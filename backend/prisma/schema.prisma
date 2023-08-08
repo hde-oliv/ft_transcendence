@@ -6,15 +6,17 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlserver"
+  provider = "postgresql"
   url = env("DATABASE_URL")
 }
 
 model User {
-  id        Int @id @default (autoincrement())
-  avatar    String
-  email     String @unique
-  firstName String
-  lastName  String
-  status    String
+  id         Int @id @default (autoincrement())
+  avatar     String
+  email      String @unique
+  firstName  String
+  lastName   String
+  fullName   String
+  status     String
+  intraLogin String
 }

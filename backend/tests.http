@@ -5,7 +5,7 @@ GET http://localhost:3000/user/
 POST http://localhost:3000/user/random
 
 # Test get a single user by id
-GET http://localhost:3000/user/4
+GET http://localhost:3000/user/1
 
 # Test create a user
 POST http://localhost:3000/user
@@ -16,10 +16,12 @@ Content-Type: application/json
     "email": "sigmundfreud@gmail.com",
     "firstName": "Sigmund",
     "lastName": "Freud",
-    "status": "on"
+    "status": "on",
+    "fullName": "Sigmund Freud",
+    "intraLogin": "sig-fre"
 }
 
 # Test delete a user by id
-DELETE http://localhost:3000/user/4
+DELETE http://localhost:3000/user/1
 
 ########################################

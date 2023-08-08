@@ -4,22 +4,65 @@ services:
   traefik:
     image: "traefik:v2.10"
     container_name: "traefik"
+    networks:
+      - transcendence
     command:
-      #- "--log.level=DEBUG"
       - "--api.insecure=true"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
+    depends_on:
+      - nextjs-frontend
+      - nestjs-backend
     ports:
       - "80:80"
       - "8080:8080"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
 
-  whoami:
-    image: "traefik/whoami"
-    container_name: "simple-service"
+  nextjs-frontend:
+    container_name: frontend
+    build:
+      context: ./frontend
+      dockerfile: ./Dockerfile
+    networks:
+      - transcendence
+    env_file: ./frontend/.env
+    restart: on-failure
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.whoami.rule=Host(`whoami.localhost`)"
-      - "traefik.http.routers.whoami.entrypoints=web"
+      - "traefik.http.routers.nextjs-frontend.rule=Host(`transcendence.localhost`)"
+      - "traefik.http.routers.nextjs-frontend.entrypoints=web"
+      - "traefik.http.services.nextjs-frontend.loadbalancer.server.port=80"
+
+  nestjs-backend:
+    container_name: backend
+    build:
+      context: ./backend
+      dockerfile: ./Dockerfile
+    networks:
+      - transcendence
+    env_file: ./backend/.env.docker
+    depends_on:
+      - postgres
+    restart: on-failure
+
+  postgres:
+    container_name: postgres
+    image: "postgres:alpine"
+    networks:
+      - transcendence
+    environment:
+      POSTGRES_PASSWORD: "mysecretpassword"
+    volumes:
+      - postgres_vol:/var/lib/postgresql/data
+    restart: on-failure
+
+networks:
+  transcendence:
+    name: "transcendence"
+    driver: bridge
+
+volumes:
+  postgres_vol:
+    name: "postgres_vol"
