@@ -62,8 +62,11 @@ const UserPage = ({
 };
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
+  // https://nextjs.org/docs/pages/building-your-application/configuring/environment-variables
+
+  // TODO: Check if Next/React reads env variables from the shell
   const user = await api.get(
-    `http://localhost:3000/user/${context.params?.id}`,
+    `http://${process.env.BACKEND_URL}:3000/user/${context.params?.id}`
   );
 
   return {
