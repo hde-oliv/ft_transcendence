@@ -1,0 +1,16 @@
+
+docker run -d --restart=always -p 5432:5432 -e "POSTGRES_PASSWORD=mysecretpassword" postgres:alpine
+backend start: cd ./backend && yarn start:dev
+frontend start: cd ./frontend && yarn dev
+npx prisma generate
+/backend :
+	.env.docker
+ 		DATABASE_URL=postgresql://postgres:mysecretpassword@postgres:5432/postgres
+	.env
+		DATABASE_URL="postgresql://postgres:mysecretpassword@localhost:5432/postgres?schema=public"
+
+/frontend:
+	.env.docker
+		BACKEND_URL=nestjs-backend
+	.env.local
+		BACKEND_URL=localhost

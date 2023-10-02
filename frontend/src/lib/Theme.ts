@@ -5,24 +5,24 @@ const baseFont = Work_Sans({ weight: ["300", "400"], subsets: ["latin"] });
 const headingFont = Readex_Pro({ weight: "500", subsets: ["latin"] });
 
 const config: ThemeConfig = {
-  initialColorMode: "dark",
-  useSystemColorMode: true,
+	initialColorMode: "system",
+	useSystemColorMode: true,
 };
 
 const theme = extendTheme({
-  config,
-  fonts: {
-    heading: headingFont.style.fontFamily,
-    body: baseFont.style.fontFamily,
-  },
-  components: {
-    Button: {
-      baseStyle: {
-        fontFamily: "heading",
-        fontWeight: "medium",
-      },
-    },
-  },
+	config,
+	fonts: {
+		heading: headingFont.style.fontFamily,
+		body: baseFont.style.fontFamily,
+	},
+	components: {
+		Button: {
+			baseStyle: {
+				fontFamily: "heading",
+				fontWeight: "medium",
+			},
+		},
+	},
 });
 
 export default theme;
