@@ -48,13 +48,15 @@ export default function Home() {
 	}
 
 	return (
-		<Container>
-			<Stack>
-				<Input placeholder='UID'></Input>
-				<Input placeholder='SECRET'></Input>
-				<Button onClick={logIn42_redirect}>LogIn 42</Button>
-				<Button onClick={exchangeCode} isDisabled={router.query.code === undefined}>Send</Button>
-			</Stack>
-		</Container>
+		<div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100vh' }}>
+			<Container>
+				<Stack>
+					<Input placeholder='UID'></Input>
+					<Input placeholder='SECRET'></Input>
+					<Button onClick={logIn42_redirect}>LogIn 42</Button>
+					<Button onClick={exchangeCode} isDisabled={router.query.code === undefined}>Send</Button>
+				</Stack>
+			</Container>
+		</div>
 	);
 }

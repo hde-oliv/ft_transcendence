@@ -8,6 +8,7 @@ export default function Document() {
 		<Html lang="en">
 			<Head />
 			<body>
+				{/* <body style={{ display: 'flex' }}> */}
 				<ColorModeScript initialColorMode={theme.config.initialColorMode} />
 				<Main />
 				<NextScript />
