@@ -1,5 +1,5 @@
 'use client'
-import { Button, Container, Input, Stack } from "@chakra-ui/react";
+import { Image, Box, Button, Container, Flex, Stack } from "@chakra-ui/react";
 import useSWR from 'swr';
 import axios, { AxiosRequestConfig } from "axios";
 import { useRouter } from "next/router";
@@ -65,14 +65,17 @@ export default function Home() {
 		}
 	}
 	return (
-		<div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100vh' }}>
+		<Flex dir='column' justify='center' align='center' h='100vh' bg='#030254' >
 			<Container>
+				<Flex justify='center' mb='20vh' >
+					<Image src='logopong_login.png' alt='pong logo' />
+				</Flex>
 				<Stack>
-					<Button size='lg' onClick={logIn42_redirect}>LogIn 42</Button>
+					<Button colorScheme="yellow" variant='outline' size='lg' onClick={logIn42_redirect}>LogIn 42</Button>
 					<Button onClick={exchangeCode} isDisabled={router.query.code === undefined}>Send</Button>
 					<Button onClick={getDataFrom42} isDisabled={token === undefined}>Get42Data</Button>
 				</Stack>
-			</Container>
-		</div>
+			</Container >
+		</Flex >
 	);
 }

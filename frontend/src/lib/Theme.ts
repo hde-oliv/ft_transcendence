@@ -6,11 +6,25 @@ const headingFont = Readex_Pro({ weight: "500", subsets: ["latin"] });
 
 const config: ThemeConfig = {
 	initialColorMode: "system",
-	useSystemColorMode: true,
+	useSystemColorMode: false,
 };
 
 const theme = extendTheme({
 	config,
+	colors: {
+		pongBlue: {
+			50: '#030254',
+			100: '#030254',
+			200: '#030254',
+			300: '#030254',
+			400: '#030254',
+			500: '#030254',
+			600: '#030254',
+			700: '#030254',
+			800: '#030254',
+			900: '#030254'
+		}
+	},
 	fonts: {
 		heading: headingFont.style.fontFamily,
 		body: baseFont.style.fontFamily,
