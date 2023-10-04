@@ -4432,6 +4432,13 @@ passport-jwt@^4.0.1:
     jsonwebtoken "^9.0.0"
     passport-strategy "^1.0.0"
 
+passport-local-token@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/passport-local-token/-/passport-local-token-1.0.1.tgz#ab601241e74fd266a05f8f7d987687ecf245a898"
+  integrity sha512-htC2y6yszUjaiqT3SKzvgA95YE+/1t7dSJD10gBPAMKG/E4t3TUo+yYIFfzbtoFGEc2YBcRKBBPuPV6Cwm4aBA==
+  dependencies:
+    passport-strategy "1.x.x"
+
 passport-local@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/passport-local/-/passport-local-1.0.0.tgz#1fe63268c92e75606626437e3b906662c15ba6ee"
@@ -4454,6 +4461,13 @@ passport-strategy@1.x.x, passport-strategy@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/passport-strategy/-/passport-strategy-1.0.0.tgz#b5539aa8fc225a3d1ad179476ddf236b440f52e4"
   integrity sha512-CB97UUvDKJde2V0KDWWB3lyf6PC3FaZP7YxZ2G8OAtn9p4HI9j9JLP9qjOGZFvyl8uwNT8qM+hGnz/n16NI7oA==
+
+passport-unique-token@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/passport-unique-token/-/passport-unique-token-3.0.0.tgz#e8aac25a319453107b28f00a25e51f6030c97219"
+  integrity sha512-BkSWODzwS1i8Z5ImmPQOWZ05dw9oS09VMBIZOogubKACrm3UO3wlJnwT/fCMQh5iTtFLYA+X4yWmtsqufftgXw==
+  dependencies:
+    passport-strategy "^1.0.0"
 
 passport@^0.6.0:
   version "0.6.0"
