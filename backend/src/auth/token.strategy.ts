@@ -1,36 +1,60 @@
 import { UniqueTokenStrategy } from 'passport-unique-token';
 import { PassportStrategy } from '@nestjs/passport';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import axios from 'axios';
+import axios, { AxiosRequestConfig } from 'axios';
+import z from 'zod';
+
+const authResponse42 = z.object({
+	access_token: z.string(),
+	token_type: z.string().startsWith('bearer').length(6),
+	expires_in: z.number().int(),
+	refresh_token: z.string(),
+	scope: z.string().startsWith("public").length(6),
+	created_at: z.number().int(),
+	secret_valid_until: z.number().int()
+})
+
+type authResponse42 = z.infer<typeof authResponse42>
 
 @Injectable()
 export class TokenStrategy extends PassportStrategy(
-  UniqueTokenStrategy,
-  'local',
+	UniqueTokenStrategy,
+	'local',
 ) {
-  constructor(private authService: AuthService) {
-    super();
-  }
+	constructor(private authService: AuthService) {
+		super();
+	}
 
-  async validate(token: string): Promise<any> {
-    const data = await this.authService.validateCode(token);
+	async validate(token: string): Promise<any> {
+		let authData: authResponse42;
+		let userData;
+		try {
+			const data = await this.authService.validateCode(token); //never throws
+			authData = authResponse42.parse(data); //throws if null
+		} catch (e) {
+			// TODO: Make a finer error handling here in case of failing to call Intra API
+			Logger.log(`User auth failed`);
+			throw new UnauthorizedException('User auth failed');
+		}
+		try {
+			userData = await this.fetchUserInformation(authData.access_token);
+		} catch (e) {
+			Logger.log(`User self data retrieval failed`);
+			userData = null
+			throw new UnauthorizedException('User self data retrieval failed');
+		}
+		return userData;
+	}
 
-    // TODO: Make a finer error handling here in case of failing to call Intra API
-    if (!data) {
-      throw new UnauthorizedException();
-    }
+	async fetchUserInformation(token: string): Promise<any> {
+		const config: AxiosRequestConfig = {
+			headers: {
+				Authorization: `Bearer ${token}`
+			}
+		}
+		const { data } = await axios.get('https://api.intra.42.fr/v2/me', config);
 
-    return this.fetchUserInformation(data.access_token);
-  }
-
-  async fetchUserInformation(token: string): Promise<any> {
-    const { data } = await axios.post('https://api.intra.42.fr/v2/me', {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    return data;
-  }
+		return data;
+	}
 }

@@ -36,7 +36,8 @@
     "passport-local-token": "^1.0.1",
     "passport-unique-token": "^3.0.0",
     "reflect-metadata": "^0.1.13",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.0.2",
