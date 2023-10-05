@@ -10,6 +10,7 @@ const authResponseData = z.object({
 	access_token: z.string(),
 	token_type: z.string().startsWith('bearer').length(6),
 	expires_in: z.number().int(),
+	refresh_token: z.string(),
 	scope: z.string().startsWith("public").length(6),
 	created_at: z.number().int(),
 	secret_valid_until: z.number().int()
@@ -42,6 +43,7 @@ export default function Home() {
 
 				}
 			})
+			console.log(response.data)
 			const data = authResponseData.parse(response.data);
 			setToken(data.access_token);
 			return response.data;

@@ -7,16 +7,90 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url = env("DATABASE_URL")
+  url      = env("DATABASE_URL")
 }
 
-model User {
-  id         Int @id @default (autoincrement())
-  avatar     String
-  email      String @unique
-  firstName  String
-  lastName   String
-  fullName   String
-  status     String
-  intraLogin String
+model Users {
+  id              Int            @id @default(autoincrement())
+  nickname        String         @unique(sort: Asc)
+  avatar          String
+  two_fa_token    String
+  intra_login     String         @unique(sort: Asc)
+  Memberships     Memberships[]
+  invitesSent     Invites[]      @relation("sent_invites")
+  inveiteReceived Invites[]      @relation("received_invites")
+  blockedIssuer   BlockedUsers[] @relation("block_issuer")
+  blockedTarget   BlockedUsers[] @relation("block_target")
+  messages        Messages[]     @relation("message_user")
+
+  @@map("users")
+}
+
+model Memberships {
+  id            Int      @id @unique @default(autoincrement())
+  channelId     Int
+  userId        Int
+  owner         Boolean  @default(false)
+  administrator Boolean  @default(false)
+  banned        Boolean  @default(false)
+  muted         Boolean  @default(false)
+  channel       Channels @relation(fields: [channelId], references: [id])
+  user          Users    @relation(fields: [userId], references: [id])
+
+  @@map("memberships")
+}
+
+model Channels {
+  id          Int           @id @unique @default(autoincrement())
+  type        ChannelType   @default(public)
+  name        String
+  password    String
+  protected   Boolean       @default(false)
+  user2user   Boolean       @default(false)
+  Memberships Memberships[]
+  Messages    Messages[]    @relation("channel_message")
+
+  @@map("channels")
+}
+
+model BlockedUsers {
+  id        String @id @default(uuid())
+  issuer_id Int
+  targer_id Int
+
+  issuer_user Users @relation("block_issuer", fields: [issuer_id], references: [id])
+  target_user Users @relation("block_target", fields: [targer_id], references: [id])
+
+  @@unique([issuer_id, targer_id])
+  @@map("blocked_users")
+}
+
+model Invites {
+  id        String @id @default(uuid())
+  user_id   Int
+  target_id Int
+
+  sender Users @relation("sent_invites", fields: [user_id], references: [id])
+  target Users @relation("received_invites", fields: [target_id], references: [id])
+
+  @@unique([user_id, target_id])
+  @@map("invites")
+}
+
+model Messages {
+  id         String   @id @default(uuid())
+  channel_id Int
+  user_id    Int
+  message    String
+  time       DateTime @default(now())
+
+  channel Channels @relation("channel_message", fields: [channel_id], references: [id])
+  user    Users    @relation("message_user", fields: [user_id], references: [id])
+
+  @@map("messages")
+}
+
+enum ChannelType {
+  private
+  public
 }
