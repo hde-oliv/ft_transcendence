@@ -1,16 +1,21 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app/app.module';
+import { Logger, LoggerErrorInterceptor } from 'nestjs-pino';
 
 declare const module: any;
 
 async function bootstrap() {
-	const app = await NestFactory.create(AppModule);
-	app.enableCors()
-	await app.listen(3000);
+  const app = await NestFactory.create(AppModule, { bufferLogs: true });
 
-	if (module.hot) {
-		module.hot.accept();
-		module.hot.dispose(() => app.close());
-	}
+  app.useLogger(app.get(Logger));
+  app.useGlobalInterceptors(new LoggerErrorInterceptor());
+
+  app.enableCors();
+  await app.listen(3000);
+
+  if (module.hot) {
+    module.hot.accept();
+    module.hot.dispose(() => app.close());
+  }
 }
 bootstrap();
