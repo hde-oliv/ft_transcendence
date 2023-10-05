@@ -1,34 +1,51 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import axios from 'axios';
+import axios, { AxiosResponse } from 'axios';
 import { Logger } from '@nestjs/common';
-import { userLoginRet } from './auth.controller';
+import { AxiosRequestConfig } from 'axios';
+import { userLoginRet } from './auth.model';
 
 @Injectable()
 export class AuthService {
   constructor(private jwtService: JwtService) {}
 
-  async validateCode(code: string): Promise<any> {
-    let response42: any;
+  private readonly logger = new Logger(AuthService.name);
 
-    try {
-      const response = await axios.post('https://api.intra.42.fr/oauth/token', {
-        grant_type: 'authorization_code',
-        client_id: process.env.FT_CLIENT_ID,
-        client_secret: process.env.FT_CLIENT_SECRET,
-        code: code,
-        redirect_uri: process.env.FT_REDIRECT_URI,
-      });
-      response42 = response.data;
-    } catch (e) {
-      Logger.error(e);
-      response42 = null;
-    }
-    return response42;
+  // Throws
+  async validateCode(code: string): Promise<AxiosResponse> {
+    this.logger.log(`Calling Intra API to get Bearer Token. [code=${code}]`);
+
+    const response = await axios.post('https://api.intra.42.fr/oauth/token', {
+      grant_type: 'authorization_code',
+      client_id: process.env.FT_CLIENT_ID,
+      client_secret: process.env.FT_CLIENT_SECRET,
+      code: code,
+      redirect_uri: process.env.FT_REDIRECT_URI,
+    });
+
+    return response;
+  }
+
+  // Throws
+  async fetchIntraUser(token: string): Promise<AxiosResponse> {
+    this.logger.log(`Calling Intra API to get user info.`);
+
+    const config: AxiosRequestConfig = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+
+    const response = await axios.get('https://api.intra.42.fr/v2/me', config);
+
+    return response;
   }
 
   async login(user: userLoginRet) {
-    const payload = { login: user.login };
+    const payload = { ...user };
+
+    this.logger.log(payload, `Creating Bearer token.`);
+
     return {
       access_token: this.jwtService.sign(payload),
     };
