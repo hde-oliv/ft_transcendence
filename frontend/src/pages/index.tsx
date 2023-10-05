@@ -31,12 +31,16 @@ export default function Home() {
 				window.alert('No code available');
 				return;
 			}
-			const response = await axios.post('https://api.intra.42.fr/oauth/token', {
-				"grant_type": "authorization_code",
-				"client_id": "u-s4t2ud-fb85b86a0af8ab2f7f127ad1616f6d3125fd4f84c7e8e5a679b9fe5a51821265",
-				"client_secret": "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",
-				"code": code,
-				"redirect_uri": "http://localhost:3001"
+			const config: AxiosRequestConfig = {
+				headers: {
+					"Content-Type": "application/json"
+				}
+			}
+			const response = await axios.post('http://localhost:3000/auth/login', { "token": code }, {
+				headers: {
+					'Content-Type': 'application/json',
+
+				}
 			})
 			const data = authResponseData.parse(response.data);
 			setToken(data.access_token);

@@ -25,7 +25,7 @@ export class AuthController {
 	@UseGuards(TokenAuthGuard)
 	@Post('login')
 	async login(@Request() req) {
-		this.authService.login(req.user);
+		// this.authService.login(req.user);
 		return userReturnInfo.safeParse(req.user);
 	}
 

@@ -29,8 +29,8 @@ export class TokenStrategy extends PassportStrategy(
 	async validate(token: string): Promise<any> {
 		let authData: authResponse42;
 		let userData;
+		const data = await this.authService.validateCode(token); //never throws
 		try {
-			const data = await this.authService.validateCode(token); //never throws
 			authData = authResponse42.parse(data); //throws if null
 		} catch (e) {
 			// TODO: Make a finer error handling here in case of failing to call Intra API
