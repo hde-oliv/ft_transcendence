@@ -1,24 +1,22 @@
 import { faker } from '@faker-js/faker';
 
 export interface User {
-  id?: number;
-  avatar: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  fullName: string;
-  intraLogin: string;
-  status: string;
+  id: number,
+  nickname: string,
+  avatar: string,
+  two_fa_token: string,
+  intra_login: string
+  online: boolean
 }
+
 
 export const createRandomUser = (): User => {
   return {
+    id: faker.number.int(),
+    nickname: faker.person.firstName(),
     avatar: faker.internet.avatar(),
-    email: faker.internet.email(),
-    firstName: faker.person.firstName(),
-    lastName: faker.person.lastName(),
-    fullName: faker.person.fullName(),
-    intraLogin: faker.internet.userName(),
-    status: faker.helpers.arrayElement(['on', 'off', 'afk']),
+    two_fa_token: faker.person.zodiacSign(),
+    intra_login: faker.internet.userName(),
+    online: false
   };
 };
