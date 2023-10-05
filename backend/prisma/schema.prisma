@@ -11,11 +11,12 @@ datasource db {
 }
 
 model Users {
-  id              Int            @id @default(autoincrement())
-  nickname        String         @unique(sort: Asc)
-  avatar          String
-  two_fa_token    String
-  intra_login     String         @unique(sort: Asc)
+  id           Int    @id @default(autoincrement())
+  nickname     String @unique(sort: Asc)
+  avatar       String
+  two_fa_token String
+  intra_login  String @unique(sort: Asc)
+
   Memberships     Memberships[]
   invitesSent     Invites[]      @relation("sent_invites")
   inveiteReceived Invites[]      @relation("received_invites")
