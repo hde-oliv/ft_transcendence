@@ -11,10 +11,10 @@ const authResponse42 = z.object({
   token_type: z.string().startsWith('bearer').length(6),
   expires_in: z.number().int(),
   refresh_token: z.string(),
-  scope: z.string().startsWith("public").length(6),
+  scope: z.string().startsWith('public').length(6),
   created_at: z.number().int(),
-  secret_valid_until: z.number().int()
-})
+  secret_valid_until: z.number().int(),
+});
 
 const user42Schema = z.object({
   id: z.number(),
@@ -28,28 +28,31 @@ const user42Schema = z.object({
   phone: z.string(),
   displayname: z.string(),
   kind: z.string(),
-})
+});
 
-type authResponse42 = z.infer<typeof authResponse42>
-type user42Data = z.infer<typeof user42Schema>
+type authResponse42 = z.infer<typeof authResponse42>;
+type user42Data = z.infer<typeof user42Schema>;
 
 @Injectable()
 export class TokenStrategy extends PassportStrategy(
   UniqueTokenStrategy,
   'local',
 ) {
-  constructor(private authService: AuthService, private userRepository: UserRepository) {
+  constructor(
+    private authService: AuthService,
+    private userRepository: UserRepository,
+  ) {
     super();
   }
 
   async validate(token: string): Promise<any> {
-    console.log('validate_passport')
+    console.log('validate_passport');
     let authData: authResponse42;
     let user42Data: user42Data;
     let dbUser;
-    const data = await this.authService.validateCode(token); //never throws
+    const data = await this.authService.validateCode(token); // NOTE: never throws
     try {
-      authData = authResponse42.parse(data); //throws if null
+      authData = authResponse42.parse(data); // NOTE: throws if null
     } catch (e) {
       // TODO: Make a finer error handling here in case of failing to call Intra API
       Logger.log(`User auth failed`);
@@ -63,18 +66,16 @@ export class TokenStrategy extends PassportStrategy(
     }
     try {
       dbUser = await this.userRepository.getUserByIntra(user42Data.login);
-    } catch (e) {
-
-    }
+    } catch (e) {}
     return user42Data;
   }
 
   async fetchIntraUser(token: string): Promise<user42Data> {
     const config: AxiosRequestConfig = {
       headers: {
-        Authorization: `Bearer ${token}`
-      }
-    }
+        Authorization: `Bearer ${token}`,
+      },
+    };
     const { data } = await axios.get('https://api.intra.42.fr/v2/me', config);
     const userData = user42Schema.parse(data);
     return data;
