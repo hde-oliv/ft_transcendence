@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker';
 
-export interface User {
+export interface Users {
   id?: number;
   nickname: string;
   avatar: string;
@@ -9,7 +9,7 @@ export interface User {
   online: boolean;
 }
 
-export const createRandomUser = (): User => {
+export const createRandomUser = (): Users => {
   return {
     nickname: faker.person.firstName(),
     avatar: faker.internet.avatar(),

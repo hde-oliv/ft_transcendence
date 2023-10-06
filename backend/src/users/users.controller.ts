@@ -1,28 +1,28 @@
 import { Controller, Get, Param, Post, Req } from '@nestjs/common';
 import { Request } from 'express';
-import { UserService } from './user.service';
+import { UsersService } from './users.service';
 
 @Controller('/user')
-export class UserController {
-  constructor(private userService: UserService) {}
+export class UsersController {
+  constructor(private usersService: UsersService) {}
 
   @Get()
   getUsers() {
-    return this.userService.getAllUsers();
+    return this.usersService.getAllUsers();
   }
 
   @Get('/:id')
   getUser(@Param() param: { id: number }) {
-    return this.userService.getUser(param);
+    return this.usersService.getUser(param);
   }
 
   @Post('/random')
   createRandom() {
-    return this.userService.createRandom();
+    return this.usersService.createRandom();
   }
 
   @Post()
   create(@Req() req: Request) {
-    return this.userService.create(req);
+    return this.usersService.create(req);
   }
 }

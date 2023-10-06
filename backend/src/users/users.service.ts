@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { Request } from 'express';
-import { UserRepository } from './user.repository';
+import { UsersRepository } from './users.repository';
 
 @Injectable()
-export class UserService {
-  constructor(private userRepository: UserRepository) {}
+export class UsersService {
+  constructor(private userRepository: UsersRepository) {}
 
   getUser(param: { id: number }) {
     return this.userRepository.getUserById(param.id);

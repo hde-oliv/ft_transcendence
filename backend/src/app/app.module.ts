@@ -1,13 +1,15 @@
 import { Module } from '@nestjs/common';
-import { UserModule } from '../user/user.module';
+import { UsersModule } from '../users/users.module';
 import { AuthModule } from 'src/auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { LoggerModule } from 'nestjs-pino';
+import { CatsModule } from 'src/cats/cats.module';
 
 @Module({
   imports: [
-    UserModule,
+    UsersModule,
     AuthModule,
+    CatsModule,
     LoggerModule.forRoot({
       pinoHttp: {
         customProps: (req, res) => ({

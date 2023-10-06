@@ -1,4 +1,11 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateCatDto } from './create-cat.dto';
+import { z } from 'zod';
 
-export class UpdateCatDto extends PartialType(CreateCatDto) {}
+export const updateCatSchema = z
+  .object({
+    name: z.string(),
+    age: z.number(),
+    breed: z.string(),
+  })
+  .required();
+
+export type UpdateCatDto = z.infer<typeof updateCatSchema>;

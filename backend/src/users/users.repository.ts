@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Users as UserEntity } from '@prisma/client';
-import { User as UserModel, createRandomUser } from './user.model';
+import { Users as UsersModel, createRandomUser } from './users.model';
 
 @Injectable()
-export class UserRepository {
+export class UsersRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
   async getUserById(id: number): Promise<UserEntity | null> {
@@ -27,7 +27,7 @@ export class UserRepository {
     return this.prismaService.users.create({ data: randomUser });
   }
 
-  async createUser(user: UserModel): Promise<UserEntity> {
+  async createUser(user: UsersModel): Promise<UserEntity> {
     return this.prismaService.users.create({ data: user });
   }
 }

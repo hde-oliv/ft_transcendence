@@ -2,7 +2,7 @@ import { UniqueTokenStrategy } from 'passport-unique-token';
 import { PassportStrategy } from '@nestjs/passport';
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { UserRepository } from 'src/user/user.repository';
+import { UsersRepository } from 'src/users/users.repository';
 import { authResponse42, user42Data, user42Schema } from './auth.model';
 import { AxiosResponse } from 'axios';
 
@@ -13,7 +13,7 @@ export class TokenStrategy extends PassportStrategy(
 ) {
   constructor(
     private authService: AuthService,
-    private userRepository: UserRepository,
+    private userRepository: UsersRepository,
   ) {
     super();
   }
@@ -48,6 +48,7 @@ export class TokenStrategy extends PassportStrategy(
     this.logger.log(`Sucessful call.`);
 
     try {
+      // TODO: UsersService should be doing this
       dbUser = await this.userRepository.getUserByIntra(userData.login);
     } catch (e) {}
     return userData;
