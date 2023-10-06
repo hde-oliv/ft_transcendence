@@ -48,19 +48,35 @@ export default function Login() {
 				if (localToken !== '') {
 					localStorage.setItem('token', localToken);
 					// router.push('/dashboard');
-				} else {
-					const totalTime = 2000;
+					const totalTime = 5000;
 					const redirector = setTimeout(() => {
-						// router.push('/')
+						router.push('/dashboard')
 					}, totalTime);
 					toast({
 						title: "Login Failed",
-						description: '',
-						status: "error",
-						duration: totalTime - 100,
+						description: 'Redirecting to dashboard',
+						status: "success",
+						isClosable: true,
+						duration: totalTime - 1000,
 						onCloseComplete: () => {
 							clearTimeout(redirector);
-							// router.push('/')
+							router.push('/dashboard')
+						}
+					})
+				} else {
+					const totalTime = 5000;
+					const redirector = setTimeout(() => {
+						router.push('/')
+					}, totalTime);
+					toast({
+						title: "Login Failed",
+						description: 'Redirecting to home',
+						status: "error",
+						isClosable: true,
+						duration: totalTime - 1000,
+						onCloseComplete: () => {
+							clearTimeout(redirector);
+							router.push('/')
 						}
 					})
 				}
