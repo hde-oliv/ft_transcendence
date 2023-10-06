@@ -1,75 +1,31 @@
 'use client'
-import { Image, Box, Button, Container, Flex, Stack } from "@chakra-ui/react";
-import useSWR from 'swr';
+import { Image, Box, Button, Container, Flex, Stack, Text } from "@chakra-ui/react";
 import axios, { AxiosRequestConfig } from "axios";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
-import z, { ZodError } from 'zod';
+import { useEffect, useRef, useState } from "react";
 
-const authResponseData = z.object({
-	access_token: z.string(),
-	token_type: z.string().startsWith('bearer').length(6),
-	expires_in: z.number().int(),
-	refresh_token: z.string(),
-	scope: z.string().startsWith("public").length(6),
-	created_at: z.number().int(),
-	secret_valid_until: z.number().int()
-})
+
+
 
 export default function Home() {
 	const [token, setToken] = useState<string | undefined>(undefined);
+	const [loadingRedir, setLoadingRedir] = useState(false);
+	const [loadingToken, setLoadingToken] = useState(false);
+
 
 	const router = useRouter();
-	function logIn42_redirect() {
-		const authURL = `https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-fb85b86a0af8ab2f7f127ad1616f6d3125fd4f84c7e8e5a679b9fe5a51821265&redirect_uri=http%3A%2F%2Flocalhost%3A3001&response_type=code`;
-		window.location.href = authURL;
+	const getRef = useRef(false);
+	async function logIn42_redirect() {
+		const authURL = `https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-fb85b86a0af8ab2f7f127ad1616f6d3125fd4f84c7e8e5a679b9fe5a51821265&redirect_uri=http%3A%2F%2Flocalhost%3A3001%2Fcallback&response_type=code`;
+		await router.push(authURL, 'login')
 
 	}
-	async function exchangeCode() {
-		try {
-			const code = router.query.code;
-			if (!code) {
-				window.alert('No code available');
-				return;
-			}
-			const config: AxiosRequestConfig = {
-				headers: {
-					"Content-Type": "application/json"
-				}
-			}
-			const response = await axios.post('http://localhost:3000/auth/login', { "token": code }, {
-				headers: {
-					'Content-Type': 'application/json',
+	if (token === undefined && router.query.code && !getRef.current.valueOf()) {
+		getRef.current = true;
+		console.log('executou!')
 
-				}
-			})
-			console.log(response.data)
-			const data = authResponseData.parse(response.data);
-			setToken(data.access_token);
-			return response.data;
-		} catch (e) {
-			if (e instanceof ZodError)
-				console.log('Failed to fetch access token');
-			if (e instanceof Error)
-				window.alert(e.message)
-		}
 	}
 
-	async function getDataFrom42() {
-		try {
-			const config: AxiosRequestConfig = {
-				headers: {
-					Authorization: `Bearer ${token}`
-				}
-			}
-			console.log(config);
-			const response = await axios.get('https://api.intra.42.fr/v2/me', config)
-			// const response = await axios.get('https://api.intra.42.fr/oauth/token/info', config)
-		} catch (e) {
-			if (e instanceof Error)
-				console.log(e);
-		}
-	}
 	return (
 		<Flex dir='column' justify='center' align='center' h='100vh' bg='#030254' >
 			<Container>
@@ -77,9 +33,7 @@ export default function Home() {
 					<Image src='logopong_login.png' alt='pong logo' />
 				</Flex>
 				<Stack>
-					<Button colorScheme="yellow" variant='outline' size='lg' onClick={logIn42_redirect}>LogIn 42</Button>
-					<Button onClick={exchangeCode} isDisabled={router.query.code === undefined}>Send</Button>
-					<Button onClick={getDataFrom42} isDisabled={token === undefined}>Get42Data</Button>
+					<Button colorScheme="yellow" variant='outline' size='lg' onClick={logIn42_redirect} isLoading={loadingRedir}> LogIn 42 </Button>
 				</Stack>
 			</Container >
 		</Flex >
