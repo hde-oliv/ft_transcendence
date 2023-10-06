@@ -8,6 +8,12 @@ npx prisma generate
  		DATABASE_URL=postgresql://postgres:mysecretpassword@postgres:5432/postgres
 	.env
 		DATABASE_URL="postgresql://postgres:mysecretpassword@localhost:5432/postgres?schema=public"
+		NODE_ENV="development"
+		FT_CLIENT_ID=
+		FT_CLIENT_SECRET=
+		FT_REDIRECT_URI=
+		JWT_SECRET=
+
 
 /frontend:
 	.env.docker
