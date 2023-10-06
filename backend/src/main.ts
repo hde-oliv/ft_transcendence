@@ -1,3 +1,4 @@
+import { otelSDK } from './tracing';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app/app.module';
 import { Logger, LoggerErrorInterceptor } from 'nestjs-pino';
@@ -5,6 +6,8 @@ import { Logger, LoggerErrorInterceptor } from 'nestjs-pino';
 declare const module: any;
 
 async function bootstrap() {
+  await otelSDK.start();
+
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
 
   app.useLogger(app.get(Logger));
