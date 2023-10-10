@@ -53,7 +53,7 @@ export default function Login() {
 						router.push('/dashboard')
 					}, totalTime);
 					toast({
-						title: "Login Failed",
+						title: "Login Succeeded",
 						description: 'Redirecting to dashboard',
 						status: "success",
 						isClosable: true,
