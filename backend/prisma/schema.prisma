@@ -20,7 +20,7 @@ model Users {
 
   Memberships     Memberships[]
   invitesSent     Invites[]      @relation("sent_invites")
-  inveiteReceived Invites[]      @relation("received_invites")
+  inviteReceived Invites[]      @relation("received_invites")
   blockedIssuer   BlockedUsers[] @relation("block_issuer")
   blockedTarget   BlockedUsers[] @relation("block_target")
   messages        Messages[]     @relation("message_user")
