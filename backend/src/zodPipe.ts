@@ -6,14 +6,15 @@ import {
 import { ZodObject } from 'zod';
 
 export class ZodValidationPipe implements PipeTransform {
-  constructor(private schema: ZodObject<any>) {}
+  constructor(private schema: ZodObject<any>) { }
 
   transform(value: unknown, metadata: ArgumentMetadata) {
+    let parsedValue;
     try {
-      this.schema.parse(value);
+      parsedValue = this.schema.parse(value);
     } catch (error) {
       throw new BadRequestException('Validation failed');
     }
-    return value;
+    return parsedValue;
   }
 }
