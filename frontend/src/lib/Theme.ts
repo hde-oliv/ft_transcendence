@@ -6,7 +6,7 @@ const headingFont = Readex_Pro({ weight: "500", subsets: ["latin"] });
 
 const config: ThemeConfig = {
 	initialColorMode: "system",
-	useSystemColorMode: false,
+	useSystemColorMode: true,
 };
 
 const theme = extendTheme({
@@ -36,7 +36,7 @@ const theme = extendTheme({
 				fontWeight: "medium",
 			},
 		},
-	},
+	}
 });
 
 export default theme;
