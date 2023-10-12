@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import axios, { AxiosResponse } from 'axios';
 import { Logger } from '@nestjs/common';
@@ -7,13 +7,19 @@ import { userLoginRet } from './auth.model';
 import { randomBytes } from 'crypto';
 import { encode } from 'hi-base32';
 import * as OTPAuth from 'otpauth';
+import { UpdateOTPUserDto } from 'src/users/dto/update-otp-user-dto';
+import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class AuthService {
-  constructor(private jwtService: JwtService) {}
+  constructor(
+    private jwtService: JwtService,
+    private userService: UsersService,
+  ) {}
 
   private readonly logger = new Logger(AuthService.name);
 
+  // Throws
   async validateCode(code: string): Promise<AxiosResponse> {
     this.logger.log(`Calling Intra API to get Bearer Token. [code=${code}]`);
 
@@ -28,6 +34,7 @@ export class AuthService {
     return response;
   }
 
+  // Throws
   async fetchIntraUser(token: string): Promise<AxiosResponse> {
     this.logger.log(`Calling Intra API to get user info.`);
 
@@ -52,14 +59,10 @@ export class AuthService {
     };
   }
 
-  async generateRandomBase32() {
+  // Throws
+  async generateOTP(intra_login: string) {
     const buffer = randomBytes(15);
-    const base32 = encode(buffer).replace(/=/g, '').substring(0, 24);
-    return base32;
-  }
-
-  async generateOTP() {
-    const base32_secret = await this.generateRandomBase32();
+    const base32_secret = encode(buffer).replace(/=/g, '').substring(0, 24);
 
     const totp = new OTPAuth.TOTP({
       issuer: 'transcendence.localhost',
@@ -71,22 +74,24 @@ export class AuthService {
 
     const otpauth_url = totp.toString();
 
-    // TODO: Update User entity with the OTP info here
-    // data: {
-    //   otp_auth_url: otpauth_url,
-    //   otp_base32: base32_secret,
-    // },
-    //
-
-    return {
-      base32: base32_secret,
-      otp_url: otpauth_url,
+    const updateDto: UpdateOTPUserDto = {
+      intra_login,
+      otp_auth_url: otpauth_url,
+      otp_base32: base32_secret,
     };
+
+    this.userService.updateOTP(updateDto);
+
+    return updateDto;
   }
 
-  async verifyOTP(token: string, secret: string) {
-    // TODO: Get user secret to validate
-    const userSecret = secret;
+  async verifyOTP(intra_login: string, token: string) {
+    const user = this.userService.getUserByIntra({ intra_login });
+    const userSecret = (await user).otp_base32;
+
+    if (userSecret === null) {
+      throw new UnauthorizedException('OTP Token failed');
+    }
 
     const totp = new OTPAuth.TOTP({
       issuer: 'transcendence.localhost',
@@ -99,17 +104,28 @@ export class AuthService {
     const delta = totp.validate({ token });
 
     if (delta === null) {
-      throw null; // TODO: Workaround, change later
+      throw new UnauthorizedException('OTP Token failed');
     }
 
     // TODO: Update user otp_enabled & otp_verfified
+    const updateDto: UpdateOTPUserDto = {
+      intra_login,
+      otp_enabled: true,
+      otp_verified: true,
+    };
 
-    return { ok: 'OK' }; // TODO: Return something
+    this.userService.updateOTP(updateDto);
+
+    return { status: 'OK' }; // TODO: Return something
   }
 
-  async validateOTP(token: string, secret: string) {
-    // TODO: Get user secret to validate
-    const userSecret = secret;
+  async validateOTP(intra_login: string, token: string) {
+    const user = this.userService.getUserByIntra({ intra_login });
+    const userSecret = (await user).otp_base32;
+
+    if (userSecret === null) {
+      throw new UnauthorizedException('OTP Token failed');
+    }
 
     const totp = new OTPAuth.TOTP({
       issuer: 'transcendence.localhost',
@@ -122,10 +138,10 @@ export class AuthService {
     let delta = totp.validate({ token, window: 1 });
 
     if (delta === null) {
-      throw null;
+      throw new UnauthorizedException('OTP Token failed');
     }
 
-    return { ok: 'OK' };
+    return { status: 'OK' }; // TODO: Make a better return
   }
 
   // TODO: Function to disable OTP for user

@@ -1,8 +1,17 @@
-import { Controller, Request, Post, UseGuards, Get } from '@nestjs/common';
+import {
+  Controller,
+  Request,
+  Post,
+  UseGuards,
+  Get,
+  UsePipes,
+  Body,
+} from '@nestjs/common';
 import { TokenAuthGuard } from './token.guard';
 import { AuthService } from './auth.service';
-import { user42Schema } from './auth.model';
 import { JwtAuthGuard } from './jwt.guard';
+import { ZodValidationPipe } from 'src/zodPipe';
+import { otpTokenSchema, OTPTokenDto } from './dto/otp-token-dto';
 
 @Controller('auth')
 export class AuthController {
@@ -11,13 +20,7 @@ export class AuthController {
   @UseGuards(TokenAuthGuard)
   @Post('login')
   async login(@Request() req) {
-    const result = user42Schema.safeParse(req.user);
-    if (!result.success) {
-      // TODO: Raise 500 exception here
-      return result.error;
-    } else {
-      return this.authService.login(result.data);
-    }
+    return this.authService.login(req.user);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -26,21 +29,26 @@ export class AuthController {
     return req.user;
   }
 
-  // TODO: Add Zod validator
+  @UseGuards(JwtAuthGuard)
   @Post('otp/generate')
   async generateOTP(@Request() req) {
-    return this.authService.generateOTP();
+    return this.authService.generateOTP(req.user.intra_login);
   }
 
-  // TODO: Add Zod validator
+  @UseGuards(JwtAuthGuard)
   @Post('otp/verify')
-  async verifyOTP(@Request() req) {
-    return this.authService.verifyOTP(req.token, req.secret);
+  @UsePipes(new ZodValidationPipe(otpTokenSchema))
+  async verifyOTP(@Request() req, @Body() otpTokenDto: OTPTokenDto) {
+    return this.authService.verifyOTP(req.user.intra_login, otpTokenDto.token);
   }
 
-  // TODO: Add Zod validator
+  @UseGuards(JwtAuthGuard)
   @Post('otp/validate')
-  async validateOTP(@Request() req) {
-    return this.authService.validateOTP(req.token, req.secret);
+  @UsePipes(new ZodValidationPipe(otpTokenSchema))
+  async validateOTP(@Request() req, @Body() otpTokenDto: OTPTokenDto) {
+    return this.authService.validateOTP(
+      req.user.intra_login,
+      otpTokenDto.token,
+    );
   }
 }

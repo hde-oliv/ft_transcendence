@@ -15,14 +15,4 @@ export class UsersController {
   getUser(@Param() param: { id: number }) {
     return this.usersService.getUser(param);
   }
-
-  @Post('/random')
-  createRandom() {
-    return this.usersService.createRandom();
-  }
-
-  @Post()
-  create(@Req() req: Request) {
-    return this.usersService.create(req);
-  }
 }

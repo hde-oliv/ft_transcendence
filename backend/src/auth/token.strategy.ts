@@ -2,9 +2,11 @@ import { UniqueTokenStrategy } from 'passport-unique-token';
 import { PassportStrategy } from '@nestjs/passport';
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { UsersRepository } from 'src/users/users.repository';
 import { authResponse42, user42Data, user42Schema } from './auth.model';
 import { AxiosResponse } from 'axios';
+import { UsersService } from 'src/users/users.service';
+import { createUserSchema, CreateUserDto } from 'src/users/dto/create-user-dto';
+import { Users as UserEntity } from '@prisma/client';
 
 @Injectable()
 export class TokenStrategy extends PassportStrategy(
@@ -13,7 +15,7 @@ export class TokenStrategy extends PassportStrategy(
 ) {
   constructor(
     private authService: AuthService,
-    private userRepository: UsersRepository,
+    private userService: UsersService,
   ) {
     super();
   }
@@ -27,30 +29,44 @@ export class TokenStrategy extends PassportStrategy(
     let authData: authResponse42;
     let userData: user42Data;
     let response: AxiosResponse;
-    let dbUser: any; // TODO: Include type here
+    let dbUser: UserEntity;
 
     try {
       response = await this.authService.validateCode(token);
       authData = authResponse42.parse(response.data);
+      this.logger.log(`Sucessful call.`);
     } catch (e) {
       this.logger.error(`Couldn't call Intra API. [error=${e}]`);
       throw new UnauthorizedException('User auth failed');
     }
-    this.logger.log(`Sucessful call.`);
 
     try {
       response = await this.authService.fetchIntraUser(authData.access_token);
       userData = user42Schema.parse(response.data);
+      this.logger.log(`Sucessful call.`);
     } catch (e) {
       this.logger.error(`Couldn't call Intra API. [error=${e}]`);
       throw new UnauthorizedException('User auth failed');
     }
-    this.logger.log(`Sucessful call.`);
 
     try {
-      // TODO: UsersService should be doing this
-      dbUser = await this.userRepository.getUserByIntra(userData.login);
-    } catch (e) {}
-    return userData;
+      dbUser = await this.userService.getUserByIntra({
+        intra_login: userData.login,
+      });
+      this.logger.log(`GetUserByIntra sucessful call.`);
+    } catch (e) {
+      this.logger.warn(`User not found, creating. [intra=${userData.login}]`);
+      const userDto: CreateUserDto = {
+        nickname: userData.login,
+        avatar: process.env.DEFAULT_AVATAR_URL
+          ? process.env.DEFAULT_AVATAR_URL
+          : '', // TODO: Make a wrapper later
+        intra_login: userData.login,
+      };
+
+      dbUser = await this.userService.create(userDto);
+    }
+
+    return dbUser;
   }
 }
