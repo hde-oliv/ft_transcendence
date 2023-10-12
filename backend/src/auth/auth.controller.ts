@@ -22,7 +22,25 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Get('decode')
-  getProfile(@Request() req) {
+  async getProfile(@Request() req) {
     return req.user;
+  }
+
+  // TODO: Add Zod validator
+  @Post('otp/generate')
+  async generateOTP(@Request() req) {
+    return this.authService.generateOTP();
+  }
+
+  // TODO: Add Zod validator
+  @Post('otp/verify')
+  async verifyOTP(@Request() req) {
+    return this.authService.verifyOTP(req.token, req.secret);
+  }
+
+  // TODO: Add Zod validator
+  @Post('otp/validate')
+  async validateOTP(@Request() req) {
+    return this.authService.validateOTP(req.token, req.secret);
   }
 }
