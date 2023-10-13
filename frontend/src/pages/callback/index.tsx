@@ -39,7 +39,7 @@ export default function Login() {
 		return parsedResp
 	}
 
-	useEffect(() => {
+	useEffect(() => { //TODO: add redirection for twofa when needed
 		console.log('render fired')
 		if (router.query.code) {
 			(async () => {
