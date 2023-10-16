@@ -1,3 +1,4 @@
+'use client'
 import { PropsWithChildren } from 'react';
 import { Flex, Container, Image, Center, Button, Heading, Highlight, Text, HStack, Box, Icon, Avatar, Wrap, VisuallyHidden, useBreakpointValue } from '@chakra-ui/react';
 import { ChevronDownIcon } from '@chakra-ui/icons'
