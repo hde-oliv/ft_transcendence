@@ -5,8 +5,8 @@ const baseFont = Work_Sans({ weight: ["300", "400"], subsets: ["latin"] });
 const headingFont = Readex_Pro({ weight: "500", subsets: ["latin"] });
 
 const config: ThemeConfig = {
-	initialColorMode: "system",
-	useSystemColorMode: true,
+	initialColorMode: "light",
+	useSystemColorMode: false,
 };
 
 const theme = extendTheme({
