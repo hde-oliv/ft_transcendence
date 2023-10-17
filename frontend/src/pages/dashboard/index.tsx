@@ -23,14 +23,14 @@ import {
 	TableContainer,
 } from '@chakra-ui/react'
 import { useRouter } from 'next/router';
-import { CheckIcon } from '@chakra-ui/icons';
+import { CheckIcon, AddIcon } from '@chakra-ui/icons';
 
 
 function PlayCard(props: PropsWithChildren) {
 	return (
 		<Center flexDir='column' alignItems='stretch' h='370px' w='370px' justifyContent='space-between'>
 			<Button borderRadius='45' h='45%' backgroundColor='yellow.300' color='pongBlue.400' >Play now</Button>
-			<Button borderRadius='45' h='45%' backgroundColor='yellow.300' color='pongBlue.400' >Challange a friend</Button>
+			<Button borderRadius='45' h='45%' backgroundColor='yellow.300' color='pongBlue.400' >Challenge a friend</Button>
 		</Center>
 	)
 }
@@ -163,7 +163,7 @@ function ChatsCard(props: PropsWithChildren) {
 	return (
 		<Flex flexDir='column' h='370px' w='370px' alignItems='stretch'>
 			<Heading textAlign='center' pt='1vh'>Chats</Heading>
-			<Button>Add friend</Button>
+			<Button rightIcon={<AddIcon />} mb='2vh' mt='1vh' colorScheme='yellow'>Add friend</Button>
 			<VStack>
 				<ContactRow online={true} />
 				<ContactRow online={false} />
