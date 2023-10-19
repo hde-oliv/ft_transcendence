@@ -28,7 +28,9 @@
         "@nestjs/mapped-types": "*",
         "@nestjs/passport": "^10.0.2",
         "@nestjs/platform-express": "^10.0.0",
+        "@nestjs/platform-socket.io": "^10.2.7",
         "@nestjs/swagger": "^7.1.13",
+        "@nestjs/websockets": "^10.2.7",
         "@opentelemetry/api": "1.6.0",
         "@opentelemetry/auto-instrumentations-node": "^0.39.2",
         "@opentelemetry/exporter-jaeger": "^1.17.0",
@@ -39,6 +41,7 @@
         "@opentelemetry/semantic-conventions": "^1.17.0",
         "@prisma/client": "^5.4.1",
         "@prisma/instrumentation": "^5.4.1",
+        "@types/socket.io": "^3.0.2",
         "axios": "^1.5.1",
         "hi-base32": "^0.5.1",
         "nestjs-pino": "^3.5.0",
@@ -85,13 +88,19 @@
         "webpack-node-externals": "^3.0.0"
     },
     "jest": {
-        "moduleFileExtensions": ["js", "json", "ts"],
+        "moduleFileExtensions": [
+            "js",
+            "json",
+            "ts"
+        ],
         "rootDir": "src",
         "testRegex": ".*\\.spec\\.ts$",
         "transform": {
             "^.+\\.(t|j)s$": "ts-jest"
         },
-        "collectCoverageFrom": ["**/*.(t|j)s"],
+        "collectCoverageFrom": [
+            "**/*.(t|j)s"
+        ],
         "coverageDirectory": "../coverage",
         "testEnvironment": "node"
     },

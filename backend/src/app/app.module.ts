@@ -4,12 +4,14 @@ import { AuthModule } from 'src/auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { LoggerModule } from 'nestjs-pino';
 import { CatsModule } from 'src/cats/cats.module';
+import { ChatModule } from 'src/chat/chat.module';
 
 @Module({
   imports: [
     UsersModule,
     AuthModule,
     CatsModule,
+    ChatModule,
     LoggerModule.forRoot({
       pinoHttp: {
         customProps: (req, res) => ({
