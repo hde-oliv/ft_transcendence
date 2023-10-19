@@ -1,6 +1,17 @@
 'use client'
 import { PropsWithChildren } from 'react';
-import { Flex, Container, Image, Center, Button, Heading, Highlight, Text, HStack, Box, Icon, Avatar, Wrap, VisuallyHidden, useBreakpointValue } from '@chakra-ui/react';
+import { Flex, Container, Image, Center, Button, Heading, Highlight, Text, HStack, Box, Icon, Avatar, Wrap, VisuallyHidden, useBreakpointValue, LinkBox, LinkOverlay } from '@chakra-ui/react';
+import {
+	Popover,
+	PopoverTrigger,
+	PopoverContent,
+	PopoverHeader,
+	PopoverBody,
+	PopoverFooter,
+	PopoverArrow,
+	PopoverCloseButton,
+	PopoverAnchor,
+} from '@chakra-ui/react'
 import { ChevronDownIcon } from '@chakra-ui/icons'
 import { Grid, GridItem } from '@chakra-ui/react';
 import {
@@ -14,6 +25,7 @@ import {
 	MenuDivider,
 } from '@chakra-ui/react'
 import { useRouter } from 'next/router';
+import Link from 'next/link';
 
 const availableRoutes: Array<PongMenuItemProps> = [
 	{
@@ -76,11 +88,31 @@ export default function PongNavBar(props: React.PropsWithChildren): JSX.Element 
 			</Menu>
 		</Center>
 		<Image src='logopong_login.png' alt='pong logo' maxH='10vh' p='1vh 1vw' fit='contain' />
-		<Flex alignItems='center' justify='space-around'>
-			{isWide ? <Heading color='pongBlue.500' size='sm'>User Name</Heading> : undefined}
-			{isWide ? <Box w='2vw'></Box> : undefined}
-			<Avatar bg='pongBlue.500' />
-			<Box w='2vw'></Box>
-		</Flex>
+		<Popover gutter={0}>
+			<PopoverTrigger>
+				<Flex alignItems='center' justify='space-around' as='button'>
+					{isWide ? <Heading color='pongBlue.500' size='sm' fontWeight='medium'>User Name</Heading> : undefined}
+					{isWide ? <Box w='2vw'></Box> : undefined}
+					<Avatar bg='pongBlue.500' />
+					<Box w='2vw'></Box>
+				</Flex>
+			</PopoverTrigger>
+			<PopoverContent pt='2vh'>
+				<PopoverArrow />
+				<PopoverCloseButton />
+				<PopoverBody>
+					<Container _hover={{ bg: 'gray.600' }}>
+						<LinkBox>
+							<LinkOverlay href='/account' >
+								<Text>Account</Text>
+							</LinkOverlay>
+						</LinkBox>
+					</Container>
+					<Container _hover={{ bg: 'gray.600' }}>
+						Logout
+					</Container>
+				</PopoverBody>
+			</PopoverContent>
+		</Popover>
 	</Flex>;
 }

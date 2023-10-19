@@ -24,6 +24,7 @@ import {
 } from '@chakra-ui/react'
 import { useRouter } from 'next/router';
 import { CheckIcon, AddIcon } from '@chakra-ui/icons';
+import PageLayout from '@/components/pageLayout/PageLayout';
 
 
 function PlayCard(props: PropsWithChildren) {
@@ -176,39 +177,27 @@ function ChatsCard(props: PropsWithChildren) {
 export default function Dashboard(props: PropsWithChildren) {
 	const router = useRouter();
 	return (
-		<Grid
-			h='100px'
-			gap='0'
-			templateAreas={`"nav"
-							"content"`}
-			gridTemplateRows={'10vh 90vh'}
-			templateColumns={'100%'}
-		>
-			<GridItem area={'nav'} bg='yellow.300'>
-				<PongPageMenu />
-			</GridItem>
-			<GridItem area={'content'} bg='pongBlue.400' overflowY='auto'>
-				<Wrap p='5vh 5vw' spacing='30px' justify='center'>
-					<WrapItem >
-						<PlayCard />
-					</WrapItem>
-					<WrapItem borderRadius='30' borderWidth='2px' borderColor='yellow.400'>
-						<RankCard />
-					</WrapItem>
-					<WrapItem borderRadius='30' borderWidth='2px' borderColor='yellow.400'>
-						<HistoryCard />
-					</WrapItem>
-					<WrapItem borderRadius='30' borderWidth='2px' borderColor='yellow.400'>
-						<StatsCard />
-					</WrapItem>
-					<WrapItem borderRadius='30' borderWidth='2px' borderColor='yellow.400'>
-						<ConfigsCard />
-					</WrapItem>
-					<WrapItem borderRadius='30' borderWidth='2px' borderColor='yellow.400'>
-						<ChatsCard />
-					</WrapItem>
-				</Wrap>
-			</GridItem>
-		</Grid>
+		<PageLayout>
+			<Wrap p='5vh 5vw' spacing='30px' justify='center'>
+				<WrapItem >
+					<PlayCard />
+				</WrapItem>
+				<WrapItem borderRadius='30' borderWidth='2px' borderColor='yellow.400'>
+					<RankCard />
+				</WrapItem>
+				<WrapItem borderRadius='30' borderWidth='2px' borderColor='yellow.400'>
+					<HistoryCard />
+				</WrapItem>
+				<WrapItem borderRadius='30' borderWidth='2px' borderColor='yellow.400'>
+					<StatsCard />
+				</WrapItem>
+				<WrapItem borderRadius='30' borderWidth='2px' borderColor='yellow.400'>
+					<ConfigsCard />
+				</WrapItem>
+				<WrapItem borderRadius='30' borderWidth='2px' borderColor='yellow.400'>
+					<ChatsCard />
+				</WrapItem>
+			</Wrap>
+		</PageLayout>
 	)
 }
