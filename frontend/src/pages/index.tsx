@@ -16,7 +16,7 @@ export default function Home() {
 	const router = useRouter();
 	const getRef = useRef(false);
 	async function logIn42_redirect() {
-		const authURL = `https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-fb85b86a0af8ab2f7f127ad1616f6d3125fd4f84c7e8e5a679b9fe5a51821265&redirect_uri=http%3A%2F%2Flocalhost%3A3001%2Fcallback&response_type=code`;
+		const authURL = `${process.env.NEXT_PUBLIC_INTRAOAUTH}`;
 		await router.push(authURL, 'login')
 
 	}
