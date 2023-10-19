@@ -9,6 +9,7 @@ import { encode } from 'hi-base32';
 import * as OTPAuth from 'otpauth';
 import { UpdateOTPUserDto } from 'src/users/dto/update-otp-user-dto';
 import { UsersService } from 'src/users/users.service';
+import { jwtConstants } from './auth.constants';
 
 @Injectable()
 export class AuthService {
@@ -57,6 +58,14 @@ export class AuthService {
     return {
       access_token: this.jwtService.sign(payload),
     };
+  }
+
+  async decodeToken(token: string) {
+    const payload = this.jwtService.verify(token, {
+      secret: jwtConstants.secret,
+    });
+
+    return payload;
   }
 
   // Throws
