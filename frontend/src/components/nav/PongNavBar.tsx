@@ -1,6 +1,6 @@
 'use client'
-import { PropsWithChildren } from 'react';
-import { Flex, Container, Image, Center, Button, Heading, Highlight, Text, HStack, Box, Icon, Avatar, Wrap, VisuallyHidden, useBreakpointValue, LinkBox, LinkOverlay } from '@chakra-ui/react';
+import { PropsWithChildren, useEffect, useState } from 'react';
+import { Flex, Container, Image, Center, Button, Heading, Highlight, Text, HStack, Box, Icon, Avatar, Wrap, VisuallyHidden, useBreakpointValue, LinkBox, LinkOverlay, useBreakpoint } from '@chakra-ui/react';
 import {
 	Popover,
 	PopoverTrigger,
@@ -25,7 +25,7 @@ import {
 	MenuDivider,
 } from '@chakra-ui/react'
 import { useRouter } from 'next/router';
-import Link from 'next/link';
+import dynamic from 'next/dynamic';
 
 const availableRoutes: Array<PongMenuItemProps> = [
 	{
@@ -68,12 +68,24 @@ function PongMenuItem(props: React.PropsWithoutRef<PongMenuItemProps>): JSX.Elem
 	)
 }
 
+const DynamicNavBar = dynamic(() => Promise.resolve(PongNavBar), { ssr: false });
+export default DynamicNavBar;
 
-export default function PongNavBar(props: React.PropsWithChildren): JSX.Element {
+function PongNavBar(props: React.PropsWithChildren): JSX.Element {
 
 	const router = useRouter();
-	const isWide = useBreakpointValue({ base: false, sm: true, md: true, lg: true, xl: true, '2xl': true })
+	const [isWide, setIsWide] = useState(window.innerWidth > 770);
 
+
+	useEffect(() => {
+		function updateWid() {
+			setIsWide(window.innerWidth > 770)
+		}
+		window.addEventListener('resize', updateWid);
+		return (() => {
+			window.removeEventListener('resize', updateWid)
+		});
+	}, [])
 	return <Flex direction='row' justify='space-between'>
 		<Center pl='2vw'>
 			<Menu>
@@ -88,7 +100,7 @@ export default function PongNavBar(props: React.PropsWithChildren): JSX.Element 
 			</Menu>
 		</Center>
 		<Image src='logopong_login.png' alt='pong logo' maxH='10vh' p='1vh 1vw' fit='contain' />
-		<Popover gutter={0}>
+		<Popover gutter={0} isLazy>
 			<PopoverTrigger>
 				<Flex alignItems='center' justify='space-around' as='button'>
 					{isWide ? <Heading color='pongBlue.500' size='sm' fontWeight='medium'>User Name</Heading> : undefined}
