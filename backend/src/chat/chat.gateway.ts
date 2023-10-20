@@ -16,14 +16,14 @@ import { Logger } from '@nestjs/common';
   cors: {
     origin: '*',
   },
+  transpors: ['websocket', 'webtransport']
 })
 export class ChatGateway
-  implements OnGatewayConnection, OnGatewayInit, OnGatewayDisconnect
-{
+  implements OnGatewayConnection, OnGatewayInit, OnGatewayDisconnect {
   @WebSocketServer()
   wss: Server;
 
-  constructor(private chatService: ChatService) {}
+  constructor(private chatService: ChatService) { }
 
   private readonly logger = new Logger(ChatGateway.name);
 
