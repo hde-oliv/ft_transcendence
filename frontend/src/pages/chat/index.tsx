@@ -1,7 +1,7 @@
 import PageLayout from "@/components/pageLayout/PageLayout";
 import { Button, Flex, Input, Stack, Text } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
-import { io } from "socket.io-client";
+import { Socket, io } from "socket.io-client";
 
 function SocketTestOliv() {
 	const socket = io("http://localhost:3000/chat");
@@ -61,22 +61,47 @@ function SocketTestOliv() {
 function SocketTestCamp() {
 
 	const [response, setResponse] = useState('');
+	const [ws, setWs] = useState<Socket | null>(null);
+	const [wsStatus, setWsStatus] = useState(false);
 
 	useEffect(() => {
-		const socket = io('ws://localhost:3000', { transports: ['websocket'] });
-		socket.on('receive_message', (data) => {
-			setResponse(data);
-		})
+		console.log('useEffect for socket')
+		if (ws === null) {
+			console.log('creating socket')
+			const socket = io('ws://localhost:3000', { transports: ['websocket'] });
+			socket.on('receive_message', (data) => {
+				setResponse(data);
+			})
+			socket.onAny((eventName, ...args) => {
+				console.log(eventName);
+				console.log(args);
+			})
+			setWs(socket);
+		}
 		return (() => {
-			if (socket.connected)
-				socket.disconnect();
+			console.log('removed socket')
+			if (ws !== null) {
+				if (ws.connected)
+					ws.disconnect();
+				setWs(null);
+			}
 		})
 	}, [])
+	const getConnected = () => {
+		if (ws !== null) {
+			return ws.connected;
+		}
+		return false;
+	}
 	return (
 		<div>
-			<p>
-				The current value of the socket is: {response}
-			</p>
+			<p>WebSocket is null ? {ws === null ? 'Yes' : 'No'}</p>
+			<p>Connected Status: {getConnected() ? 'Connected' : 'Disconnected'}</p>
+			<button onClick={() => {
+				if (ws !== null) {
+					ws.emit('send_message', 'teste');
+				}
+			}}>Print ws</button>
 		</div>
 	);
 
