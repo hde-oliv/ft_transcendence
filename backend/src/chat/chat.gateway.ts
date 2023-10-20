@@ -10,6 +10,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { ChatService } from './chat.service';
+import { Logger } from '@nestjs/common';
 
 @WebSocketGateway({
   cors: {
@@ -20,25 +21,31 @@ export class ChatGateway
   implements OnGatewayConnection, OnGatewayInit, OnGatewayDisconnect
 {
   @WebSocketServer()
-  server: Server;
+  wss: Server;
 
   constructor(private chatService: ChatService) {}
 
-  async afterInit(server: any) {}
+  private readonly logger = new Logger(ChatGateway.name);
 
-  async handleDisconnect(client: any) {}
+  async afterInit(server: Server) {
+    this.logger.log('Initialized');
+  }
 
-  async handleConnection(socket: Socket) {
-    // await this.chatService.getUserFromSocket(socket);
+  async handleDisconnect(client: Socket) {
+    this.logger.log(`Client Disconnected: ${client.id}`);
+  }
+
+  async handleConnection(client: Socket) {
+    this.logger.log(`Client Connected: ${client.id}`);
   }
 
   @SubscribeMessage('send_message')
-  async listenForMessages(
+  async handleSendMessage(
     @MessageBody() data: string,
     @ConnectedSocket() socket: Socket,
   ) {
-    const user = await this.chatService.getUserFromSocket(socket);
+    // const user = await this.chatService.getUserFromSocket(socket);
 
-    this.server.sockets.emit('receive_message', data, user);
+    this.wss.sockets.emit('receive_message', data);
   }
 }

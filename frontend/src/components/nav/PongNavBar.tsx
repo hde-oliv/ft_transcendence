@@ -1,19 +1,6 @@
 'use client'
 import { PropsWithChildren, useEffect, useState } from 'react';
-import { Flex, Container, Image, Center, Button, Heading, Highlight, Text, HStack, Box, Icon, Avatar, Wrap, VisuallyHidden, useBreakpointValue, LinkBox, LinkOverlay, useBreakpoint } from '@chakra-ui/react';
-import {
-	Popover,
-	PopoverTrigger,
-	PopoverContent,
-	PopoverHeader,
-	PopoverBody,
-	PopoverFooter,
-	PopoverArrow,
-	PopoverCloseButton,
-	PopoverAnchor,
-} from '@chakra-ui/react'
-import { ChevronDownIcon } from '@chakra-ui/icons'
-import { Grid, GridItem } from '@chakra-ui/react';
+import { Flex, Container, Image, Center, Button, Heading, Highlight, Text, HStack, Box, Icon, Avatar, Wrap, VisuallyHidden, useBreakpointValue, LinkBox, LinkOverlay, useBreakpoint, Popover, PopoverTrigger, PopoverContent, PopoverArrow, PopoverCloseButton, PopoverBody } from '@chakra-ui/react';
 import {
 	Menu,
 	MenuButton,
@@ -26,46 +13,45 @@ import {
 } from '@chakra-ui/react'
 import { useRouter } from 'next/router';
 import dynamic from 'next/dynamic';
+import { ChevronDownIcon } from '@chakra-ui/icons';
 
 const availableRoutes: Array<PongMenuItemProps> = [
 	{
-		text: 'Dashboard',
-		route: '/dashboard'
+		text: "Dashboard",
+		route: "/dashboard",
 	},
 	{
-		text: 'Game',
-		route: '/game'
+		text: "Game",
+		route: "/game",
 	},
 	{
-		text: 'Chat',
-		route: '/chat'
+		text: "Chat",
+		route: "/chat",
 	},
 	{
-		text: 'History',
-		route: '/history'
+		text: "History",
+		route: "/history",
 	},
 	{
-		text: 'Rank',
-		route: '/rank'
+		text: "Rank",
+		route: "/rank",
 	},
 ];
 
 interface PongMenuItemProps {
-	route: '/dashboard' | '/game' | '/chat' | '/history' | '/rank',
-	text: 'Dashboard' | 'Game' | 'Chat' | 'History' | 'Rank'
+	route: "/dashboard" | "/game" | "/chat" | "/history" | "/rank";
+	text: "Dashboard" | "Game" | "Chat" | "History" | "Rank";
 }
-function PongMenuItem(props: React.PropsWithoutRef<PongMenuItemProps>): JSX.Element {
+function PongMenuItem(
+	props: React.PropsWithoutRef<PongMenuItemProps>,
+): JSX.Element {
 	const { text, route } = props;
 	const router = useRouter();
 
 	function goTo() {
-		router.push(route)
+		router.push(route);
 	}
-	return (
-		<MenuItem onClick={goTo}>
-			{text}
-		</MenuItem>
-	)
+	return <MenuItem onClick={goTo}>{text}</MenuItem>;
 }
 
 const DynamicNavBar = dynamic(() => Promise.resolve(PongNavBar), { ssr: false });
