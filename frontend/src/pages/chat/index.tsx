@@ -73,7 +73,7 @@ export default function App() {
           Submit
         </Button>
       </Stack>
-      <List bg="gray.200">
+      <List>
         {receiveMessage.map((event, index) => (
           <Text key={index}>{event}</Text>
         ))}
