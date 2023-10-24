@@ -31,7 +31,7 @@ export default function Login() {
 				}
 			})
 			parsedResp = loginResponse.parse(response.data).access_token;
-
+			localStorage.setItem('bearerPong42', `Bearer ${parsedResp}`);
 		} catch (e) {
 			if (e instanceof ZodError)
 				console.log('Failed to fetch access token');

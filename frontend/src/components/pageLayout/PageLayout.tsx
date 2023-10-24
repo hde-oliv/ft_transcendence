@@ -1,5 +1,5 @@
 'use client'
-import { PropsWithChildren } from 'react';
+import { PropsWithChildren, useEffect } from 'react';
 import { Grid, GridItem } from '@chakra-ui/react';
 
 import { useRouter } from 'next/router';
@@ -8,6 +8,7 @@ import PongNavBar from '../nav/PongNavBar';
 
 export default function PageLayout(props: PropsWithChildren) {
 	const router = useRouter();
+
 	return (
 		<Grid
 			h='100px'
