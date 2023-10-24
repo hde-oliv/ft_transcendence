@@ -45,10 +45,10 @@ export default function Login() {
 			(async () => {
 				console.log('router_query_code found');
 				const localToken = await sendCode();
+				const totalTime = 2000;
 				if (localToken !== '') {
 					localStorage.setItem('token', localToken);
 					// router.push('/dashboard');
-					const totalTime = 5000;
 					const redirector = setTimeout(() => {
 						router.push('/dashboard')
 					}, totalTime);
@@ -64,7 +64,6 @@ export default function Login() {
 						}
 					})
 				} else {
-					const totalTime = 5000;
 					const redirector = setTimeout(() => {
 						router.push('/')
 					}, totalTime);

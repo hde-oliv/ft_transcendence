@@ -16,7 +16,7 @@ export class AuthService {
   constructor(
     private jwtService: JwtService,
     private userService: UsersService,
-  ) {}
+  ) { }
 
   private readonly logger = new Logger(AuthService.name);
 
@@ -95,8 +95,8 @@ export class AuthService {
   }
 
   async verifyOTP(intra_login: string, token: string) {
-    const user = this.userService.getUserByIntra({ intra_login });
-    const userSecret = (await user).otp_base32;
+    const user = await this.userService.getUserByIntra({ intra_login });
+    const userSecret = user.otp_base32;
 
     if (userSecret === null) {
       throw new UnauthorizedException('OTP Token failed');
