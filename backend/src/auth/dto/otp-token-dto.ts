@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const otpTokenSchema = z
   .object({
-    token: z.string().length(6),
+    token: z.string().regex(/^([0-9]){6}$/g, 'Token does not comply with expected value'),
   })
   .required();
 
