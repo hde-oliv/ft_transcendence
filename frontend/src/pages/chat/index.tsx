@@ -1,118 +1,83 @@
-import PageLayout from "@/components/pageLayout/PageLayout";
-import { Button, Flex, Input, Stack, Text } from "@chakra-ui/react";
-import { useEffect, useState } from "react";
-import { Socket, io } from "socket.io-client";
+import { List, Stack, Text, Box, Button, Input } from "@chakra-ui/react";
+import React, { useState, useEffect } from "react";
+import { io } from "socket.io-client";
 
-function SocketTestOliv() {
-	const socket = io("http://localhost:3000/chat");
+const URL = "http://localhost:3000";
 
-	const [messages, setMessages] = useState([""]);
-	const [newMessage, setNewMessage] = useState("");
+export const socket = io(URL, {
+  autoConnect: false,
+});
 
-	useEffect(() => {
-		socket.on("receive_message", (msg) => {
-			receiveMessage(msg);
-		});
+export default function App() {
+  const [isConnected, setIsConnected] = useState(socket.connected);
+  const [receiveMessage, setReceiveMessage] = useState([""]);
+  const [value, setValue] = useState("");
+  const handleValueChange = (event: any) => setValue(event.target.value);
+  const [isLoading, setIsLoading] = useState(false);
 
-		//     getInitialMessages();
-		return (() => {
-			if (socket.connected)
-				socket.disconnect();
-		})
-	}, []);
-	// const getInitialMessages = () => {
-	//fetch("http://localhost:3000/chat")
-	//.then((res) => res.json())
-	//.then((data) => {
-	//setMessages([data]);
-	//});
-	//};
-	const receiveMessage = (msg: any) => {
-		const newList = [...messages, msg];
-		console.log(newList);
-		setMessages(newList);
-		console.log(messages);
-	};
+  function handleSubmit(event: any) {
+    event.preventDefault();
+    setIsLoading(true);
 
-	const sendMessage = () => {
-		socket.emit("send_message", newMessage);
-		setNewMessage("");
-	};
+    socket.timeout(5000).emit("send_message", value, () => {
+      setIsLoading(false);
+    });
+  }
 
-	const handleChange = (event: any) => setNewMessage(event.target.value);
+  useEffect(() => {
+    function onConnect() {
+      setIsConnected(true);
+    }
 
-	return (
-		<div>
-			<Input
-				placeholder="New message"
-				value={newMessage}
-				onChange={handleChange}
-			/>
-			<Button onClick={sendMessage}>Send Message</Button>
+    function onDisconnect() {
+      setIsConnected(false);
+    }
 
-			<Stack>
-				{messages.map((msg, index) => {
-					return <Text key={index}>{`${msg}`}</Text>;
-				})}
-			</Stack>
-		</div>
-	)
-}
-function SocketTestCamp() {
+    function onReceiveMessage(value: string) {
+      setReceiveMessage((previous) => [...previous, value]);
+    }
 
-	const [response, setResponse] = useState('');
-	const [ws, setWs] = useState<Socket | null>(null);
-	const [wsStatus, setWsStatus] = useState(false);
+    socket.on("connect", onConnect);
+    socket.on("disconnect", onDisconnect);
+    socket.on("receive_message", onReceiveMessage);
 
-	useEffect(() => {
-		console.log('useEffect for socket')
-		if (ws === null) {
-			console.log('creating socket')
-			const socket = io('ws://localhost:3000', { transports: ['websocket'] });
-			socket.on('receive_message', (data) => {
-				setResponse(data);
-			})
-			socket.onAny((eventName, ...args) => {
-				console.log(eventName);
-				console.log(args);
-			})
-			setWs(socket);
-		}
-		return (() => {
-			console.log('removed socket')
-			if (ws !== null) {
-				if (ws.connected)
-					ws.disconnect();
-				setWs(null);
-			}
-		})
-	}, [])
-	const getConnected = () => {
-		if (ws !== null) {
-			return ws.connected;
-		}
-		return false;
-	}
-	return (
-		<div>
-			<p>WebSocket is null ? {ws === null ? 'Yes' : 'No'}</p>
-			<p>Connected Status: {getConnected() ? 'Connected' : 'Disconnected'}</p>
-			<button onClick={() => {
-				if (ws !== null) {
-					ws.emit('send_message', 'teste');
-				}
-			}}>Print ws</button>
-		</div>
-	);
+    return () => {
+      socket.off("connect", onConnect);
+      socket.off("disconnect", onDisconnect);
+      socket.off("receive_message", onReceiveMessage);
+    };
+  }, []);
 
-
-}
-export default function Chat() {
-
-
-	return (
-		<PageLayout>
-			<SocketTestCamp />
-		</PageLayout>
-	);
+  return (
+    <Stack>
+      <Text>State: {`${isConnected}`}</Text>
+      <Stack>
+        <Button
+          onClick={() => {
+            socket.connect();
+          }}
+        >
+          Connect
+        </Button>
+        <Button
+          onClick={() => {
+            socket.disconnect();
+          }}
+        >
+          Disconnect
+        </Button>
+      </Stack>
+      <Stack>
+        <Input value={value} onChange={handleValueChange} />
+        <Button onClick={handleSubmit} disabled={isLoading}>
+          Submit
+        </Button>
+      </Stack>
+      <List>
+        {receiveMessage.map((event, index) => (
+          <Text key={index}>{event}</Text>
+        ))}
+      </List>
+    </Stack>
+  );
 }
