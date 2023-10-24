@@ -5,6 +5,7 @@ import { ConfigModule } from '@nestjs/config';
 import { LoggerModule } from 'nestjs-pino';
 import { CatsModule } from 'src/cats/cats.module';
 import { ChatModule } from 'src/chat/chat.module';
+import { MeModule } from 'src/me/me.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { ChatModule } from 'src/chat/chat.module';
     AuthModule,
     CatsModule,
     ChatModule,
+    MeModule,
     LoggerModule.forRoot({
       pinoHttp: {
         customProps: (req, res) => ({

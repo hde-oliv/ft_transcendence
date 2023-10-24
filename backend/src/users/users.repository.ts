@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { Users as UserEntity } from '@prisma/client';
 import { CreateUserDto } from './dto/create-user-dto';
 import { UpdateOTPUserDto } from './dto/update-otp-user-dto';
+import { UpdateUserDto } from './dto/update-user-dto';
 
 @Injectable()
 export class UsersRepository {
@@ -24,6 +25,18 @@ export class UsersRepository {
 
   async createUser(user: CreateUserDto): Promise<UserEntity> {
     return this.prismaService.users.create({ data: user });
+  }
+
+  async updateUser(user: UpdateUserDto): Promise<UserEntity> {
+    return this.prismaService.users.update({
+      where: {
+        intra_login: user.intra_login,
+      },
+      data: {
+        nickname: user.nickname,
+        avatar: user.avatar,
+      },
+    });
   }
 
   async updateOTP(user: UpdateOTPUserDto): Promise<UserEntity> {
