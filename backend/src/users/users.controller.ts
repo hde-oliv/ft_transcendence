@@ -11,8 +11,13 @@ export class UsersController {
     return this.usersService.getAllUsers();
   }
 
-  @Get('/:id')
-  getUser(@Param() param: { id: number }) {
-    return this.usersService.getUser(param);
+  // @Get('/:id')
+  // getUser(@Param() param: { id: number }) {
+  //   return this.usersService.getUser(param);
+  // }
+
+  @Get('/:intra')
+  getUserByIntra(@Param() param: { intra_login: string }) {
+    return this.usersService.getUserByIntra(param);
   }
 }
