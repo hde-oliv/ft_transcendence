@@ -1,29 +1,32 @@
 'use client'
-import { PropsWithChildren, useEffect } from 'react';
+import { PropsWithChildren, ReactElement, useEffect } from 'react';
 import { Grid, GridItem } from '@chakra-ui/react';
+
+import { ChakraProvider } from "@chakra-ui/react";
+import theme from "@/lib/Theme";
 
 import { useRouter } from 'next/router';
 import PongNavBar from '../nav/PongNavBar';
 
 
-export default function PageLayout(props: PropsWithChildren) {
-	const router = useRouter();
-
+export default function PageLayout({ children }: { children: ReactElement }) {
 	return (
-		<Grid
-			h='100px'
-			gap='0'
-			templateAreas={`"nav"
+		<ChakraProvider theme={theme}>
+			<Grid
+				h='100px'
+				gap='0'
+				templateAreas={`"nav"
 							"content"`}
-			gridTemplateRows={'10vh 90vh'}
-			templateColumns={'100%'}
-		>
-			<GridItem area={'nav'} bg='yellow.300'>
-				<PongNavBar />
-			</GridItem>
-			<GridItem area={'content'} bg='pongBlue.400' overflowY='auto'>
-				{props.children}
-			</GridItem>
-		</Grid>
+				gridTemplateRows={'10vh 90vh'}
+				templateColumns={'100%'}
+			>
+				<GridItem area={'nav'} bg='yellow.300'>
+					<PongNavBar />
+				</GridItem>
+				<GridItem area={'content'} bg='pongBlue.400' overflowY='auto'>
+					{children}
+				</GridItem>
+			</Grid>
+		</ChakraProvider>
 	)
 }

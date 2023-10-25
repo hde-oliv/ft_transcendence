@@ -1,5 +1,5 @@
 'use client'
-import { PropsWithChildren } from 'react';
+import { PropsWithChildren, ReactElement } from 'react';
 import PongPageMenu from '../../components/nav/PongNavBar'
 import { Avatar, AvatarBadge, Box, Button, Card, CardBody, CardFooter, CardHeader, Center, Flex, Heading, Icon, Text, VStack, Wrap, WrapItem } from '@chakra-ui/react';
 import {
@@ -26,6 +26,7 @@ import { useRouter } from 'next/router';
 import { CheckIcon, AddIcon } from '@chakra-ui/icons';
 import PageLayout from '@/components/pageLayout/PageLayout';
 
+import type { NextPageWithLayout } from './_app';
 
 function PlayCard(props: PropsWithChildren) {
 	return (
@@ -173,31 +174,38 @@ function ChatsCard(props: PropsWithChildren) {
 		</Flex>
 	)
 }
-
-export default function Dashboard(props: PropsWithChildren) {
+const Dashboard: NextPageWithLayout = () => {
 	const router = useRouter();
 	return (
+		<Wrap p='5vh 5vw' spacing='30px' justify='center'>
+			<WrapItem >
+				<PlayCard />
+			</WrapItem>
+			<WrapItem borderRadius='30' borderWidth='2px' borderColor='yellow.400'>
+				<RankCard />
+			</WrapItem>
+			<WrapItem borderRadius='30' borderWidth='2px' borderColor='yellow.400'>
+				<HistoryCard />
+			</WrapItem>
+			<WrapItem borderRadius='30' borderWidth='2px' borderColor='yellow.400'>
+				<StatsCard />
+			</WrapItem>
+			<WrapItem borderRadius='30' borderWidth='2px' borderColor='yellow.400'>
+				<ConfigsCard />
+			</WrapItem>
+			<WrapItem borderRadius='30' borderWidth='2px' borderColor='yellow.400'>
+				<ChatsCard />
+			</WrapItem>
+		</Wrap>
+	)
+}
+
+Dashboard.getLayout = function getLayoutPage(page: ReactElement) {
+	return (
 		<PageLayout>
-			<Wrap p='5vh 5vw' spacing='30px' justify='center'>
-				<WrapItem >
-					<PlayCard />
-				</WrapItem>
-				<WrapItem borderRadius='30' borderWidth='2px' borderColor='yellow.400'>
-					<RankCard />
-				</WrapItem>
-				<WrapItem borderRadius='30' borderWidth='2px' borderColor='yellow.400'>
-					<HistoryCard />
-				</WrapItem>
-				<WrapItem borderRadius='30' borderWidth='2px' borderColor='yellow.400'>
-					<StatsCard />
-				</WrapItem>
-				<WrapItem borderRadius='30' borderWidth='2px' borderColor='yellow.400'>
-					<ConfigsCard />
-				</WrapItem>
-				<WrapItem borderRadius='30' borderWidth='2px' borderColor='yellow.400'>
-					<ChatsCard />
-				</WrapItem>
-			</Wrap>
+			{page}
 		</PageLayout>
 	)
 }
+
+export default Dashboard;
