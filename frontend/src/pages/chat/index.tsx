@@ -1,11 +1,31 @@
 import { List, Stack, Text, Box, Button, Input } from "@chakra-ui/react";
 import React, { useState, useEffect } from "react";
-import { io } from "socket.io-client";
+import { Socket, io } from "socket.io-client";
 
 const URL = "http://localhost:3000";
 
+const useLocalStorage = (name: string) => {
+  const [value, setValue] = useState("");
+
+  useEffect(() => {
+    // @ts-ignore
+    setValue(localStorage.getItem(name));
+  }, []);
+
+  return value;
+};
+
+let token: string;
+
+if (typeof window !== "undefined") {
+  token = localStorage.getItem("bearerPong42") || "";
+}
+
 export const socket = io(URL, {
   autoConnect: false,
+  extraHeaders: {
+    Authorization: token,
+  },
 });
 
 export default function App() {
