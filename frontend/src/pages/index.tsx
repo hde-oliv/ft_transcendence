@@ -1,8 +1,7 @@
 'use client'
 import { Image, Box, Button, Container, Flex, Stack, Text } from "@chakra-ui/react";
-import axios, { AxiosRequestConfig } from "axios";
 import { useRouter } from "next/router";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 
 
@@ -10,7 +9,6 @@ import { useEffect, useRef, useState } from "react";
 export default function Home() {
 	const [token, setToken] = useState<string | undefined>(undefined);
 	const [loadingRedir, setLoadingRedir] = useState(false);
-	const [loadingToken, setLoadingToken] = useState(false);
 
 
 	const router = useRouter();
@@ -39,3 +37,4 @@ export default function Home() {
 		</Flex >
 	);
 }
+
