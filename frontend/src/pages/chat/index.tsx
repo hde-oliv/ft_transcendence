@@ -1,3 +1,4 @@
+'use client'
 import { List, Stack, Text, Box, Button, Input } from "@chakra-ui/react";
 import React, { useState, useEffect } from "react";
 import { Socket, io } from "socket.io-client";
@@ -5,99 +6,99 @@ import { Socket, io } from "socket.io-client";
 const URL = "http://localhost:3000";
 
 const useLocalStorage = (name: string) => {
-  const [value, setValue] = useState("");
+	const [value, setValue] = useState("");
 
-  useEffect(() => {
-    // @ts-ignore
-    setValue(localStorage.getItem(name));
-  }, []);
+	useEffect(() => {
+		// @ts-ignore
+		setValue(localStorage.getItem(name));
+	}, []);
 
-  return value;
+	return value;
 };
 
-let token: string;
-
-if (typeof window !== "undefined") {
-  token = localStorage.getItem("bearerPong42") || "";
+const token = () => {
+	if (typeof window !== "undefined")
+		return localStorage.getItem("bearerPong42") ?? '';
+	return ''
 }
 
 export const socket = io(URL, {
-  autoConnect: false,
-  extraHeaders: {
-    Authorization: token,
-  },
+	autoConnect: false,
+	extraHeaders: {
+		Authorization: token(),
+	},
 });
 
 export default function App() {
-  const [isConnected, setIsConnected] = useState(socket.connected);
-  const [receiveMessage, setReceiveMessage] = useState([""]);
-  const [value, setValue] = useState("");
-  const handleValueChange = (event: any) => setValue(event.target.value);
-  const [isLoading, setIsLoading] = useState(false);
+	const [isConnected, setIsConnected] = useState(socket.connected);
+	const [receiveMessage, setReceiveMessage] = useState([""]);
+	const [value, setValue] = useState("");
+	const handleValueChange = (event: any) => setValue(event.target.value);
+	const [isLoading, setIsLoading] = useState(false);
 
-  function handleSubmit(event: any) {
-    event.preventDefault();
-    setIsLoading(true);
+	function handleSubmit(event: any) {
+		event.preventDefault();
+		setIsLoading(true);
 
-    socket.timeout(5000).emit("send_message", value, () => {
-      setIsLoading(false);
-    });
-  }
+		socket.timeout(5000).emit("send_message", value, () => {
+			setIsLoading(false);
+		});
+	}
 
-  useEffect(() => {
-    function onConnect() {
-      setIsConnected(true);
-    }
+	useEffect(() => {
+		function onConnect() {
+			setIsConnected(true);
+		}
 
-    function onDisconnect() {
-      setIsConnected(false);
-    }
+		function onDisconnect() {
+			setIsConnected(false);
+		}
 
-    function onReceiveMessage(value: string) {
-      setReceiveMessage((previous) => [...previous, value]);
-    }
+		function onReceiveMessage(value: string) {
+			setReceiveMessage((previous) => [...previous, value]);
+		}
 
-    socket.on("connect", onConnect);
-    socket.on("disconnect", onDisconnect);
-    socket.on("receive_message", onReceiveMessage);
+		socket.on("connect", onConnect);
+		socket.on("disconnect", onDisconnect);
+		socket.on("receive_message", onReceiveMessage);
 
-    return () => {
-      socket.off("connect", onConnect);
-      socket.off("disconnect", onDisconnect);
-      socket.off("receive_message", onReceiveMessage);
-    };
-  }, []);
+		return () => {
+			socket.off("connect", onConnect);
+			socket.off("disconnect", onDisconnect);
+			socket.off("receive_message", onReceiveMessage);
+		};
+	}, []);
 
-  return (
-    <Stack>
-      <Text>State: {`${isConnected}`}</Text>
-      <Stack>
-        <Button
-          onClick={() => {
-            socket.connect();
-          }}
-        >
-          Connect
-        </Button>
-        <Button
-          onClick={() => {
-            socket.disconnect();
-          }}
-        >
-          Disconnect
-        </Button>
-      </Stack>
-      <Stack>
-        <Input value={value} onChange={handleValueChange} />
-        <Button onClick={handleSubmit} disabled={isLoading}>
-          Submit
-        </Button>
-      </Stack>
-      <List>
-        {receiveMessage.map((event, index) => (
-          <Text key={index}>{event}</Text>
-        ))}
-      </List>
-    </Stack>
-  );
+	return (
+		<Stack>
+			<Text>State: {`${isConnected}`}</Text>
+			<Stack>
+				<Button
+					onClick={() => {
+						socket.connect();
+					}}
+				>
+					Connect
+				</Button>
+				<Button
+					onClick={() => {
+						socket.disconnect();
+					}}
+				>
+					Disconnect
+				</Button>
+			</Stack>
+			<Stack>
+				<Input value={value} onChange={handleValueChange} />
+				<Button onClick={handleSubmit} disabled={isLoading}>
+					Submit
+				</Button>
+			</Stack>
+			<List>
+				{receiveMessage.map((event, index) => (
+					<Text key={index}>{event}</Text>
+				))}
+			</List>
+		</Stack>
+	);
 }
