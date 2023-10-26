@@ -18,7 +18,7 @@ const useLocalStorage = (name: string) => {
 
 const token = () => {
 	if (typeof window !== "undefined")
-		return localStorage.getItem("bearerPong42") ?? '';
+		return localStorage.getItem("token") ?? '';
 	return ''
 }
 

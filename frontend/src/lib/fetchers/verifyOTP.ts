@@ -10,7 +10,7 @@ export default async function verifyOTP(token: string) {
 		baseURL: remote_host,
 		headers: {
 			Accept: 'Application/json',
-			Authorization: localStorage.getItem('bearerPong42')
+			Authorization: localStorage.getItem('token')
 		}
 	})
 	try {
