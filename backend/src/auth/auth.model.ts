@@ -28,6 +28,16 @@ export const user42Schema = z.object({
   kind: z.string(),
 });
 
+export const tokenClaimsSchema = z.object({
+  nickname: z.string(),
+  avatar: z.string(),
+  intra_login: z.string(),
+  online: z.boolean(),
+  otp_enabled: z.boolean(),
+  otp_verified: z.boolean(),
+});
+
 export type authResponse42 = z.infer<typeof authResponse42>;
 export type user42Data = z.infer<typeof user42Schema>;
 export type userLoginRet = z.infer<typeof userReturnInfo>;
+export type TokenClaims = z.infer<typeof tokenClaimsSchema>;

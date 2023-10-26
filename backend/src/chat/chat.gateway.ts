@@ -11,6 +11,8 @@ import {
 import { Server, Socket } from 'socket.io';
 import { ChatService } from './chat.service';
 import { Logger } from '@nestjs/common';
+import { Users } from '@prisma/client';
+import { map, without } from 'lodash';
 
 @WebSocketGateway({
   cors: {
@@ -28,16 +30,45 @@ export class ChatGateway
 
   private readonly logger = new Logger(ChatGateway.name);
 
+  private clients: ClientSocket[] = [];
+
+  getClientList() {
+    let ret: string = '';
+    for (let i = 0; i < this.clients.length; i++) {
+      ret += `{${this.clients[i].socket.id}, ${this.clients[i].user.intra_login}}; `;
+    }
+    return ret;
+  }
+
   async afterInit(server: Server) {
     this.logger.log('WebSocket Gateway Initialized');
   }
 
-  async handleDisconnect(client: Socket) {
-    this.logger.log(`Client Disconnected: ${client.id}`);
+  async handleDisconnect(socket: Socket) {
+    const user = await this.chatService.getUserFromSocket(socket);
+
+    // NOTE: remove disconnected user
+    let newClients = map(this.clients, function (cl: ClientSocket) {
+      if (cl.socket.id !== socket.id) return cl;
+    });
+
+    newClients = without(newClients, undefined);
+
+    // @ts-ignore
+    this.clients = newClients;
+
+    this.logger.log(`Client Disconnected: ${socket.id}`);
+    this.logger.log(`All Clients: ${this.getClientList()} `);
   }
 
-  async handleConnection(client: Socket) {
-    this.logger.log(`Client Connected: ${client.id}`);
+  async handleConnection(socket: Socket) {
+    const user = await this.chatService.getUserFromSocket(socket);
+    const clientSocket = { user, socket };
+
+    this.clients = [...this.clients, clientSocket];
+
+    this.logger.log(`Client Connected: ${socket.id}`);
+    this.logger.log(`All Clients: ${this.getClientList()} `);
   }
 
   @SubscribeMessage('send_message')
@@ -51,4 +82,9 @@ export class ChatGateway
 
     this.wss.sockets.emit('receive_message', data);
   }
+}
+
+export interface ClientSocket {
+  user: Users;
+  socket: Socket;
 }

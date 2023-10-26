@@ -2,7 +2,13 @@ import { UniqueTokenStrategy } from 'passport-unique-token';
 import { PassportStrategy } from '@nestjs/passport';
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { authResponse42, user42Data, user42Schema } from './auth.model';
+import {
+  authResponse42,
+  user42Data,
+  user42Schema,
+  tokenClaimsSchema,
+  TokenClaims,
+} from './auth.model';
 import { AxiosResponse } from 'axios';
 import { UsersService } from 'src/users/users.service';
 import { createUserSchema, CreateUserDto } from 'src/users/dto/create-user-dto';
@@ -23,6 +29,7 @@ export class TokenStrategy extends PassportStrategy(
   private readonly logger = new Logger(TokenStrategy.name);
 
   // NOTE: Is named token instead of code 'cause Passport
+  // TODO: Refactor this to decouple
   async validate(token: string): Promise<any> {
     this.logger.log(`Start validating code. [code=${token}]`);
 
@@ -30,6 +37,7 @@ export class TokenStrategy extends PassportStrategy(
     let userData: user42Data;
     let response: AxiosResponse;
     let dbUser: UserEntity;
+    let tokenClaims: TokenClaims;
 
     try {
       response = await this.authService.validateCode(token);
@@ -58,15 +66,25 @@ export class TokenStrategy extends PassportStrategy(
       this.logger.warn(`User not found, creating. [intra=${userData.login}]`);
       const userDto: CreateUserDto = {
         nickname: userData.login,
-        avatar: process.env.DEFAULT_AVATAR_URL
-          ? process.env.DEFAULT_AVATAR_URL
-          : '', // TODO: Make a wrapper later
+        avatar: process.env.DEFAULT_AVATAR_URL ?? '', // TODO: Make a wrapper later
         intra_login: userData.login,
       };
 
-      dbUser = await this.userService.create(userDto);
+      try {
+        dbUser = await this.userService.create(userDto);
+      } catch (e) {
+        this.logger.warn(`Database error, couldn't create user. [error=${e}]`);
+        throw new UnauthorizedException('User auth failed');
+      }
     }
 
-    return dbUser;
+    try {
+      tokenClaims = tokenClaimsSchema.parse(dbUser);
+    } catch (e) {
+      this.logger.warn(`Invalid user, couldn't parse.`);
+      throw new UnauthorizedException('User auth failed');
+    }
+
+    return tokenClaims;
   }
 }
