@@ -14,7 +14,7 @@ import {
 	ModalCloseButton
 } from '@chakra-ui/react';
 import getTwoFacQR from "@/lib/fetchers/getTwoFacQR";
-import { VarifyOTPTab } from "./VarifyOTPTab";
+import { VerifyOTPTab } from "./VerifyOTPTab";
 import { ModalContext } from ".";
 import { QRCodeImage } from "./QRCodeImage";
 import { Spinner } from "@chakra-ui/react";
@@ -59,7 +59,7 @@ export const TwoAuthStepper: React.FC<TwoAuthSteps> = (props) => {
 
 
 
-export const TwoFactorActivatorModal: React.FC<TwoFactorActivatorProps> = (props) => {
+export const ActivateTPOModal: React.FC<TwoFactorActivatorProps> = (props) => {
 	const { onClose, isOpen } = props;
 	const [qrCode, setQrcode] = useState('');
 	const { activeStep, goToNext, goToPrevious, setActiveStep } = useSteps({
@@ -85,7 +85,7 @@ export const TwoFactorActivatorModal: React.FC<TwoFactorActivatorProps> = (props
 		if (props.index === 0)
 			return <QRCodeImage src={qrCode} aria-label="two-factor-qr-code" />;
 		else if (props.index === 1)
-			return <VarifyOTPTab />;
+			return <VerifyOTPTab />;
 		return (
 			<Box pt='3vh'>
 				<LockIcon boxSize='10' />

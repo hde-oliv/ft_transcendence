@@ -114,9 +114,8 @@ function PongNavBar(props: React.PropsWithChildren): JSX.Element {
 					<Box w='2vw'></Box>
 				</Flex>
 			</PopoverTrigger>
-			<PopoverContent pt='2vh'>
+			<PopoverContent>
 				<PopoverArrow />
-				<PopoverCloseButton />
 				<PopoverBody>
 					<Container _hover={{ bg: 'gray.600' }}>
 						<LinkBox>
