@@ -11,7 +11,7 @@ import {
 	MenuOptionGroup,
 	MenuDivider,
 } from '@chakra-ui/react'
-import { useRouter } from 'next/router';
+import { NextRouter, useRouter } from 'next/router';
 import dynamic from 'next/dynamic';
 import { ChevronDownIcon } from '@chakra-ui/icons';
 
@@ -54,15 +54,34 @@ function PongMenuItem(
 	return <MenuItem onClick={goTo}>{text}</MenuItem>;
 }
 
+
+
 const DynamicNavBar = dynamic(() => Promise.resolve(PongNavBar), { ssr: false });
 export default DynamicNavBar;
+
+function logOff(router: NextRouter, ls: Storage) {
+	ls.removeItem('token');
+	ls.removeItem('tokenExp');
+	router.push('/');
+}
 
 function PongNavBar(props: React.PropsWithChildren): JSX.Element {
 
 	const router = useRouter();
 	const [isWide, setIsWide] = useState(window.innerWidth > 770);
 
-
+	useEffect(() => {
+		window.localStorage
+		const token = localStorage.getItem('token');
+		const tokenExp = localStorage.getItem('tokenExp');
+		if (token !== null && tokenExp !== null) {
+			const isValid: boolean = parseInt(tokenExp) > Date.now();
+			if (!isValid)
+				logOff(router, localStorage);
+		} else {
+			logOff(router, localStorage);
+		}
+	}, [])
 	useEffect(() => {
 		function updateWid() {
 			setIsWide(window.innerWidth > 770)
@@ -95,9 +114,8 @@ function PongNavBar(props: React.PropsWithChildren): JSX.Element {
 					<Box w='2vw'></Box>
 				</Flex>
 			</PopoverTrigger>
-			<PopoverContent pt='2vh'>
+			<PopoverContent>
 				<PopoverArrow />
-				<PopoverCloseButton />
 				<PopoverBody>
 					<Container _hover={{ bg: 'gray.600' }}>
 						<LinkBox>
@@ -106,7 +124,7 @@ function PongNavBar(props: React.PropsWithChildren): JSX.Element {
 							</LinkOverlay>
 						</LinkBox>
 					</Container>
-					<Container _hover={{ bg: 'gray.600' }}>
+					<Container _hover={{ bg: 'gray.600' }} cursor='pointer' onClick={() => { logOff(router, localStorage) }}>
 						Logout
 					</Container>
 				</PopoverBody>

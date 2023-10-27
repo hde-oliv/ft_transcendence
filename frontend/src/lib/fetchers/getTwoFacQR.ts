@@ -1,5 +1,6 @@
 import axios from 'axios'
 import z, { ZodError } from 'zod'
+import pongAxios from './pongAxios';
 
 
 const twoFactorResponse = z.object({
@@ -11,24 +12,20 @@ const twoFactorResponse = z.object({
 type twoFactorResponse = z.infer<typeof twoFactorResponse>;
 
 export default async function getTwoFacQR() {
-	const remote_host = 'http://localhost:3000'; //TODO point to variable with actual address:port
-	const fetcher = axios.create({
-		baseURL: remote_host,
-		headers: {
-			Accept: 'Application/json',
-			Authorization: localStorage.getItem('bearerPong42')
-		}
-	})
+	const token = localStorage.getItem('token');
+	if (token === null)
+		return '';
+	const fetcher = pongAxios(token)
 	try {
 		const response = await fetcher.post('auth/otp/generate');
 		const parsedData = twoFactorResponse.parse(response.data)
 		return parsedData.otp_auth_url;
 	} catch (e) {
 		if (e instanceof ZodError) {
-			console.warn(`Response of ${remote_host}/auth/otp/generate did not meet expected value`);
+			console.warn(`Response of /auth/otp/generate did not meet expected value`);
 			e.errors.forEach(f => console.error(f))
 		} else {
-			console.error(`Response of ${remote_host}/auth/otp/generate failed`);
+			console.error(`Response of /auth/otp/generate failed`);
 		}
 		return ''
 	}

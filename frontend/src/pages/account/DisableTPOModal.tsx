@@ -1,25 +1,36 @@
 'use client';
-import { Flex, Stack, Text, Button } from '@chakra-ui/react';
-import { PinInput, PinInputField } from '@chakra-ui/react';
-import { useContext, useRef, useState } from "react";
-import verifyOTP from "@/lib/fetchers/verifyOTP";
-import { ModalContext } from ".";
+import {
+	Modal,
+	ModalOverlay,
+	ModalContent,
+	ModalHeader,
+	ModalFooter,
+	ModalBody,
+	ModalCloseButton,
+	Stack,
+	Text,
+	PinInput,
+	PinInputField,
+	Flex,
+	Button
+} from "@chakra-ui/react";
+import { DisableTPOModalProps } from ".";
+import { useState, useRef } from "react";
 
-export const VarifyOTPTab: React.FC<{}> = (props) => {
+const OTPInputStack: React.FC<{}> = (props) => {
 	const [value, setValue] = useState('');
 	const [text, setText] = useState('');
-	const goToNext = useContext(ModalContext);
 	const firstPinRef = useRef<HTMLInputElement>(null);
 	const getter = async (token: string) => {
-		const verified = await verifyOTP(token);
-		if (!verified) {
-			setValue('');
-			setText('Invalid Code, try again');
-			if (firstPinRef.current !== null)
-				firstPinRef.current.focus();
-		} else {
-			goToNext();
-		}
+		// const verified = await verifyOTP(token);
+		// if (!verified) {
+		// 	setValue('');
+		// 	setText('Invalid Code, try again');
+		// 	if (firstPinRef.current !== null)
+		// 		firstPinRef.current.focus();
+		// } else {
+		// 	goToNext();
+		// }
 	};
 
 	return (
@@ -45,7 +56,33 @@ export const VarifyOTPTab: React.FC<{}> = (props) => {
 					<PinInputField borderColor='yellow.300' borderRadius='50%' borderWidth='2px' color='yellow.300' fontWeight='extrabold' fontSize='xl'></PinInputField>
 				</PinInput>
 			</Flex>
-			<Button onClick={() => { getter(value); }}>Send</Button>
+			<Button onClick={() => { getter(value); }}>Disable</Button>
 		</Stack>
+	);
+};
+
+export const DisableTPOModal: React.FC<DisableTPOModalProps> = (props) => {
+	const { onClose, isOpen } = props;
+	return (
+		<Modal
+			isCentered
+			onClose={onClose}
+			isOpen={isOpen}
+			motionPreset='slideInBottom'
+			size='3xl'
+		>
+			<ModalOverlay />
+			<ModalContent>
+				<ModalHeader>Disabling Two Factor Authentication</ModalHeader>
+				<ModalCloseButton />
+
+				<ModalBody display='flex' justifyContent={'center'}>
+					<OTPInputStack />
+				</ModalBody>
+				<ModalFooter>
+
+				</ModalFooter>
+			</ModalContent>
+		</Modal>
 	);
 };
