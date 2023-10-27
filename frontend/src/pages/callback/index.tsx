@@ -4,6 +4,8 @@ import axios, { AxiosRequestConfig } from "axios";
 import { useRouter } from "next/router";
 import { useEffect } from "react"
 import { z, ZodError } from 'zod';
+import sendSsoCode from "@/lib/fetchers/sendSsoCode";
+import { storeToken } from "@/lib/TokenMagagment";
 
 const tokenPayload = z.object({
 	nickname: z.string().min(1, 'User Nickname cannot be empty'),
@@ -26,60 +28,52 @@ export default function Login() {
 	const toast = useToast();
 
 	async function sendCode() {
-		console.log('sending code to backend');
-		let parsedResp: string = '';
-		try {
-			const code = router.query.code;
-			const config: AxiosRequestConfig = {
-				headers: {
-					"Content-Type": "application/json"
-				}
-			}
-			const response = await axios.post('http://localhost:3000/auth/login', { "token": code }, {
-				headers: {
-					'Content-Type': 'application/json',
-				}
-			})
-			parsedResp = loginResponse.parse(response.data).access_token;
-			localStorage.setItem('token', `Bearer ${parsedResp}`);
-		} catch (e) {
-			if (e instanceof ZodError)
-				console.log('Failed to fetch access token');
+		if (typeof router.query.code === 'string') {
+			return sendSsoCode(router.query.code);
 		}
-		return parsedResp
+		throw new Error('No code was sent by client')
 	}
 
 	useEffect(() => { //TODO: add redirection for twofa when needed
 		if (router.query.code) {
 			(async () => {
-				console.log('router_query_code found');
-				const localToken = await sendCode();
+
+				let localToken: string = ''
 				const totalTime = 2000;
-				if (localToken !== '') {
-					const tParts = localToken.split('.');
-					const encoded = tParts[1];
-					const payload = JSON.parse(atob(encoded));
-					localStorage.setItem('token', localToken);
-					localStorage.setItem('tokenExp', Math.floor(payload.exp * 1000).toString());
-					// router.push('/dashboard');
-					const redirector = setTimeout(() => {
-						router.push('/dashboard')
-					}, totalTime);
-					toast({
-						title: "Login Succeeded",
-						description: 'Redirecting to dashboard',
-						status: "success",
-						isClosable: true,
-						duration: totalTime - 1000,
-						onCloseComplete: () => {
-							clearTimeout(redirector);
-							router.push('/dashboard')
-						}
-					})
-				} else {
-					const redirector = setTimeout(() => {
-						router.push('/')
-					}, totalTime);
+				try {
+					localToken = await sendCode();
+					const bearerRegex = /(^[\w-]*\.[\w-]*\.[\w-]*$)/g;
+					if (bearerRegex.test(localToken)) {
+						storeToken(localToken, localStorage);
+						const redirector = setTimeout(() => { router.push('/dashboard') }, totalTime);
+						toast({
+							title: "Login Succeeded",
+							description: 'Redirecting to dashboard',
+							status: "success",
+							isClosable: true,
+							duration: totalTime - 1000,
+							onCloseComplete: () => {
+								clearTimeout(redirector);
+								router.push('/dashboard')
+							}
+						})
+					} else {
+						localStorage.setItem('username', localToken);
+						const redirector = setTimeout(() => { router.push('/') }, totalTime);
+						toast({
+							title: "Login Succeeded",
+							description: 'Redirecting to 2FA login',
+							status: "info",
+							isClosable: true,
+							duration: totalTime - 1000,
+							onCloseComplete: () => {
+								clearTimeout(redirector);
+								router.push('/twofa')
+							}
+						})
+					}
+				} catch (e) {
+					const redirector = setTimeout(() => { router.push('/') }, totalTime);
 					toast({
 						title: "Login Failed",
 						description: 'Redirecting to home',
@@ -92,6 +86,7 @@ export default function Login() {
 						}
 					})
 				}
+
 			})()
 		}
 	}, [router.query.code]) //for some reason, this this dependency is necessary
