@@ -11,6 +11,7 @@ export default function TwoFaPage(props: PropsWithChildren) {
 	const [tryCount, setTryCount] = useState(0);
 	const [loading, setLoading] = useState(false);
 	const pinRef = useRef<HTMLInputElement>(null);
+	const btnRef = useRef<HTMLButtonElement>(null);
 	const router = useRouter();
 
 	const sendPin = async () => {
@@ -32,14 +33,20 @@ export default function TwoFaPage(props: PropsWithChildren) {
 				}, confyTimer);
 				return;
 			}
-			setTryCount((prev) => prev + 1);
+			if (pinRef.current)
+				setTryCount((prev) => prev + 1);
 			setLoading(false)
+			setPin('')
 		}
 	}
 
 	useEffect(() => {
 		setUser(localStorage.getItem('username') ?? '')
-	}, [])
+		if (pin === '') {
+			if (pinRef.current !== null)
+				pinRef.current.focus();
+		}
+	}, [pin])
 	return (
 		<Flex dir='column' justify='center' align='center' h='100vh' bg='#030254' >
 			<Container>
@@ -47,7 +54,8 @@ export default function TwoFaPage(props: PropsWithChildren) {
 					<Image src='logopong_login.png' alt='pong logo' />
 				</Flex>
 				<Stack>
-					<Text color='orange' textAlign='center' fontSize='2xl'>Enter your code, soab (tryes : {tryCount})</Text>
+					<Text color='orange' textAlign='center' fontSize='2xl'>Enter your code, soab </Text>
+					<Text color='orange' textAlign='center' fontSize='2xl'>(tries left : {3 - tryCount})</Text>
 					<Flex justify='space-around' mt='1vh'>
 						<PinInput
 							type='number'
@@ -58,6 +66,14 @@ export default function TwoFaPage(props: PropsWithChildren) {
 							value={pin}
 							onChange={setPin}
 							isDisabled={loading}
+							onComplete={
+								() => {
+									console.log(btnRef); setTimeout(() => {
+										if (btnRef.current)
+											btnRef.current.focus()
+									}, 100)
+								}
+							}
 						>
 							<PinInputField ref={pinRef} borderColor='orange.500' borderRadius='50%' borderWidth='2px' color='orange.500' fontWeight='extrabold' fontSize='xl'></PinInputField>
 							<PinInputField borderColor='orange.500' borderRadius='50%' borderWidth='2px' color='orange.500' fontWeight='extrabold' fontSize='xl'></PinInputField>
@@ -67,7 +83,7 @@ export default function TwoFaPage(props: PropsWithChildren) {
 							<PinInputField borderColor='orange.500' borderRadius='50%' borderWidth='2px' color='orange.500' fontWeight='extrabold' fontSize='xl'></PinInputField>
 						</PinInput>
 					</Flex>
-					<Button w='100%' onClick={sendPin} isDisabled={loading}>Send</Button>
+					<Button w='100%' onClick={sendPin} isDisabled={pin.length < 6} isLoading={loading} ref={btnRef}>Send</Button>
 					<Collapse in={loading}>
 						<Progress isIndeterminate />
 					</Collapse>
