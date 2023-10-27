@@ -42,13 +42,23 @@ export class AuthController {
     return this.authService.verifyOTP(req.user.intra_login, otpTokenDto.token);
   }
 
-  @UseGuards(JwtAuthGuard)
+  // @UseGuards(JwtAuthGuard)
+  // @Post('otp/validate')
+  // @UsePipes(new ZodValidationPipe(otpTokenSchema))
+  // async validateOTP(@Request() req, @Body() otpTokenDto: OTPTokenDto) {
+  //   return this.authService.validateOTP(
+  //     req.user.intra_login,
+  //     otpTokenDto.token,
+  //   );
+  // }
+
   @Post('otp/validate')
   @UsePipes(new ZodValidationPipe(otpTokenSchema))
-  async validateOTP(@Request() req, @Body() otpTokenDto: OTPTokenDto) {
-    return this.authService.validateOTP(
-      req.user.intra_login,
-      otpTokenDto.token,
-    );
+  async validateOTP(
+    @Request() req,
+    @Body() bq: { otp: OTPTokenDto; username: string },
+  ) {
+    const { otp, username } = bq;
+    return this.authService.validateOTP(username, otp.token);
   }
 }
