@@ -3,12 +3,16 @@ import { AuthService } from 'src/auth/auth.service';
 import { UsersService } from 'src/users/users.service';
 import { Socket } from 'socket.io';
 import { WsException } from '@nestjs/websockets';
+import { NewMessageDto } from './dto/new-message-dto';
+import { Users } from '@prisma/client';
+import { ChatRepository } from './chat.repository';
 
 @Injectable()
 export class ChatService {
   constructor(
     private authService: AuthService,
     private userService: UsersService,
+    private chatRepository: ChatRepository,
   ) {}
 
   private readonly logger = new Logger(ChatService.name);
@@ -18,8 +22,6 @@ export class ChatService {
       ? socket.handshake.headers.authorization
       : '';
 
-    this.logger.log(token);
-
     if (token === '') {
       throw new WsException('Invalid credentials.');
     }
@@ -27,8 +29,6 @@ export class ChatService {
     token = token.split(' ')[1]; // NOTE: To remove 'Bearer'
 
     const payload = await this.authService.decodeToken(token);
-
-    this.logger.log(payload);
 
     if (!payload) {
       throw new WsException('Invalid credentials.');
@@ -45,5 +45,9 @@ export class ChatService {
     }
 
     return user;
+  }
+
+  async registerNewMessage(data: NewMessageDto, user: Users) {
+    await this.chatRepository.registerNewMessage(data, user.id);
   }
 }

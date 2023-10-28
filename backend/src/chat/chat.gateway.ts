@@ -13,6 +13,10 @@ import { ChatService } from './chat.service';
 import { Logger } from '@nestjs/common';
 import { Users } from '@prisma/client';
 import { map, without } from 'lodash';
+import { NewMessageDto } from './dto/new-message-dto';
+
+// NOTE: Chat only works in the /chat page
+// TODO: Define how a chat is created
 
 @WebSocketGateway({
   cors: {
@@ -32,28 +36,19 @@ export class ChatGateway
 
   private clients: ClientSocket[] = [];
 
-  getClientList() {
-    let ret: string = '';
-    for (let i = 0; i < this.clients.length; i++) {
-      ret += `{${this.clients[i].socket.id}, ${this.clients[i].user.intra_login}}; `;
-    }
-    return ret;
-  }
-
   async afterInit(server: Server) {
+    // Send to frontend all messages
     this.logger.log('WebSocket Gateway Initialized');
   }
 
   async handleDisconnect(socket: Socket) {
     const user = await this.chatService.getUserFromSocket(socket);
 
-    // NOTE: remove disconnected user
     let newClients = map(this.clients, function (cl: ClientSocket) {
       if (cl.socket.id !== socket.id) return cl;
     });
 
     newClients = without(newClients, undefined);
-
     // @ts-ignore
     this.clients = newClients;
 
@@ -71,16 +66,33 @@ export class ChatGateway
     this.logger.log(`All Clients: ${this.getClientList()} `);
   }
 
-  @SubscribeMessage('send_message')
-  async handleSendMessage(
-    @MessageBody() data: string,
+  @SubscribeMessage('NewMessage')
+  async handleNewMessage(
+    @MessageBody() data: NewMessageDto,
     @ConnectedSocket() socket: Socket,
   ) {
-    const user = await this.chatService.getUserFromSocket(socket);
+    const user: Users = await this.chatService.getUserFromSocket(socket);
 
-    this.logger.log(user);
+    // const channel = await this.chatService.getChannel(data.channel_id);
+    await this.chatService.registerNewMessage(data, user);
 
-    this.wss.sockets.emit('receive_message', data);
+    // const onlineUsers = getOnlineSocketsByChannel(channel);
+    // await this.broadcast(onlineUsers, 'ReceiveMessage', data.message);
+    // this.wss.sockets.emit('receive_message', data);
+  }
+
+  async broadcast(targets: Socket[], event: string, message: any) {
+    for (let i = 0; i < targets.length; i++) {
+      targets[i].emit(event, message);
+    }
+  }
+
+  getClientList() {
+    let ret: string = '';
+    for (let i = 0; i < this.clients.length; i++) {
+      ret += `{${this.clients[i].socket.id}, ${this.clients[i].user.intra_login}}; `;
+    }
+    return ret;
   }
 }
 
