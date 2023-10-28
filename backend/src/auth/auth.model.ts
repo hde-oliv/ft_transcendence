@@ -1,7 +1,12 @@
 import z from 'zod';
 
 export const userReturnInfo = z.object({
-  login: z.string(),
+  nickname: z.string(),
+  avatar: z.string(),
+  intra_login: z.string(),
+  online: z.boolean(),
+  otp_enabled: z.boolean(),
+  otp_verified: z.boolean()
 });
 
 export const authResponse42 = z.object({

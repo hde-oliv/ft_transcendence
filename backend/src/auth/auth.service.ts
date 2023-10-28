@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import axios, { AxiosResponse } from 'axios';
 import { Logger } from '@nestjs/common';
 import { AxiosRequestConfig } from 'axios';
-import { userLoginRet } from './auth.model';
+import { TokenClaims, tokenClaimsSchema, userLoginRet } from './auth.model';
 import { randomBytes } from 'crypto';
 import { encode } from 'hi-base32';
 import * as OTPAuth from 'otpauth';
@@ -52,11 +52,9 @@ export class AuthService {
 
   async login(user: userLoginRet) {
     const payload = { ...user };
-
-    this.logger.log(payload, `Creating Bearer token.`);
-
+    this.logger.log(JSON.stringify(payload), `Creating Bearer token.`);
     return {
-      access_token: this.jwtService.sign(payload),
+      access_token: payload.otp_enabled ? payload.intra_login : this.jwtService.sign(payload),
     };
   }
 
@@ -129,9 +127,27 @@ export class AuthService {
   }
 
   async validateOTP(intra_login: string, token: string) {
-    const user = this.userService.getUserByIntra({ intra_login });
-    const userSecret = (await user).otp_base32;
 
+    /*
+    dbUser = await this.userService.getUserByIntra({
+        intra_login: userData.login,
+      });
+      this.logger.log(`GetUserByIntra sucessful call.`);
+
+       try {
+      tokenClaims = tokenClaimsSchema.parse(dbUser);
+    } catch (e) {
+      this.logger.warn(`Invalid user, couldn't parse.`);
+      throw new UnauthorizedException('User auth failed');
+    }
+
+    return tokenClaims;
+     */
+    let tokenClaims: TokenClaims;
+
+    const user = await this.userService.getUserByIntra({ intra_login });
+    const userSecret = user.otp_base32;
+    //this.authService.login(req.user)
     if (userSecret === null) {
       throw new UnauthorizedException('OTP Token failed');
     }
@@ -149,8 +165,13 @@ export class AuthService {
     if (delta === null) {
       throw new UnauthorizedException('OTP Token failed');
     }
+    try {
+      tokenClaims = tokenClaimsSchema.parse(user);
+    } catch (e) {
+      throw new UnauthorizedException('OTP Token failed');
+    }
 
-    return { status: 'OK' }; // TODO: Make a better return
+    return { access_token: this.jwtService.sign(tokenClaims) }; // TODO: Make a better return
   }
 
   // TODO: Function to disable OTP for user
