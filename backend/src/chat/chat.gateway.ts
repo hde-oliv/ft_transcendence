@@ -42,25 +42,25 @@ export class ChatGateway
   }
 
   async handleDisconnect(socket: Socket) {
-    const user = await this.chatService.getUserFromSocket(socket);
+    // const user = await this.chatService.getUserFromSocket(socket);
 
-    let newClients = map(this.clients, function (cl: ClientSocket) {
-      if (cl.socket.id !== socket.id) return cl;
-    });
+    // let newClients = map(this.clients, function (cl: ClientSocket) {
+    //   if (cl.socket.id !== socket.id) return cl;
+    // });
 
-    newClients = without(newClients, undefined);
-    // @ts-ignore
-    this.clients = newClients;
+    // newClients = without(newClients, undefined);
+    // // @ts-ignore
+    // this.clients = newClients;
 
     this.logger.log(`Client Disconnected: ${socket.id}`);
     this.logger.log(`All Clients: ${this.getClientList()} `);
   }
 
   async handleConnection(socket: Socket) {
-    const user = await this.chatService.getUserFromSocket(socket);
-    const clientSocket = { user, socket };
+    // const user = await this.chatService.getUserFromSocket(socket);
+    // const clientSocket = { user, socket };
 
-    this.clients = [...this.clients, clientSocket];
+    // this.clients = [...this.clients, clientSocket];
 
     this.logger.log(`Client Connected: ${socket.id}`);
     this.logger.log(`All Clients: ${this.getClientList()} `);
@@ -71,11 +71,9 @@ export class ChatGateway
     @MessageBody() data: NewMessageDto,
     @ConnectedSocket() socket: Socket,
   ) {
-    const user: Users = await this.chatService.getUserFromSocket(socket);
-
+    // const user: Users = await this.chatService.getUserFromSocket(socket);
     // const channel = await this.chatService.getChannel(data.channel_id);
-    await this.chatService.registerNewMessage(data, user);
-
+    // await this.chatService.registerNewMessage(data, user);
     // const onlineUsers = getOnlineSocketsByChannel(channel);
     // await this.broadcast(onlineUsers, 'ReceiveMessage', data.message);
     // this.wss.sockets.emit('receive_message', data);
