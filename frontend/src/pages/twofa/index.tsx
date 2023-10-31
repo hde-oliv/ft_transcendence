@@ -68,7 +68,7 @@ export default function TwoFaPage(props: PropsWithChildren) {
 							isDisabled={loading}
 							onComplete={
 								() => {
-									console.log(btnRef); setTimeout(() => {
+									setTimeout(() => {
 										if (btnRef.current)
 											btnRef.current.focus()
 									}, 100)

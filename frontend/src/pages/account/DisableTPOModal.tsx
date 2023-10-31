@@ -14,8 +14,14 @@ import {
 	Flex,
 	Button
 } from "@chakra-ui/react";
-import { DisableTPOModalProps } from ".";
+
 import { useState, useRef } from "react";
+
+type DisableTPOModalProps = {
+	onClose: () => void,
+	setOTP: (v: boolean) => void,
+	isOpen: boolean
+}
 
 const OTPInputStack: React.FC<{}> = (props) => {
 	const [value, setValue] = useState('');
@@ -62,7 +68,7 @@ const OTPInputStack: React.FC<{}> = (props) => {
 };
 
 export const DisableTPOModal: React.FC<DisableTPOModalProps> = (props) => {
-	const { onClose, isOpen } = props;
+	const { onClose, isOpen, setOTP } = props;
 	return (
 		<Modal
 			isCentered

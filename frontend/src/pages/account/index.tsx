@@ -1,69 +1,141 @@
 'use client'
 import PageLayout from "@/components/pageLayout/PageLayout";
-import { CheckIcon, EditIcon, LockIcon, UnlockIcon } from "@chakra-ui/icons";
-import { Button, Card, CardBody, CardHeader, Center, Heading, IconButton, Input, StackDivider } from "@chakra-ui/react";
+import { AttachmentIcon, CheckIcon, CloseIcon, EditIcon, LockIcon, UnlockIcon } from "@chakra-ui/icons";
+import { Button, Card, CardBody, CardHeader, Center, Collapse, Heading, IconButton, Input, StackDivider } from "@chakra-ui/react";
 import { Flex, Stack, Text, Avatar, AvatarBadge, Box, useDisclosure } from '@chakra-ui/react';
-import { Fade, ScaleFade, Slide, SlideFade, Collapse } from '@chakra-ui/react'
-import { createContext, useEffect, useState } from "react";
+import { ChangeEvent, ChangeEventHandler, DetailedHTMLProps, HTMLInputTypeAttribute, InputHTMLAttributes, createContext, useEffect, useRef, useState } from "react";
 import { ActivateTPOModal } from "./ActivateTPOModal";
 import pinkGuy from './pinkGuy'
-import getMe from "@/lib/fetchers/me";
+import { getMe, updateMe } from "@/lib/fetchers/me";
 import { DisableTPOModal } from "./DisableTPOModal";
+import { UserNickSegment } from "./UserNickSegment";
 
-type UserNickSegmentProps = userData
-function UserNickSegment(props: UserNickSegmentProps): JSX.Element {
-	const { onOpen, onClose, isOpen } = useDisclosure();
+export const ModalContext = createContext<() => void>(() => { }); //used by Modals of this page
 
-
-	return (
-		<Flex justifyContent='space-between' alignItems='stretch'>
-			<Box flexGrow={1}>
-				<Heading pl='1vw' size='sm'>Your Nickname </Heading>
-				<Text pl='2vw'>{props.nickname}</Text>
-				<Collapse in={isOpen} >
-					<Flex >
-						<Input flexGrow={1} ml='2vw' placeholder='New Nickname' bg='pongBlue.800' />
-						<IconButton
-							colorScheme="yellow"
-							aria-label="save-new-nickname"
-							w='5vw'
-							onClick={onClose}
-							icon={<CheckIcon />}
-						/>
-					</Flex>
-				</Collapse>
-			</Box>
-			<IconButton
-				colorScheme="yellow"
-				aria-label="edit"
-				w='5vw'
-				onClick={isOpen ? onClose : onOpen}
-				icon={<EditIcon />}
-			/>
-		</Flex>
-	)
-}
-
-
-export const ModalContext = createContext<() => void>(() => { });
 const base64Image = pinkGuy;
 
-type userData = {
+export type userData = {
 	forthyTwoTag: string,
 	avatar: string,
 	nickname: string,
 	otpEnabled: boolean
 }
 
-export type DisableTPOModalProps = {
-	onClose: () => void,
-	isOpen: boolean
+type AvatarEditProps = userData & {
+	updateAvatar: (str: string) => void
+}
+
+function AvatarEditComponent(props: AvatarEditProps): JSX.Element {
+	const { avatar, updateAvatar: setAvatar, forthyTwoTag: intraTag } = props;
+	const { isOpen, onOpen, onClose } = useDisclosure();
+	const [tempAvatar, setTempAvatar] = useState(avatar);
+	const [uploaded, setUploaded] = useState(false);
+	const hiddenRef = useRef<HTMLInputElement>(null);
+
+
+	async function saveNewAvatar() {
+		const params = {
+			intra_login: intraTag,
+			avatar: tempAvatar,
+		};
+		try {
+			if (await updateMe(params)) {
+				setAvatar(tempAvatar);
+				onClose();
+				setUploaded(false);
+			} else {
+				console.log('failed to update nickname');
+				setTimeout(() => { setTempAvatar(avatar); setUploaded(false); }, 200);
+			}
+		} catch (e) {
+			console.log(e);
+			setTimeout(() => { setTempAvatar(avatar); setUploaded(false); }, 200);
+		}
+
+	}
+	function loadImage(event: ChangeEvent<HTMLInputElement>) {
+		const files = event.target.files;
+		const reader = new FileReader();
+		reader.onload = (e: ProgressEvent<FileReader>) => {
+			if (e.target) {
+				const newAvatar = e.target.result;
+				if (typeof newAvatar === 'string') {
+					setTempAvatar(newAvatar);
+				}
+			}
+		}
+		if (files) {
+			if (files.length > 0) {
+				if (files[0].type.includes('image')) {
+					reader.readAsDataURL(files[0]);
+					setUploaded(true);
+				}
+			}
+		}
+	}
+	return (
+		<>
+			<Flex justify='center' pb='2vh'>
+				<Avatar size='2xl' src={tempAvatar}>
+					<AvatarBadge border='none' bg='transparent'>
+						<IconButton
+							colorScheme='yellow'
+							aria-label='Edit Avatar'
+							size='lg'
+							isRound={true}
+							isDisabled={isOpen}
+							onClick={onOpen}
+							icon={<EditIcon />}
+						/>
+					</AvatarBadge>
+				</Avatar>
+			</Flex>
+			<input type='file' accept="image/*" ref={hiddenRef} style={{ display: 'none' }} onChange={loadImage} />
+			<Collapse in={isOpen}>
+				<Center>
+					<Button
+						aria-label="cancel image upload"
+						colorScheme="red"
+						onClick={() => { setTempAvatar(avatar); setUploaded(false); onClose(); }}
+						rightIcon={<CloseIcon />}
+					>
+						Cancel
+					</Button>
+					<Button
+						colorScheme={uploaded ? 'green' : 'yellow'}
+						aria-label="upload image button"
+						leftIcon={uploaded ? <CheckIcon /> : <AttachmentIcon />}
+						onClick={() => {
+							if (uploaded) {
+								saveNewAvatar();
+							} else {
+								if (hiddenRef.current) {
+									hiddenRef.current.click();
+								}
+							}
+						}}
+					>{uploaded ? 'Confirm' : 'Upload'}</Button>
+				</Center>
+			</Collapse>
+		</>
+	)
 }
 
 export default function Account() {
 	const { isOpen: isOpenTF, onOpen: onOpenTF, onClose: onCloseTF } = useDisclosure();
 	const { isOpen: isOpenDisabler, onOpen: onOpenDisabler, onClose: onCloseDisabler } = useDisclosure();
 	const [userData, setUserData] = useState<undefined | userData>(undefined);
+	const [userAvatar, setUserAvatar] = useState(base64Image);
+
+	function updateNickName(updatedNickName: string) {
+		if (userData !== undefined) {
+			const tmp = {
+				...userData
+			};
+			tmp.nickname = updatedNickName
+			setUserData(tmp);
+		}
+	}
 
 	const OTPButton = () => {
 		if (userData) {
@@ -93,6 +165,13 @@ export default function Account() {
 			)
 		}
 	}
+	function setOTPState(newValue: boolean) {
+		if (userData !== undefined) {
+			const temp = { ...userData };
+			temp.otpEnabled = newValue;
+			setUserData(temp);
+		}
+	}
 	useEffect(() => {
 		const token = localStorage.getItem('token');
 		if (token !== null) {
@@ -106,6 +185,7 @@ export default function Account() {
 						otpEnabled: ftData.otp_enabled
 					}
 					setUserData(tmp);
+					setUserAvatar(tmp.avatar);
 				} catch (e) {
 				}
 			})()
@@ -127,27 +207,15 @@ export default function Account() {
 						</CardHeader>
 						<CardBody>
 							<Stack divider={<StackDivider />} pl='20%' pr='20%'>
-								<Flex justify='center' pb='2vh'>
-									<Avatar size='2xl' src={base64Image}>
-										<AvatarBadge border='none' bg='transparent'>
-											<IconButton
-												colorScheme='yellow'
-												aria-label='Edit Avatar'
-												size='lg'
-												isRound={true}
-												icon={<EditIcon />}
-											/>
-										</AvatarBadge>
-									</Avatar>
-								</Flex>
+								<AvatarEditComponent {...userData} avatar={userAvatar} updateAvatar={setUserAvatar} />
 								<Box>
-									<Heading pl='1vw' size='sm' >Your Intra Tag </Heading>
+									<Heading pl='1vw' size='sm' >Intra Tag </Heading>
 									<Text pl='2vw' >{userData.forthyTwoTag}</Text>
 								</Box>
-								<UserNickSegment {...userData} />
+								<UserNickSegment {...userData} updateNickName={updateNickName} />
 								<Box>
-									<ActivateTPOModal isOpen={isOpenTF} onClose={onCloseTF} />
-									<DisableTPOModal isOpen={isOpenDisabler} onClose={onCloseDisabler} />
+									<ActivateTPOModal isOpen={isOpenTF} onClose={onCloseTF} setOTP={setOTPState} />
+									<DisableTPOModal isOpen={isOpenDisabler} onClose={onCloseDisabler} setOTP={setOTPState} />
 									<Heading pl='1vw' size='sm' >Security </Heading>
 									<Flex pl='1vw' justify='space-between'>
 										<Text pl='1vw'>Two Factor Authenticator is {userData.otpEnabled ? 'enabled' : 'disabled'}</Text>

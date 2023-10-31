@@ -24,6 +24,7 @@ import { Step, StepDescription, StepIcon, StepIndicator, StepStatus, StepTitle, 
 
 type TwoFactorActivatorProps = {
 	onClose: () => void,
+	setOTP: (v: boolean) => void,
 	isOpen: boolean
 }
 
@@ -60,7 +61,7 @@ export const TwoAuthStepper: React.FC<TwoAuthSteps> = (props) => {
 
 
 export const ActivateTPOModal: React.FC<TwoFactorActivatorProps> = (props) => {
-	const { onClose, isOpen } = props;
+	const { onClose, isOpen, setOTP } = props;
 	const [qrCode, setQrcode] = useState('');
 	const { activeStep, goToNext, goToPrevious, setActiveStep } = useSteps({
 		index: 0,
@@ -113,7 +114,7 @@ export const ActivateTPOModal: React.FC<TwoFactorActivatorProps> = (props) => {
 					<ModalFooter>
 						{activeStep === 0 ? <Button onClick={goToNext} colorScheme='green'>Next</Button> : <></>}
 						{activeStep === 1 ? <Button onClick={goToPrevious} colorScheme='red'>Back</Button> : <></>}
-						{activeStep === 2 ? <Button onClick={() => { onClose(), setActiveStep(0); }} colorScheme='green'>Ok</Button> : <></>}
+						{activeStep === 2 ? <Button onClick={() => { onClose(), setActiveStep(0); setOTP(true); }} colorScheme='green'>Ok</Button> : <></>}
 					</ModalFooter>
 				</ModalContent>
 			</ModalContext.Provider>
