@@ -1,13 +1,49 @@
 'use client'
 import PageLayout from "@/components/pageLayout/PageLayout";
-import { EditIcon, LockIcon, UnlockIcon } from "@chakra-ui/icons";
-import { Button, Card, CardBody, CardHeader, Center, Heading, IconButton, StackDivider } from "@chakra-ui/react";
+import { CheckIcon, EditIcon, LockIcon, UnlockIcon } from "@chakra-ui/icons";
+import { Button, Card, CardBody, CardHeader, Center, Heading, IconButton, Input, StackDivider } from "@chakra-ui/react";
 import { Flex, Stack, Text, Avatar, AvatarBadge, Box, useDisclosure } from '@chakra-ui/react';
+import { Fade, ScaleFade, Slide, SlideFade, Collapse } from '@chakra-ui/react'
 import { createContext, useEffect, useState } from "react";
 import { ActivateTPOModal } from "./ActivateTPOModal";
 import pinkGuy from './pinkGuy'
 import getMe from "@/lib/fetchers/me";
 import { DisableTPOModal } from "./DisableTPOModal";
+
+type UserNickSegmentProps = userData
+function UserNickSegment(props: UserNickSegmentProps): JSX.Element {
+	const { onOpen, onClose, isOpen } = useDisclosure();
+
+
+	return (
+		<Flex justifyContent='space-between' alignItems='stretch'>
+			<Box flexGrow={1}>
+				<Heading pl='1vw' size='sm'>Your Nickname </Heading>
+				<Text pl='2vw'>{props.nickname}</Text>
+				<Collapse in={isOpen} >
+					<Flex >
+						<Input flexGrow={1} ml='2vw' placeholder='New Nickname' bg='pongBlue.800' />
+						<IconButton
+							colorScheme="yellow"
+							aria-label="save-new-nickname"
+							w='5vw'
+							onClick={onClose}
+							icon={<CheckIcon />}
+						/>
+					</Flex>
+				</Collapse>
+			</Box>
+			<IconButton
+				colorScheme="yellow"
+				aria-label="edit"
+				w='5vw'
+				onClick={isOpen ? onClose : onOpen}
+				icon={<EditIcon />}
+			/>
+		</Flex>
+	)
+}
+
 
 export const ModalContext = createContext<() => void>(() => { });
 const base64Image = pinkGuy;
@@ -108,13 +144,7 @@ export default function Account() {
 									<Heading pl='1vw' size='sm' >Your Intra Tag </Heading>
 									<Text pl='2vw' >{userData.forthyTwoTag}</Text>
 								</Box>
-								<Flex justifyContent='space-between'>
-									<Box>
-										<Heading pl='1vw' size='sm' >Your Nickname </Heading>
-										<Text pl='2vw' >{userData.nickname}</Text>
-									</Box>
-									<IconButton colorScheme="yellow" aria-label="edit" icon={<EditIcon />} w='5vw' />
-								</Flex>
+								<UserNickSegment {...userData} />
 								<Box>
 									<ActivateTPOModal isOpen={isOpenTF} onClose={onCloseTF} />
 									<DisableTPOModal isOpen={isOpenDisabler} onClose={onCloseDisabler} />
@@ -132,3 +162,4 @@ export default function Account() {
 		</PageLayout >
 	)
 }
+
