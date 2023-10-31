@@ -1,8 +1,8 @@
 import { z } from 'zod';
 
 export const updateUserSchema = z.object({
-  nickname: z.string(),
-  avatar: z.string(),
+  nickname: z.string().optional(),
+  avatar: z.string().optional(),
   intra_login: z.string(),
 });
 
