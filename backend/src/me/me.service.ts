@@ -9,8 +9,8 @@ export class MeService {
   constructor(private userRepository: UsersRepository) {}
 
   // throws
-  getMe(intra_tag: string) {
-    const me = this.userRepository.getUserByIntra(intra_tag);
+  async getMe(intra_tag: string) {
+    const me = await this.userRepository.getUserByIntra(intra_tag);
     try {
       return returnMeSchema.parse(me);
     } catch {
@@ -19,11 +19,11 @@ export class MeService {
   }
 
   // throws
-  updateMe(intra_tag: string, updateDto: UpdateUserDto) {
+  async updateMe(intra_tag: string, updateDto: UpdateUserDto) {
     if (intra_tag !== updateDto.intra_login) {
       throw new UnauthorizedException('Trying to update another user.');
     } else {
-      const me = this.userRepository.updateUser(updateDto);
+      const me = await this.userRepository.updateUser(updateDto);
 
       try {
         return returnMeSchema.parse(me);
