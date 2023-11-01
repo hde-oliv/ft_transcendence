@@ -16,7 +16,7 @@ export class AuthService {
   constructor(
     private jwtService: JwtService,
     private userService: UsersService,
-  ) { }
+  ) {}
 
   private readonly logger = new Logger(AuthService.name);
 
@@ -54,7 +54,9 @@ export class AuthService {
     const payload = { ...user };
     this.logger.log(JSON.stringify(payload), `Creating Bearer token.`);
     return {
-      access_token: payload.otp_enabled ? payload.intra_login : this.jwtService.sign(payload),
+      access_token: payload.otp_enabled
+        ? payload.intra_login
+        : this.jwtService.sign(payload),
     };
   }
 
@@ -92,6 +94,40 @@ export class AuthService {
     return updateDto;
   }
 
+  async deactivateOTP(intra_login: string, token: string) {
+    const user = await this.userService.getUserByIntra({ intra_login });
+    const userSecret = user.otp_base32;
+
+    if (userSecret === null) {
+      throw new UnauthorizedException('OTP Token failed');
+    }
+
+    const totp = new OTPAuth.TOTP({
+      issuer: 'transcendence.localhost',
+      label: 'Transcendence',
+      algorithm: 'SHA1',
+      digits: 6,
+      secret: userSecret,
+    });
+
+    const delta = totp.validate({ token });
+
+    if (delta === null) {
+      throw new UnauthorizedException('OTP Token failed');
+    }
+
+    // TODO: Update user otp_enabled & otp_verfified
+    const updateDto: UpdateOTPUserDto = {
+      intra_login,
+      otp_enabled: false,
+      otp_verified: false,
+    };
+
+    this.userService.updateOTP(updateDto);
+
+    return { status: 'OK' }; // TODO: Return something
+  }
+
   async verifyOTP(intra_login: string, token: string) {
     const user = await this.userService.getUserByIntra({ intra_login });
     const userSecret = user.otp_base32;
@@ -127,7 +163,6 @@ export class AuthService {
   }
 
   async validateOTP(intra_login: string, token: string) {
-
     /*
     dbUser = await this.userService.getUserByIntra({
         intra_login: userData.login,

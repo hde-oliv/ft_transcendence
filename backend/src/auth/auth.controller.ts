@@ -12,11 +12,14 @@ import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt.guard';
 import { ZodValidationPipe } from 'src/zodPipe';
 import { otpTokenSchema, OTPTokenDto } from './dto/otp-token-dto';
-import { otpValidationPayload } from './otpValidade/otp-validation-dto';
+import {
+  otpValidationSchema,
+  OTPValidationDto,
+} from './dto/otp-validation-dto';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) { }
+  constructor(private authService: AuthService) {}
 
   @UseGuards(TokenAuthGuard)
   @Post('login')
@@ -43,12 +46,19 @@ export class AuthController {
     return this.authService.verifyOTP(req.user.intra_login, otpTokenDto.token);
   }
 
-  @Post('otp/validate')
-  @UsePipes(new ZodValidationPipe(otpValidationPayload))
-  async validateOTP(@Request() req, @Body() body: { token: string, username: string }) {
-    return this.authService.validateOTP(
-      body.username,
-      body.token,
+  @UseGuards(JwtAuthGuard)
+  @Post('otp/deactivate')
+  @UsePipes(new ZodValidationPipe(otpTokenSchema))
+  async deactivateOTP(@Request() req, @Body() otpTokenDto: OTPTokenDto) {
+    return this.authService.deactivateOTP(
+      req.user.intra_login,
+      otpTokenDto.token,
     );
+  }
+
+  @Post('otp/validate')
+  @UsePipes(new ZodValidationPipe(otpValidationSchema))
+  async validateOTP(@Request() req, @Body() body: OTPValidationDto) {
+    return this.authService.validateOTP(body.username, body.token);
   }
 }
