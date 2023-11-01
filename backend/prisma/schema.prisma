@@ -11,23 +11,23 @@ datasource db {
 }
 
 model Users {
-  id           Int     @id @default(autoincrement())
-  nickname     String  @unique(sort: Asc)
-  avatar       String
-  intra_login  String  @unique(sort: Asc)
-  online       Boolean @default(false)
+  id          Int     @id @default(autoincrement())
+  nickname    String  @unique(sort: Asc)
+  avatar      String  @db.Text
+  intra_login String  @unique(sort: Asc)
+  online      Boolean @default(false)
 
   otp_enabled  Boolean @default(false)
   otp_verified Boolean @default(false)
   otp_base32   String?
   otp_auth_url String?
 
-  Memberships     Memberships[]
-  invitesSent     Invites[]      @relation("sent_invites")
-  inviteReceived  Invites[]      @relation("received_invites")
-  blockedIssuer   BlockedUsers[] @relation("block_issuer")
-  blockedTarget   BlockedUsers[] @relation("block_target")
-  messages        Messages[]     @relation("message_user")
+  Memberships    Memberships[]
+  invitesSent    Invites[]      @relation("sent_invites")
+  inviteReceived Invites[]      @relation("received_invites")
+  blockedIssuer  BlockedUsers[] @relation("block_issuer")
+  blockedTarget  BlockedUsers[] @relation("block_target")
+  messages       Messages[]     @relation("message_user")
 
   @@map("users")
 }
