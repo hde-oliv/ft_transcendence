@@ -34,7 +34,6 @@ export const user42Schema = z.object({
 
 export const tokenClaimsSchema = z.object({
   nickname: z.string(),
-  avatar: z.string(),
   intra_login: z.string(),
   online: z.boolean(),
   otp_enabled: z.boolean(),
