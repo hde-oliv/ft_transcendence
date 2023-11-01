@@ -52,7 +52,7 @@ export class AuthService {
 
   async login(user: userLoginRet) {
     const payload = { ...user };
-    this.logger.log(JSON.stringify(payload), `Creating Bearer token.`);
+    this.logger.log(`Creating Bearer token.`);
     return {
       access_token: payload.otp_enabled
         ? payload.intra_login
