@@ -5,7 +5,6 @@ const meResponseData = z.object({
 	nickname: z.string(),
 	avatar: z.string(),
 	intra_login: z.string(),
-	online: z.boolean(),
 	otp_enabled: z.boolean()
 })
 

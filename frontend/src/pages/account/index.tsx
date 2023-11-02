@@ -178,7 +178,8 @@ export default function Account() {
 			(async () => {
 				try {
 					const ftData = await getMe();
-					let tmp = {
+					console.log(ftData);
+					let tmp: userData = {
 						forthyTwoTag: ftData.intra_login,
 						avatar: ftData.avatar,
 						nickname: ftData.nickname,
@@ -187,6 +188,7 @@ export default function Account() {
 					setUserData(tmp);
 					setUserAvatar(tmp.avatar);
 				} catch (e) {
+					console.log(e)
 				}
 			})()
 		}

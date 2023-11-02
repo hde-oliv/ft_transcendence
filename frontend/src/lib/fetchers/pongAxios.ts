@@ -12,6 +12,7 @@ export default function (token?: string): AxiosInstance {
 		headers: {
 			Accept: 'Application/json',
 			"Content-Type": "application/json",
+			'Access-Control-Allow-Origin': '*'
 		}
 	};
 
