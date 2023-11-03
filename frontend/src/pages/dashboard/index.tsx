@@ -1,7 +1,7 @@
 'use client'
-import { PropsWithChildren, ReactElement } from 'react';
+import { PropsWithChildren, ReactElement, useEffect, useRef, useState } from 'react';
 import PongPageMenu from '../../components/nav/PongNavBar'
-import { Avatar, AvatarBadge, Box, Button, Card, CardBody, CardFooter, CardHeader, Center, Flex, Heading, Icon, Text, VStack, Wrap, WrapItem } from '@chakra-ui/react';
+import { Avatar, AvatarBadge, Box, Button, Card, CardBody, CardFooter, CardHeader, Center, Flex, Heading, Icon, Skeleton, Text, VStack, Wrap, WrapItem } from '@chakra-ui/react';
 import {
 	Stat,
 	StatLabel,
@@ -25,8 +25,8 @@ import {
 import { useRouter } from 'next/router';
 import { CheckIcon, AddIcon } from '@chakra-ui/icons';
 import PageLayout from '@/components/pageLayout/PageLayout';
+import { NextPageWithLayout } from '../_app';
 
-import type { NextPageWithLayout } from './_app';
 
 function PlayCard(props: PropsWithChildren) {
 	return (
@@ -37,23 +37,33 @@ function PlayCard(props: PropsWithChildren) {
 	)
 }
 function RankCard(props: PropsWithChildren) {
+	const [loading, setLoading] = useState(true)
+
+	useEffect(() => {
+		let timer = setTimeout(() => {
+			setLoading(false)
+		}, 1000)
+		return (
+			() => { clearTimeout(timer) }
+		)
+	}, [])
 	return (
-		<Center h='370px' w='370px'>
-			<Stat pl='1vw'>
-				<StatLabel fontSize='lg' fontWeight='bold'>Rank</StatLabel>
-				<StatNumber fontSize='3xl' textAlign='center'>1</StatNumber>
-				<StatHelpText textAlign='center' fontSize='md'>
-					<StatArrow type='increase' />
-					1
-				</StatHelpText>
-				<StatLabel fontSize='lg' fontWeight='bold'>Points</StatLabel>
-				<StatNumber fontSize='3xl' textAlign='center'>50</StatNumber>
-				<StatHelpText textAlign='center' fontSize='md'>
-					<StatArrow type='increase'></StatArrow>
-					50
-				</StatHelpText>
-			</Stat>
-		</Center>
+		<Skeleton borderRadius='30' isLoaded={!loading}>
+			<Center h='370px' w='370px'>
+				<Stat pl='1vw'>
+					<StatLabel fontSize='lg' fontWeight='bold'>Rank</StatLabel>
+					<StatNumber fontSize='3xl' textAlign='center'>1</StatNumber>
+					<StatHelpText textAlign='center' fontSize='md'>
+					</StatHelpText>
+					<StatLabel fontSize='lg' fontWeight='bold'>Points</StatLabel>
+					<StatNumber fontSize='3xl' textAlign='center'>50</StatNumber>
+					<StatHelpText textAlign='center' fontSize='md'>
+						<StatArrow type='increase'></StatArrow>
+						50
+					</StatHelpText>
+				</Stat>
+			</Center>
+		</Skeleton>
 	)
 }
 

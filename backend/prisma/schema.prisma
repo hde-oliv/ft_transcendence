@@ -28,6 +28,8 @@ model Users {
   blockedIssuer  BlockedUsers[] @relation("block_issuer")
   blockedTarget  BlockedUsers[] @relation("block_target")
   messages       Messages[]     @relation("message_user")
+  matches_one    Matches[]      @relation("matches_one")
+  matches_two    Matches[]      @relation("matches_two")
 
   @@map("users")
 }
@@ -99,4 +101,19 @@ model Messages {
 enum ChannelType {
   private
   public
+}
+
+model Matches {
+  id          String   @id @unique @default(uuid())
+  p_one       Int
+  p_two       Int
+  p_one_score Int
+  p_two_score Int
+  start       DateTime @default(now())
+  end         DateTime
+
+  player_one Users @relation("matches_one", fields: [p_one], references: [id])
+  player_two Users @relation("matches_two", fields: [p_two], references: [id])
+
+  @@map("matches")
 }
