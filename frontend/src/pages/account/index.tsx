@@ -3,7 +3,7 @@ import PageLayout from "@/components/pageLayout/PageLayout";
 import { AttachmentIcon, CheckIcon, CloseIcon, EditIcon, LockIcon, UnlockIcon } from "@chakra-ui/icons";
 import { Button, Card, CardBody, CardHeader, Center, Collapse, Heading, IconButton, Input, StackDivider } from "@chakra-ui/react";
 import { Flex, Stack, Text, Avatar, AvatarBadge, Box, useDisclosure } from '@chakra-ui/react';
-import { ChangeEvent, ChangeEventHandler, DetailedHTMLProps, HTMLInputTypeAttribute, InputHTMLAttributes, createContext, useEffect, useRef, useState } from "react";
+import { ChangeEvent, ChangeEventHandler, DetailedHTMLProps, HTMLInputTypeAttribute, InputHTMLAttributes, ReactElement, createContext, useEffect, useRef, useState } from "react";
 import { ActivateTPOModal } from "./ActivateTPOModal";
 import pinkGuy from './pinkGuy'
 import { getMe, updateMe } from "@/lib/fetchers/me";
@@ -200,36 +200,41 @@ export default function Account() {
 			</Center>
 		)
 	return (
-		<PageLayout>
-			<Center pt='2vh'>
-				<Flex flexDir='column'>
-					<Card bg='pongBlue.500'>
-						<CardHeader w='80vw'>
-							<Heading textAlign='center'>Account details</Heading>
-						</CardHeader>
-						<CardBody>
-							<Stack divider={<StackDivider />} pl='20%' pr='20%'>
-								<AvatarEditComponent {...userData} avatar={userAvatar} updateAvatar={setUserAvatar} />
-								<Box>
-									<Heading pl='1vw' size='sm' >Intra Tag </Heading>
-									<Text pl='2vw' >{userData.forthyTwoTag}</Text>
-								</Box>
-								<UserNickSegment {...userData} updateNickName={updateNickName} />
-								<Box>
-									<ActivateTPOModal isOpen={isOpenTF} onClose={onCloseTF} setOTP={setOTPState} />
-									<DisableTPOModal isOpen={isOpenDisabler} onClose={onCloseDisabler} setOTP={setOTPState} />
-									<Heading pl='1vw' size='sm' >Security </Heading>
-									<Flex pl='1vw' justify='space-between'>
-										<Text pl='1vw'>Two Factor Authenticator is {userData.otpEnabled ? 'enabled' : 'disabled'}</Text>
-										<OTPButton />
-									</Flex>
-								</Box>
-							</Stack>
-						</CardBody>
-					</Card>
-				</Flex>
-			</Center>
-		</PageLayout >
+		<Center pt='2vh'>
+			<Flex flexDir='column'>
+				<Card bg='pongBlue.500'>
+					<CardHeader w='80vw'>
+						<Heading textAlign='center'>Account details</Heading>
+					</CardHeader>
+					<CardBody>
+						<Stack divider={<StackDivider />} pl='20%' pr='20%'>
+							<AvatarEditComponent {...userData} avatar={userAvatar} updateAvatar={setUserAvatar} />
+							<Box>
+								<Heading pl='1vw' size='sm' >Intra Tag </Heading>
+								<Text pl='2vw' >{userData.forthyTwoTag}</Text>
+							</Box>
+							<UserNickSegment {...userData} updateNickName={updateNickName} />
+							<Box>
+								<ActivateTPOModal isOpen={isOpenTF} onClose={onCloseTF} setOTP={setOTPState} />
+								<DisableTPOModal isOpen={isOpenDisabler} onClose={onCloseDisabler} setOTP={setOTPState} />
+								<Heading pl='1vw' size='sm' >Security </Heading>
+								<Flex pl='1vw' justify='space-between'>
+									<Text pl='1vw'>Two Factor Authenticator is {userData.otpEnabled ? 'enabled' : 'disabled'}</Text>
+									<OTPButton />
+								</Flex>
+							</Box>
+						</Stack>
+					</CardBody>
+				</Card>
+			</Flex>
+		</Center>
 	)
 }
 
+Account.getLayout = function getLayoutPage(page: ReactElement) {
+	return (
+		<PageLayout>
+			{page}
+		</PageLayout>
+	)
+}

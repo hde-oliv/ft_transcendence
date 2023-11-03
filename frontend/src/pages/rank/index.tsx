@@ -1,15 +1,15 @@
 import PageLayout from "@/components/pageLayout/PageLayout";
 import { ReactElement } from "react";
 
-export default function History() {
+export default function Rank() {
 	return (
 		<>
-			Account Page
+			Ranks Page
 		</>
 	)
 }
 
-History.getLayout = function getLayoutPage(page: ReactElement) {
+Rank.getLayout = function getLayoutPage(page: ReactElement) {
 	return (
 		<PageLayout>
 			{page}

@@ -1,6 +1,7 @@
 'use client'
+import PageLayout from "@/components/pageLayout/PageLayout";
 import { List, Stack, Text, Box, Button, Input } from "@chakra-ui/react";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, ReactElement } from "react";
 import { Socket, io } from "socket.io-client";
 
 const URL = "http://localhost:3000";
@@ -29,7 +30,7 @@ export const socket = io(URL, {
 	},
 });
 
-export default function App() {
+export default function Chat() {
 	const [isConnected, setIsConnected] = useState(socket.connected);
 	const [receiveMessage, setReceiveMessage] = useState([""]);
 	const [value, setValue] = useState("");
@@ -101,4 +102,12 @@ export default function App() {
 			</List>
 		</Stack>
 	);
+}
+
+Chat.getLayout = function getLayoutPage(page: ReactElement) {
+	return (
+		<PageLayout>
+			{page}
+		</PageLayout>
+	)
 }
