@@ -2,7 +2,7 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { UsersRepository } from 'src/users/users.repository';
 import { UnauthorizedException } from '@nestjs/common';
 import { UpdateUserDto } from 'src/users/dto/update-user-dto';
-import { returnMeSchema } from 'src/chat/dto/return-me-dto';
+import { returnMeSchema } from './dto/return-me-dto';
 
 @Injectable()
 export class MeService {
