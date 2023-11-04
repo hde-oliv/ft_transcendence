@@ -145,6 +145,12 @@ export class ChatController {
     );
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Post('/channel/messages/:id')
+  async getChannelMessages(@Request() req, @Param('id') id: number) {
+    return this.chatService.getChannelMessages(id);
+  }
+
   // @UseGuards(JwtAuthGuard)
   // @Post('/block')
   // async blockUser(@Request() req, @Body() body: UpdateMembershipDto) {

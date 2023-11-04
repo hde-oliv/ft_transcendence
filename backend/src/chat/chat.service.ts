@@ -34,8 +34,6 @@ export class ChatService {
 
   private readonly logger = new Logger(ChatService.name);
 
-  // CONTROLLER METHODS
-
   // NOTE: Who made the request must not be present in the members array
   async createChannel(token: TokenClaims, createChannelDto: CreateChannelDto) {
     const chat: Channels = await this.chatRepository.createChannel(
@@ -394,8 +392,6 @@ export class ChatService {
     }
   }
 
-  // GATEWAY METHODS
-
   async getUserFromSocket(socket: Socket) {
     let token = socket.handshake.headers.authorization
       ? socket.handshake.headers.authorization
@@ -438,5 +434,9 @@ export class ChatService {
     });
 
     return validMemberships;
+  }
+
+  async getChannelMessages(channelId: number) {
+    return await this.chatRepository.getChannelMessages(channelId);
   }
 }

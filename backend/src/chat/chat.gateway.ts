@@ -39,7 +39,6 @@ export class ChatGateway
   private clients: ClientSocket[] = [];
 
   async afterInit(server: Server) {
-    // Send to frontend all history messages
     this.logger.log('WebSocket Gateway Initialized');
   }
 
