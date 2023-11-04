@@ -15,7 +15,8 @@ model Users {
   nickname    String  @unique(sort: Asc)
   avatar      String  @db.Text
   intra_login String  @unique(sort: Asc)
-  online      Boolean @default(false)
+  status      String  @default("offline")
+  elo         Int     @default(1000)
 
   otp_enabled  Boolean @default(false)
   otp_verified Boolean @default(false)
@@ -53,6 +54,7 @@ model Channels {
   type        ChannelType   @default(public)
   name        String
   password    String
+  visible     Boolean       @default(true)
   protected   Boolean       @default(false)
   user2user   Boolean       @default(false)
   Memberships Memberships[]
