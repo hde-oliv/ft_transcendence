@@ -1,8 +1,8 @@
 -- CreateTable
 CREATE TABLE "matches" (
     "id" TEXT NOT NULL,
-    "p_one" INTEGER NOT NULL,
-    "p_two" INTEGER NOT NULL,
+    "p_one" TEXT NOT NULL,
+    "p_two" TEXT NOT NULL,
     "p_one_score" INTEGER NOT NULL,
     "p_two_score" INTEGER NOT NULL,
     "start" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
