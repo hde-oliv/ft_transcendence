@@ -11,12 +11,12 @@ datasource db {
 }
 
 model Users {
-  id          Int     @id @default(autoincrement())
-  nickname    String  @unique(sort: Asc)
-  avatar      String  @db.Text
-  intra_login String  @unique(sort: Asc)
-  status      String  @default("offline")
-  elo         Int     @default(1000)
+  id          String @id @unique(sort: Asc)
+  nickname    String @unique(sort: Asc)
+  avatar      String @db.Text
+  intra_login String @unique(sort: Asc)
+  status      String @default("offline")
+  elo         Int    @default(1000)
 
   otp_enabled  Boolean @default(false)
   otp_verified Boolean @default(false)
@@ -38,7 +38,7 @@ model Users {
 model Memberships {
   id            Int      @id @unique @default(autoincrement())
   channelId     Int
-  userId        Int
+  userId        String
   owner         Boolean  @default(false)
   administrator Boolean  @default(false)
   banned        Boolean  @default(false)
@@ -54,7 +54,6 @@ model Channels {
   type        ChannelType   @default(public)
   name        String
   password    String
-  visible     Boolean       @default(true)
   protected   Boolean       @default(false)
   user2user   Boolean       @default(false)
   Memberships Memberships[]
@@ -65,8 +64,8 @@ model Channels {
 
 model BlockedUsers {
   id        String @id @default(uuid())
-  issuer_id Int
-  targer_id Int
+  issuer_id String
+  targer_id String
 
   issuer_user Users @relation("block_issuer", fields: [issuer_id], references: [id])
   target_user Users @relation("block_target", fields: [targer_id], references: [id])
@@ -77,8 +76,8 @@ model BlockedUsers {
 
 model Invites {
   id        String @id @default(uuid())
-  user_id   Int
-  target_id Int
+  user_id   String
+  target_id String
 
   sender Users @relation("sent_invites", fields: [user_id], references: [id])
   target Users @relation("received_invites", fields: [target_id], references: [id])
@@ -90,7 +89,7 @@ model Invites {
 model Messages {
   id         String   @id @default(uuid())
   channel_id Int
-  user_id    Int
+  user_id    String
   message    String
   time       DateTime @default(now())
 
