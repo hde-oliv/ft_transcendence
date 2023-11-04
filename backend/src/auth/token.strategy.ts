@@ -65,8 +65,9 @@ export class TokenStrategy extends PassportStrategy(
     } catch (e) {
       this.logger.warn(`User not found, creating. [intra=${userData.login}]`);
       const userDto: CreateUserDto = {
+        id: userData.login,
         nickname: userData.login,
-        avatar: process.env.DEFAULT_AVATAR_URL ?? '', // TODO: Make a wrapper later
+        avatar: process.env.DEFAULT_AVATAR ?? '', // TODO: Make a wrapper later
         intra_login: userData.login,
       };
 

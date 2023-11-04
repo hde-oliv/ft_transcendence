@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { Request } from 'express';
 import { UsersRepository } from './users.repository';
 import { CreateUserDto } from './dto/create-user-dto';
 import { UpdateOTPUserDto } from './dto/update-otp-user-dto';
@@ -8,7 +7,7 @@ import { UpdateOTPUserDto } from './dto/update-otp-user-dto';
 export class UsersService {
   constructor(private userRepository: UsersRepository) {}
 
-  getUser(param: { id: number }) {
+  getUser(param: { id: string }) {
     return this.userRepository.getUserById(param.id);
   }
 
