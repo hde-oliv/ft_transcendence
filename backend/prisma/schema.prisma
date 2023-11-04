@@ -46,12 +46,13 @@ model Memberships {
   channel       Channels @relation(fields: [channelId], references: [id])
   user          Users    @relation(fields: [userId], references: [id])
 
+  @@unique([channelId, userId])
   @@map("memberships")
 }
 
 model Channels {
   id          Int           @id @unique @default(autoincrement())
-  type        ChannelType   @default(public)
+  type        String        @default("public")
   name        String
   password    String
   protected   Boolean       @default(false)
@@ -99,15 +100,10 @@ model Messages {
   @@map("messages")
 }
 
-enum ChannelType {
-  private
-  public
-}
-
 model Matches {
   id          String   @id @unique @default(uuid())
-  p_one       Int
-  p_two       Int
+  p_one       String
+  p_two       String
   p_one_score Int
   p_two_score Int
   start       DateTime @default(now())
