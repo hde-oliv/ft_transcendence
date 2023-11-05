@@ -115,8 +115,11 @@ export class ChatRepository {
 
   async getChannelMessages(channelId: number): Promise<Array<MessageEntity>> {
     return this.prismaService.messages.findMany({
-      where: { channel_id: channelId },
-      include: { user: true, channel: true },
+      where: { channel_id: Number(channelId) },
     });
+  }
+
+  async getChannelByName(name: string): Promise<Channels> {
+    return this.prismaService.channels.findUniqueOrThrow({ where: { name } });
   }
 }

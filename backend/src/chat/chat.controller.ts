@@ -33,8 +33,8 @@ export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 
   @UseGuards(JwtAuthGuard)
-  @Post('/channel')
   @UsePipes(new ZodValidationPipe(createChannelSchema))
+  @Post('/channel')
   async createChannel(
     @Request() req,
     @Body() createChannelDto: CreateChannelDto,
@@ -55,8 +55,8 @@ export class ChatController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Patch('/channel/:id')
   @UsePipes(new ZodValidationPipe(updateChannelSchema))
+  @Patch('/channel/:id')
   async updateChannel(
     @Request() req,
     @Body() body: UpdateChannelDto,
@@ -72,8 +72,8 @@ export class ChatController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post('/channel/user/join')
   @UsePipes(new ZodValidationPipe(joinChannelSchema))
+  @Post('/channel/user/join')
   async joinChannel(@Request() req, @Body() body: JoinChannelDto) {
     return this.chatService.joinChannel(req.user, body);
   }
@@ -92,51 +92,51 @@ export class ChatController {
 
   // NOTE: Administrator can only kick/ban/mute
   @UseGuards(JwtAuthGuard)
-  @Post('/channel/user/kick')
   @UsePipes(new ZodValidationPipe(membershipSchema))
+  @Post('/channel/user/kick')
   async kickUser(@Request() req, @Body() body: MembershipDto) {
     return this.chatService.kickUser(req.user, body.channelId, body.userId);
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post('/channel/user/ban')
   @UsePipes(new ZodValidationPipe(membershipSchema))
+  @Post('/channel/user/ban')
   async banUser(@Request() req, @Body() body: MembershipDto) {
     return this.chatService.banUser(req.user, body.channelId, body.userId);
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post('/channel/user/unban')
   @UsePipes(new ZodValidationPipe(membershipSchema))
+  @Post('/channel/user/unban')
   async unbanUser(@Request() req, @Body() body: MembershipDto) {
     return this.chatService.unbanUser(req.user, body.channelId, body.userId);
   }
 
   // TODO: temporarily mute user
   @UseGuards(JwtAuthGuard)
-  @Post('/channel/user/mute')
   @UsePipes(new ZodValidationPipe(membershipSchema))
+  @Post('/channel/user/mute')
   async muteUser(@Request() req, @Body() body: MembershipDto) {
     return this.chatService.muteUser(req.user, body.channelId, body.userId);
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post('/channel/user/unmute')
   @UsePipes(new ZodValidationPipe(membershipSchema))
+  @Post('/channel/user/unmute')
   async unmuteUser(@Request() req, @Body() body: MembershipDto) {
     return this.chatService.unmuteUser(req.user, body.channelId, body.userId);
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post('/channel/user/admin')
   @UsePipes(new ZodValidationPipe(membershipSchema))
+  @Post('/channel/user/admin')
   async setAdminUser(@Request() req, @Body() body: MembershipDto) {
     return this.chatService.setAdminUser(req.user, body.channelId, body.userId);
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post('/channel/user/unadmin')
   @UsePipes(new ZodValidationPipe(membershipSchema))
+  @Post('/channel/user/unadmin')
   async unsetAdminUser(@Request() req, @Body() body: MembershipDto) {
     return this.chatService.unsetAdminUser(
       req.user,
@@ -146,9 +146,18 @@ export class ChatController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post('/channel/messages/:id')
+  @Get('/channel/:id/messages')
   async getChannelMessages(@Request() req, @Param('id') id: number) {
     return this.chatService.getChannelMessages(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('/channel/direct')
+  async getDirectChannelByUsers(
+    @Body() body: { user1: string; user2: string },
+  ) {
+    // TODO: create dto later
+    return this.chatService.getDirectChannelByUsers(body.user1, body.user2);
   }
 
   // @UseGuards(JwtAuthGuard)

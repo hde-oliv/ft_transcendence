@@ -19,7 +19,7 @@ export class UsersRepository {
     });
   }
 
-  async getAllUsers(): Promise<Array<UserEntity | null>> {
+  async getAllUsers(): Promise<Array<UserEntity>> {
     return this.prismaService.users.findMany();
   }
 

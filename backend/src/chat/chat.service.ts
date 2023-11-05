@@ -333,6 +333,26 @@ export class ChatService {
     });
   }
 
+  async getDirectChannelByUsers(user1: string, user2: string) {
+    this.logger.warn('Here!');
+    let channel: Channels;
+    try {
+      channel = await this.chatRepository.getChannelByName(
+        `${user1} & ${user2}`,
+      );
+    } catch (e) {
+      try {
+        channel = await this.chatRepository.getChannelByName(
+          `${user2} & ${user1}`,
+        );
+      } catch (e) {
+        throw new NotFoundException('Channel does not exist.');
+      }
+    }
+
+    return channel;
+  }
+
   // throws
   async getMembershipsbyChannel(channelId: number) {
     return await this.chatRepository.getMembershipsbyChannel(channelId);
@@ -393,6 +413,8 @@ export class ChatService {
   }
 
   async getUserFromSocket(socket: Socket) {
+    this.logger.error(socket.handshake.headers.authorization);
+
     let token = socket.handshake.headers.authorization
       ? socket.handshake.headers.authorization
       : '';
@@ -400,8 +422,6 @@ export class ChatService {
     if (token === '') {
       throw new UnauthorizedException('Invalid credentials.');
     }
-
-    token = token.split(' ')[1]; // NOTE: To remove 'Bearer'
 
     const payload = await this.authService.decodeToken(token);
     if (!payload) {
@@ -421,7 +441,7 @@ export class ChatService {
   }
 
   async registerNewMessage(data: NewMessageDto, user: Users) {
-    await this.chatRepository.registerNewMessage(data, user.id);
+    return await this.chatRepository.registerNewMessage(data, user.id);
   }
 
   async getValidMembershipsFromChannel(channelId: number) {
@@ -438,5 +458,9 @@ export class ChatService {
 
   async getChannelMessages(channelId: number) {
     return await this.chatRepository.getChannelMessages(channelId);
+  }
+
+  async getChannelByName(name: string) {
+    return await this.chatRepository.getChannelByName(name);
   }
 }

@@ -11,12 +11,13 @@ datasource db {
 }
 
 model Users {
-  id          String @id @unique(sort: Asc)
-  nickname    String @unique(sort: Asc)
-  avatar      String @db.Text
-  intra_login String @unique(sort: Asc)
-  status      String @default("offline")
-  elo         Int    @default(1000)
+  id          String  @id @unique(sort: Asc)
+  nickname    String  @unique(sort: Asc)
+  avatar      String  @db.Text
+  intra_login String  @unique(sort: Asc)
+  status      String  @default("offline")
+  elo         Int     @default(1000)
+  online      Boolean @default(false)
 
   otp_enabled  Boolean @default(false)
   otp_verified Boolean @default(false)
@@ -60,6 +61,7 @@ model Channels {
   Memberships Memberships[]
   Messages    Messages[]    @relation("channel_message")
 
+  @@unique(name)
   @@map("channels")
 }
 

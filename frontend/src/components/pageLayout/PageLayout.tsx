@@ -1,5 +1,5 @@
 'use client'
-import { PropsWithChildren, ReactElement, useEffect } from 'react';
+import { PropsWithChildren, ReactElement, useEffect, useState } from 'react';
 import { Grid, GridItem } from '@chakra-ui/react';
 
 import { ChakraProvider } from "@chakra-ui/react";
@@ -7,7 +7,6 @@ import theme from "@/lib/Theme";
 
 import { useRouter } from 'next/router';
 import PongNavBar from '../nav/PongNavBar';
-
 
 export default function PageLayout({ children }: { children: ReactElement }) {
 	return (

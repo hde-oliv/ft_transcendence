@@ -13,7 +13,7 @@ import { ChatService } from './chat.service';
 import { Logger } from '@nestjs/common';
 import { Channels, Memberships, Users } from '@prisma/client';
 import { map, without } from 'lodash';
-import { NewMessageDto } from './dto/new-message-dto';
+import { SendMessageDto } from './dto/send-message-dto';
 
 // NOTE: Chat only works in the /chat page
 // TODO: Define how a chat is created
@@ -58,31 +58,32 @@ export class ChatGateway
   async handleConnection(socket: Socket) {
     const user = await this.chatService.getUserFromSocket(socket);
     const clientSocket = { user, socket };
-
     this.clients = [...this.clients, clientSocket];
-
     this.logger.log(`Client Connected: ${socket.id}`);
     this.logger.log(`All Clients: ${this.getClientList()} `);
   }
 
-  @SubscribeMessage('NewMessage')
+  @SubscribeMessage('send_message')
   async handleNewMessage(
-    @MessageBody() data: NewMessageDto,
+    @MessageBody() data: SendMessageDto,
     @ConnectedSocket() socket: Socket,
   ) {
     const user: Users = await this.chatService.getUserFromSocket(socket);
-    const channel = await this.chatService.getChannel(data.channel_id);
+    const channel = await this.chatService.getChannelByName(data.channel_name);
 
     const members = await this.chatService.getValidMembershipsFromChannel(
       channel?.id,
     );
 
-    await this.chatService.registerNewMessage(data, user);
+    const message = await this.chatService.registerNewMessage(
+      { channel_id: channel.id, message: data.message },
+      user,
+    );
 
     const onlineUsers = this.getOnlineSocketsByMemberships(members);
 
-    await this.broadcast(socket, onlineUsers, 'ReceiveMessage', data.message);
-    this.wss.sockets.emit('receive_message', data);
+    await this.broadcast(socket, onlineUsers, 'receive_message', message);
+    // this.wss.sockets.emit('receive_message', data);
   }
 
   async broadcast(
@@ -92,7 +93,6 @@ export class ChatGateway
     message: any,
   ) {
     for (let i = 0; i < targets.length; i++) {
-      if (targets[i].id === sender.id) continue;
       targets[i].emit(event, message);
     }
   }
@@ -106,17 +106,27 @@ export class ChatGateway
   }
 
   getOnlineSocketsByMemberships(memberships: Memberships[]): Socket[] {
+    this.logger.warn(`Memberships: ${JSON.stringify(memberships)}`);
+
     const onlineUsers = memberships.filter((m) => {
       const client = this.clients.find((c) => c.user.id === m.userId);
       return client !== undefined;
     });
 
+    this.logger.warn(`Online Users: ${JSON.stringify(onlineUsers)}`);
+
+    // map users to socket using lodash
     const onlineSockets = map(onlineUsers, (m) => {
       const client = this.clients.find((c) => c.user.id === m.userId);
-      return client?.socket; // add null check here
-    }).filter((socket) => socket !== undefined); // add filter to remove undefined values
+      return client?.socket;
+    });
 
-    return onlineSockets as Socket[]; // cast the result to Socket[]
+    // remove undefined values
+    const onlineSocketsWithoutUndefined = without(onlineSockets, undefined);
+
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    return onlineSocketsWithoutUndefined;
   }
 }
 
