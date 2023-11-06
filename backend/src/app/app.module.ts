@@ -6,6 +6,7 @@ import { LoggerModule } from 'nestjs-pino';
 import { CatsModule } from 'src/cats/cats.module';
 import { ChatModule } from 'src/chat/chat.module';
 import { MeModule } from 'src/me/me.module';
+import { GameModule } from 'src/game/game.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { MeModule } from 'src/me/me.module';
     AuthModule,
     CatsModule,
     ChatModule,
+    GameModule,
     MeModule,
     LoggerModule.forRoot({
       pinoHttp: {
