@@ -1,15 +1,6 @@
 import pongAxios from "./pongAxios";
 import z from "zod";
 
-// TODO: Validation
-// const userResponse = z.object({
-//   nickname: z.string(),
-//   avatar: z.string(),
-//   intra_login: z.string(),
-//   status: z.string(),
-//   elo: z.number(),
-// });
-
 const channelResponseSchema = z.object({
   id: z.number(),
   type: z.string(),
