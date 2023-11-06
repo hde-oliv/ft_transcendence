@@ -116,7 +116,6 @@ export class AuthService {
       throw new UnauthorizedException('OTP Token failed');
     }
 
-    // TODO: Update user otp_enabled & otp_verfified
     const updateDto: UpdateOTPUserDto = {
       intra_login,
       otp_enabled: false,
@@ -150,7 +149,6 @@ export class AuthService {
       throw new UnauthorizedException('OTP Token failed');
     }
 
-    // TODO: Update user otp_enabled & otp_verfified
     const updateDto: UpdateOTPUserDto = {
       intra_login,
       otp_enabled: true,
@@ -208,6 +206,4 @@ export class AuthService {
 
     return { access_token: this.jwtService.sign(tokenClaims) }; // TODO: Make a better return
   }
-
-  // TODO: Function to disable OTP for user
 }

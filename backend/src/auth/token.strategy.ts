@@ -67,7 +67,7 @@ export class TokenStrategy extends PassportStrategy(
       const userDto: CreateUserDto = {
         id: userData.login,
         nickname: userData.login,
-        avatar: process.env.DEFAULT_AVATAR ?? '', // TODO: Make a wrapper later
+        avatar: process.env.DEFAULT_AVATAR ?? '',
         intra_login: userData.login,
       };
 

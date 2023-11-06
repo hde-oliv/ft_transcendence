@@ -19,10 +19,8 @@ import { UpdateChannelDto } from './dto/update-channel-dto';
 import { JoinChannelDto } from './dto/join-channel-dto';
 
 // TODO: try except blocks
-// TODO: remove the ws exceptions
-// TODO: Channel names must be Unique???
 // TODO: How banned will work on frontend?
-// TODO: Check if everything works on yourself
+// TODO: Check if everything works on yourself | NO, does not work, specially the create Channel function because it tries to create the membership twice
 
 @Injectable()
 export class ChatService {
@@ -415,7 +413,7 @@ export class ChatService {
   async getUserFromSocket(socket: Socket) {
     this.logger.error(socket.handshake.headers.authorization);
 
-    let token = socket.handshake.headers.authorization
+    const token = socket.handshake.headers.authorization
       ? socket.handshake.headers.authorization
       : '';
 

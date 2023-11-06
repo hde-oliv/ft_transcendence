@@ -171,6 +171,4 @@ export class ChatController {
   // async unblockUser(@Request() req, @Body() body: UpdateMembershipDto) {
   //   return this.chatService.deleteBlock(req.user, body);
   // }
-
-  // TODO: Decide how to handle kick and ban together
 }

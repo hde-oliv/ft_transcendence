@@ -16,7 +16,6 @@ import { map, without } from 'lodash';
 import { SendMessageDto } from './dto/send-message-dto';
 
 // NOTE: Chat only works in the /chat page
-// TODO: Define how a chat is created
 // TODO: Create a global websocket to handle user status later
 // TODO: List of online users
 
