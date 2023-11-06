@@ -28,7 +28,7 @@ export class ChatService {
     private authService: AuthService,
     private userService: UsersService,
     private chatRepository: ChatRepository,
-  ) {}
+  ) { }
 
   private readonly logger = new Logger(ChatService.name);
 
@@ -333,22 +333,7 @@ export class ChatService {
 
   async getDirectChannelByUsers(user1: string, user2: string) {
     this.logger.warn('Here!');
-    let channel: Channels;
-    try {
-      channel = await this.chatRepository.getChannelByName(
-        `${user1} & ${user2}`,
-      );
-    } catch (e) {
-      try {
-        channel = await this.chatRepository.getChannelByName(
-          `${user2} & ${user1}`,
-        );
-      } catch (e) {
-        throw new NotFoundException('Channel does not exist.');
-      }
-    }
-
-    return channel;
+    return await this.chatRepository.getUtUChannelByUsers(user1, user2);
   }
 
   // throws

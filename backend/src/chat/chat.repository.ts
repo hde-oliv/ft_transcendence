@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   Channels,
@@ -13,7 +13,7 @@ import { UpdateMembershipDto } from './dto/update-membership-dto';
 
 @Injectable()
 export class ChatRepository {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(private readonly prismaService: PrismaService) { }
 
   async createChannel(newChannel: CreateChannelDto): Promise<Channels> {
     return this.prismaService.channels.create({
@@ -35,6 +35,33 @@ export class ChatRepository {
         ...newMembership,
       },
     });
+  }
+
+  async getUtUChannelByUsers(user1: string, user2: string): Promise<Channels> {
+    const channelId_qr = await this.prismaService.memberships.groupBy({
+      by: ['channelId'],
+      having: {
+        channelId: {
+          _count: {
+            equals: 2,
+          },
+        },
+      },
+      where: {
+        user: {
+          id: {
+            in: [user1, user2],
+          },
+        },
+        channel: {
+          user2user: true,
+        },
+      }
+    })
+    if (channelId_qr.length > 0) {
+      return this.prismaService.channels.findUniqueOrThrow({ where: { id: channelId_qr[0].channelId } });
+    }
+    throw new NotFoundException("NotFoundError: No channel exists for this users");
   }
 
   async getChannel(id: number): Promise<Channels> {
