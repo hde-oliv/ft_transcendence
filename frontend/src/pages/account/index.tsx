@@ -1,9 +1,9 @@
 'use client'
-import PageLayout from "@/components/pageLayout/PageLayout";
+import PageLayout, { MeStateContext } from "@/components/pageLayout/PageLayout";
 import { AttachmentIcon, CheckIcon, CloseIcon, EditIcon, LockIcon, UnlockIcon } from "@chakra-ui/icons";
 import { Button, Card, CardBody, CardHeader, Center, Collapse, Heading, IconButton, Input, StackDivider } from "@chakra-ui/react";
 import { Flex, Stack, Text, Avatar, AvatarBadge, Box, useDisclosure } from '@chakra-ui/react';
-import { ChangeEvent, ChangeEventHandler, DetailedHTMLProps, HTMLInputTypeAttribute, InputHTMLAttributes, ReactElement, createContext, useEffect, useRef, useState } from "react";
+import { ChangeEvent, ChangeEventHandler, DetailedHTMLProps, HTMLInputTypeAttribute, InputHTMLAttributes, ReactElement, createContext, useContext, useEffect, useRef, useState } from "react";
 import { ActivateTPOModal } from "./ActivateTPOModal";
 import pinkGuy from './pinkGuy'
 import { getMe, updateMe } from "@/lib/fetchers/me";
@@ -31,6 +31,7 @@ function AvatarEditComponent(props: AvatarEditProps): JSX.Element {
 	const [tempAvatar, setTempAvatar] = useState(avatar);
 	const [uploaded, setUploaded] = useState(false);
 	const hiddenRef = useRef<HTMLInputElement>(null);
+	const MeContext = useContext(MeStateContext);
 
 
 	async function saveNewAvatar() {
@@ -40,6 +41,7 @@ function AvatarEditComponent(props: AvatarEditProps): JSX.Element {
 		};
 		try {
 			if (await updateMe(params)) {
+				MeContext[1]();
 				setAvatar(tempAvatar);
 				onClose();
 				setUploaded(false);
@@ -121,7 +123,7 @@ function AvatarEditComponent(props: AvatarEditProps): JSX.Element {
 	)
 }
 
-export default function Account() {
+export default function Account(props: any) {
 	const { isOpen: isOpenTF, onOpen: onOpenTF, onClose: onCloseTF } = useDisclosure();
 	const { isOpen: isOpenDisabler, onOpen: onOpenDisabler, onClose: onCloseDisabler } = useDisclosure();
 	const [userData, setUserData] = useState<undefined | userData>(undefined);
@@ -178,7 +180,6 @@ export default function Account() {
 			(async () => {
 				try {
 					const ftData = await getMe();
-					console.log(ftData);
 					let tmp: userData = {
 						forthyTwoTag: ftData.intra_login,
 						avatar: ftData.avatar,

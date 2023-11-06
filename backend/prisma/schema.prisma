@@ -32,8 +32,21 @@ model Users {
   messages       Messages[]     @relation("message_user")
   matches_one    Matches[]      @relation("matches_one")
   matches_two    Matches[]      @relation("matches_two")
+  friendship_one Friendships[]  @relation("friendship_one")
+  friendship_two Friendships[]  @relation("friendship_two")
 
   @@map("users")
+}
+
+model Friendships {
+  id   String @id @default(uuid())
+  fOne String
+  fTwo String
+
+  friend_one Users @relation("friendship_one", fields: [fOne], references: [id])
+  friend_two Users @relation("friendship_two", fields: [fTwo], references: [id])
+
+  @@map("friendships")
 }
 
 model Memberships {
