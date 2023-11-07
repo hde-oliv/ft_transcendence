@@ -38,11 +38,15 @@ const availableRoutes: Array<PongMenuItemProps> = [
 		text: "Rank",
 		route: "/rank",
 	},
+	{
+		text: "WppChat",
+		route: "/wppChat",
+	},
 ];
 
 interface PongMenuItemProps {
-	route: "/dashboard" | "/game" | "/chat" | "/history" | "/rank";
-	text: "Dashboard" | "Game" | "Chat" | "History" | "Rank";
+	route: "/dashboard" | "/game" | "/chat" | "/history" | "/rank" | '/wppChat';
+	text: "Dashboard" | "Game" | "Chat" | "History" | "Rank" | "WppChat";
 }
 function PongMenuItem(
 	props: React.PropsWithoutRef<PongMenuItemProps>,
