@@ -1,9 +1,22 @@
 import PageLayout from "@/components/pageLayout/PageLayout";
-import { EmailIcon } from "@chakra-ui/icons";
-import { Avatar, Box, Flex, Heading, Input, InputGroup, InputRightAddon, Stack, Text } from "@chakra-ui/react";
+import chatSocket from "@/lib/sockets/chatSocket";
+import { EmailIcon, RepeatIcon } from "@chakra-ui/icons";
+import { Avatar, Box, Button, Center, Flex, Heading, IconButton, Input, InputGroup, InputRightAddon, Stack, Switch, Text } from "@chakra-ui/react";
 import { ReactElement, useEffect, useState } from "react";
 
-function ChatCard(props: any) {
+type userSchema = {
+	nickname: string,
+	avatar: string,
+	intra_login: string,
+	status: string,
+	elo: number,
+}
+
+type FriendCardProps = userSchema & {
+	lastMessage?: string
+};
+
+function FriendCard(props: FriendCardProps) {
 	return (
 		<Flex
 			bg='pongBlue.300'
@@ -22,13 +35,16 @@ function ChatCard(props: any) {
 					size='xs'
 					overflow='hidden'
 					textOverflow='ellipsis'
-				>Henrique de Campos Duller</Heading>
+				>
+					{props.nickname}
+				</Heading>
 				<Text
 					overflow='hidden'
 					textOverflow='ellipsis'
 					whiteSpace="nowrap"
 				>
-					This is a long long long long long long long long long long long long long long long long long long text</Text>
+					{props.lastMessage ? props.lastMessage : ''}
+				</Text>
 			</Box>
 		</Flex>
 	);
@@ -100,7 +116,34 @@ function MessageSection(props: any): JSX.Element {
 		</>
 	)
 }
+
+const dummyFriends = [
+	{
+		nickname: 'JohnDoe',
+		avatar: '',
+		intra_login: 'johndoe123',
+		status: 'active',
+		elo: 1500,
+	},
+	{
+		nickname: 'JaneSmith',
+		avatar: '',
+		intra_login: 'janesmith456',
+		status: 'inactive',
+		elo: 1400,
+	},
+	{
+		nickname: 'MaxPayne',
+		avatar: '',
+		intra_login: 'maxpayne789',
+		status: 'active',
+		elo: 1600,
+	}
+];
+
 export default function Chat(props: any) {
+	const [online, setOnline] = useState(false);
+	const [friendList, setFriendList] = useState<Array<userSchema>>(dummyFriends)
 	/**
 	 * {
 		"id": "baaf8ba7-ad95-4913-aad1-53bbcee4ba7e",
@@ -110,7 +153,36 @@ export default function Chat(props: any) {
 		"time": "2023-11-07T00:32:41.867Z"
 	},
 	 */
+	useEffect(() => {
+		function onConnect() {
+			setOnline(true);
+		}
+
+		function onDisconnect() {
+			setOnline(false);
+		}
+
+		// function onReceiveMessage(value: Message) {
+		//   console.warn(value.channel_id);
+		//   console.warn(chatRef.current);
+
+		//   if (value.channel_id === chatRef.current.chatInfo?.id) {
+		// 	setLocalMessages((previous) => [...previous, value]);
+		//   }
+		// }
+
+		chatSocket.on("connect", onConnect);
+		chatSocket.on("disconnect", onDisconnect);
+		// chatSocket.on("receive_message", onReceiveMessage);
+
+		return () => {
+			chatSocket.off("connect", onConnect);
+			chatSocket.off("disconnect", onDisconnect);
+			// chatSocket.off("receive_message", onReceiveMessage);
+		};
+	}, []);
 	return (
+
 		<Flex h='100%' alignItems={'stretch'}>
 			<Flex
 				flexDir={'column'}
@@ -121,21 +193,34 @@ export default function Chat(props: any) {
 				pr='1vw'
 				overflowY='auto'
 			>
-				<Stack>
-					<ChatCard avatar={props.avatar} />
-					<ChatCard avatar={props.avatar} />
-					<ChatCard avatar={props.avatar} />
-					<ChatCard avatar={props.avatar} />
-					<ChatCard avatar={props.avatar} />
-					<ChatCard avatar={props.avatar} />
-					<ChatCard avatar={props.avatar} />
-					<ChatCard avatar={props.avatar} />
-					<ChatCard avatar={props.avatar} />
-					<ChatCard avatar={props.avatar} />
-					<ChatCard avatar={props.avatar} />
-					<ChatCard avatar={props.avatar} />
-					<ChatCard avatar={props.avatar} />
-					<ChatCard avatar={props.avatar} />
+				<Flex
+					justifyContent={'space-between'}
+					align={'center'}
+
+					pr='1vw'
+					mb='1vh'
+					h='10vh'
+					borderRadius={5}
+				>
+					<Button
+						colorScheme="green"
+						aria-label="connect"
+						leftIcon={<RepeatIcon />}
+						onClick={() => {
+							chatSocket.connect()
+						}}
+					>
+						{online ? 'Disconnect' : 'Connect'}
+					</Button>
+					<Switch
+						isReadOnly={true}
+						isChecked={online}
+						colorScheme={'green'}
+						size='lg'
+					/>
+				</Flex>
+				<Stack overflow={'auto'}>
+					{friendList.map(f => <FriendCard {...f} />)}
 				</Stack>
 
 			</Flex>
@@ -147,6 +232,7 @@ export default function Chat(props: any) {
 				<MessageSection />
 			</Flex>
 		</Flex>
+
 	)
 }
 

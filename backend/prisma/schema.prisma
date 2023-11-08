@@ -35,6 +35,8 @@ model Users {
   friendship_one Friendships[]  @relation("friendship_one")
   friendship_two Friendships[]  @relation("friendship_two")
 
+  @@index([nickname])
+  @@index([elo])
   @@map("users")
 }
 
@@ -46,6 +48,9 @@ model Friendships {
   friend_one Users @relation("friendship_one", fields: [fOne], references: [id])
   friend_two Users @relation("friendship_two", fields: [fTwo], references: [id])
 
+  @@unique([fOne, fTwo])
+  @@index([fOne])
+  @@index([fTwo])
   @@map("friendships")
 }
 

@@ -5,6 +5,8 @@ import axios, { AxiosInstance, AxiosRequestConfig } from 'axios'
  * @param token string
  * @returns Instace of Axios, with baseUrl defined and Authorization IF token if provided
  */
+export const baseUrl = 'http://localhost:3000';
+
 export default function (token?: string): AxiosInstance {
 
 	const config: AxiosRequestConfig = {
