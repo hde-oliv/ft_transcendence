@@ -30,7 +30,7 @@ import { MembershipDto, membershipSchema } from './dto/membership-dto';
 
 @Controller('chat')
 export class ChatController {
-  constructor(private readonly chatService: ChatService) { }
+  constructor(private readonly chatService: ChatService) {}
 
   @UseGuards(JwtAuthGuard)
   @UsePipes(new ZodValidationPipe(createChannelSchema))
@@ -155,22 +155,26 @@ export class ChatController {
   @Post('/channel/direct')
   async getDirectChannelByUsers(
     @Request() req,
-    @Body() body: { user1: string; user2: string }
+    @Body() body: { user1: string; user2: string },
   ) {
     // TODO: create dto later    let channel;
     try {
-      return await this.chatService.getDirectChannelByUsers(body.user1, body.user2);
+      return await this.chatService.getDirectChannelByUsers(
+        body.user1,
+        body.user2,
+      );
     } catch (e) {
-      const member = body.user1 === req.user.intra_login ? body.user2 : body.user1;
+      const member =
+        body.user1 === req.user.intra_login ? body.user2 : body.user1;
       const createChannelDto = {
         name: `${body.user1} - ${body.user2}`,
         type: 'private',
         password: '',
         protected: false,
         user2user: true,
-        members: [member]
-      }
-      return await this.chatService.createChannel(req.user, createChannelDto)
+        members: [member],
+      };
+      return await this.chatService.createChannel(req.user, createChannelDto);
     }
   }
 

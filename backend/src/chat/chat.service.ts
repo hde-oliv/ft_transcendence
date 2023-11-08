@@ -28,7 +28,7 @@ export class ChatService {
     private authService: AuthService,
     private userService: UsersService,
     private chatRepository: ChatRepository,
-  ) { }
+  ) {}
 
   private readonly logger = new Logger(ChatService.name);
 
