@@ -14,7 +14,7 @@ import { TokenClaims } from 'src/auth/auth.model';
 
 @Injectable()
 export class ChatRepository {
-  constructor(private readonly prismaService: PrismaService) { }
+  constructor(private readonly prismaService: PrismaService) {}
 
   async createChannel(newChannel: CreateChannelDto): Promise<Channels> {
     return this.prismaService.channels.create({
@@ -57,12 +57,16 @@ export class ChatRepository {
         channel: {
           user2user: true,
         },
-      }
-    })
+      },
+    });
     if (channelId_qr.length > 0) {
-      return this.prismaService.channels.findUniqueOrThrow({ where: { id: channelId_qr[0].channelId } });
+      return this.prismaService.channels.findUniqueOrThrow({
+        where: { id: channelId_qr[0].channelId },
+      });
     }
-    throw new NotFoundException("NotFoundError: No channel exists for this users");
+    throw new NotFoundException(
+      'NotFoundError: No channel exists for this users',
+    );
   }
 
   async getChannel(id: number): Promise<Channels> {
