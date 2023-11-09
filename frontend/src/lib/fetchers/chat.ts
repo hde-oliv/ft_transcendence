@@ -1,5 +1,5 @@
 import pongAxios from "./pongAxios";
-import z from "zod";
+import z, { boolean } from "zod";
 
 const channelResponseSchema = z.object({
 	id: z.number(),
@@ -107,6 +107,32 @@ export async function fetchMyChannels() {
 		return final;
 	} catch (e) {
 		console.warn(e);
+		return [];
+	}
+}
+
+const userSchema = z.object({
+	id: z.string(),
+	nickname: z.string(),
+	avatar: z.string(),
+	intra_login: z.string(),
+	status: z.enum(["offline", "online"]),
+	elo: z.number(),
+	online: z.boolean()
+}
+)
+
+type user = z.infer<typeof userSchema>
+export type FetchChannelUsers = Array<user>;
+export async function fetchChannelUsers(id: number): Promise<FetchChannelUsers> {
+	const token = localStorage.getItem("token");
+	if (token === null) throw new Error(`getMe could't get bearer token`);
+	const fetcher = pongAxios(token);
+	try {
+		const response = await fetcher.get(`chat/channel/${id}/users`)
+
+		return z.array(userSchema).parse(response.data);
+	} catch (e) {
 		return [];
 	}
 }

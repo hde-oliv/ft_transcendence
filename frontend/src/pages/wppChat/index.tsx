@@ -1,10 +1,12 @@
 import PageLayout from "@/components/pageLayout/PageLayout";
-import { fetchMyChannels } from "@/lib/fetchers/chat";
+import { fetchChannelUsers, fetchMyChannels } from "@/lib/fetchers/chat";
+import { FetchChannelUsers } from "@/lib/fetchers/chat";
 import chatSocket from "@/lib/sockets/chatSocket";
 import { EmailIcon, RepeatIcon } from "@chakra-ui/icons";
-import { Avatar, Box, Button, Center, Flex, Heading, IconButton, Input, InputGroup, InputRightAddon, Stack, Switch, Text } from "@chakra-ui/react";
+import { Avatar, Box, Button, Center, Flex, Heading, IconButton, Input, InputGroup, InputRightAddon, Skeleton, Stack, Switch, Text } from "@chakra-ui/react";
 import { ReactElement, useEffect, useState } from "react";
 import { myChannel } from "@/lib/fetchers/chat";
+import { fetchUserById } from "@/lib/fetchers/users";
 
 type userSchema = {
 	nickname: string,
@@ -14,42 +16,84 @@ type userSchema = {
 	elo: number,
 }
 
-type FriendCardProps = userSchema & {
-	channel: myChannel,
+type FriendCardProps = myChannel & {
 	lastMessage?: string
 };
 
 function ChannelCard(props: FriendCardProps) {
+	const [cardData, setCardData] = useState<userSchema>({
+		avatar: '',
+		elo: 1000,
+		intra_login: '',
+		nickname: '',
+		status: ''
+	})
+	function polishChannelUsers(users: FetchChannelUsers) {
+		const me = props.relation.userId;
+		if (props.user2user) { //direct channels
+			let target = users.find((e) => e.id !== me);
+			if (target) {
+				setCardData({
+					avatar: target.avatar,
+					elo: target.elo,
+					intra_login: target.intra_login,
+					nickname: target.nickname,
+					status: target.status
+				})
+			}
+		} else {
+			setCardData({
+				avatar: '',
+				elo: 0,
+				intra_login: '',
+				nickname: props.name,
+				status: 'online'
+			})
+		}
+	}
+	useEffect(() => {
+		fetchChannelUsers(props.id)
+			.then(polishChannelUsers).
+			catch(() => setCardData({
+				avatar: '',
+				elo: 1000,
+				intra_login: '',
+				nickname: '',
+				status: ''
+			}));
+	}, [])
 	return (
-		<Flex
-			bg='pongBlue.300'
-			padding='1vw 1vw'
-			borderRadius='10'
-			borderStyle='solid'
-			borderColor='yellow.500'
-			borderWidth={2}
-			justifyContent='flex-start'
-			maxW='20vw'
-		>
-			<Avatar src={props.avatar} maxW='30%' />
-			<Box pr='5%' pl='5%' maxW='70%'>
-				<Heading
-					as='h6'
-					size='xs'
-					overflow='hidden'
-					textOverflow='ellipsis'
-				>
-					{props.nickname}
-				</Heading>
-				<Text
-					overflow='hidden'
-					textOverflow='ellipsis'
-					whiteSpace="nowrap"
-				>
-					{props.lastMessage ? props.lastMessage : ''}
-				</Text>
-			</Box>
-		</Flex>
+		<Skeleton isLoaded={cardData.intra_login !== ''}>
+			<Flex
+				bg='pongBlue.300'
+				padding='1vw 1vw'
+				borderRadius='10'
+				borderStyle='solid'
+				borderColor='yellow.500'
+				borderWidth={2}
+				justifyContent='flex-start'
+				maxW='20vw'
+			>
+				<Avatar src={cardData.avatar} maxW='30%' />
+				<Box pr='5%' pl='5%' maxW='70%'>
+					<Heading
+						as='h6'
+						size='xs'
+						overflow='hidden'
+						textOverflow='ellipsis'
+					>
+						{cardData.nickname}
+					</Heading>
+					<Text
+						overflow='hidden'
+						textOverflow='ellipsis'
+						whiteSpace="nowrap"
+					>
+						{props.lastMessage ? props.lastMessage : ''}
+					</Text>
+				</Box>
+			</Flex>
+		</Skeleton>
 	);
 }
 type Message = {
@@ -146,7 +190,7 @@ const dummyFriends = [
 
 export default function Chat(props: any) {
 	const [online, setOnline] = useState(false);
-	const [channelList, setChannelList] = useState<Array<userSchema>>(dummyFriends)
+	const [channelList, setChannelList] = useState<Array<FriendCardProps>>([])
 	/**
 	 * {
 		"id": "baaf8ba7-ad95-4913-aad1-53bbcee4ba7e",
@@ -165,7 +209,9 @@ export default function Chat(props: any) {
 		setOnline(false);
 	}
 	useEffect(() => {
-		fetchMyChannels().then().catch();
+		fetchMyChannels().then(e => {
+			setChannelList(e);
+		}).catch();
 
 		// function onReceiveMessage(value: Message) {
 		//   console.warn(value.channel_id);
@@ -187,7 +233,6 @@ export default function Chat(props: any) {
 		};
 	}, []);
 	return (
-
 		<Flex h='100%' alignItems={'stretch'}>
 			<Flex
 				flexDir={'column'}
@@ -212,7 +257,7 @@ export default function Chat(props: any) {
 						aria-label="connect"
 						leftIcon={<RepeatIcon />}
 						onClick={() => {
-							chatSocket.connect()
+							chatSocket.connected ? chatSocket.disconnect() : chatSocket.connect()
 						}}
 					>
 						{online ? 'Disconnect' : 'Connect'}
@@ -225,7 +270,7 @@ export default function Chat(props: any) {
 					/>
 				</Flex>
 				<Stack overflow={'auto'}>
-					{channelList.map(f => <ChannelCard {...f} key={`ChannelCard${f.intra_login}`} />)}
+					{channelList.map(c => <ChannelCard {...c} key={`ChannelCard-${c.id}`} />)}
 				</Stack>
 
 			</Flex>

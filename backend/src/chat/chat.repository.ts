@@ -14,7 +14,7 @@ import { TokenClaims } from 'src/auth/auth.model';
 
 @Injectable()
 export class ChatRepository {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(private readonly prismaService: PrismaService) { }
 
   async createChannel(newChannel: CreateChannelDto): Promise<Channels> {
     return this.prismaService.channels.create({
@@ -165,5 +165,17 @@ export class ChatRepository {
 
   async getChannelByName(name: string): Promise<Channels> {
     return this.prismaService.channels.findUniqueOrThrow({ where: { name } });
+  }
+
+  async getUsersByChannel(channelId: number) {
+    return this.prismaService.users.findMany({
+      where: {
+        Memberships: {
+          some: {
+            channelId: channelId
+          }
+        }
+      }
+    })
   }
 }

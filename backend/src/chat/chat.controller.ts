@@ -31,7 +31,13 @@ import { TokenClaims } from 'src/auth/auth.model';
 
 @Controller('chat')
 export class ChatController {
-  constructor(private readonly chatService: ChatService) {}
+  constructor(private readonly chatService: ChatService) { }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/mychannels')
+  async getUserChannels(@Request() req) {
+    return this.chatService.getChannelsByUser(req.user);
+  }
 
   @UseGuards(JwtAuthGuard)
   @UsePipes(new ZodValidationPipe(createChannelSchema))
@@ -43,16 +49,11 @@ export class ChatController {
     return this.chatService.createChannel(req.user, createChannelDto);
   }
 
+
   @UseGuards(JwtAuthGuard)
   @Get('/channel')
   async getAllChannels() {
     return this.chatService.getAllChannels();
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Get('/mychannels')
-  async getUserChannels(@Request() req) {
-    return this.chatService.getChannelsByUser(req.user);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -156,6 +157,12 @@ export class ChatController {
   @Get('/channel/:id/messages')
   async getChannelMessages(@Request() req, @Param('id') id: number) {
     return this.chatService.getChannelMessages(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/channel/:id/users')
+  async getChannelData(@Request() req, @Param('id') id: any) {
+    return this.chatService.getChannelDataById(id);
   }
 
   @UseGuards(JwtAuthGuard)

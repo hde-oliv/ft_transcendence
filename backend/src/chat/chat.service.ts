@@ -28,7 +28,7 @@ export class ChatService {
     private authService: AuthService,
     private userService: UsersService,
     private chatRepository: ChatRepository,
-  ) {}
+  ) { }
 
   private readonly logger = new Logger(ChatService.name);
 
@@ -448,5 +448,13 @@ export class ChatService {
 
   async getChannelByName(name: string) {
     return await this.chatRepository.getChannelByName(name);
+  }
+
+  async getChannelDataById(channelId: any) {
+    channelId = Number(channelId);
+    if (typeof channelId !== 'number' || !Number.isInteger(channelId)) {
+      throw new BadRequestException();
+    }
+    return this.chatRepository.getUsersByChannel(channelId);
   }
 }
