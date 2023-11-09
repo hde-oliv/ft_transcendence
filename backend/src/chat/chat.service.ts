@@ -74,8 +74,12 @@ export class ChatService {
   }
 
   async getChannelsByUser(user: TokenClaims) {
-    return this.chatRepository.getChannelsByUser(user);
+    const data = await this.chatRepository.getChannelsByUser(user);
+    if (data)
+      return data.Memberships;
+    return []
   }
+
   // throws
   async getChannel(id: number) {
     let channel: Channels;

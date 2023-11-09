@@ -39,6 +39,7 @@ export class ChatController {
     return this.chatService.getChannelsByUser(req.user);
   }
 
+
   @UseGuards(JwtAuthGuard)
   @UsePipes(new ZodValidationPipe(createChannelSchema))
   @Post('/channel')

@@ -1,101 +1,25 @@
 import PageLayout from "@/components/pageLayout/PageLayout";
-import { fetchChannelUsers, fetchMyChannels } from "@/lib/fetchers/chat";
-import { FetchChannelUsers } from "@/lib/fetchers/chat";
+import { ChannelData, MyChannels, fetchMyChannels } from "@/lib/fetchers/chat";
 import chatSocket from "@/lib/sockets/chatSocket";
 import { EmailIcon, RepeatIcon } from "@chakra-ui/icons";
-import { Avatar, Box, Button, Center, Flex, Heading, IconButton, Input, InputGroup, InputRightAddon, Skeleton, Stack, Switch, Text } from "@chakra-ui/react";
+import { Box, Button, Center, Flex, IconButton, Input, InputGroup, InputRightAddon, Skeleton, Stack, Switch, Text } from "@chakra-ui/react";
 import { ReactElement, useEffect, useState } from "react";
 import { myChannel } from "@/lib/fetchers/chat";
 import { fetchUserById } from "@/lib/fetchers/users";
+import { ChannelCard } from "./ChannelCard";
 
-type userSchema = {
+export type userSchema = {
 	nickname: string,
 	avatar: string,
 	intra_login: string,
 	status: string,
-	elo: number,
 }
 
-type FriendCardProps = myChannel & {
+export type ChannelComponentProps = ChannelData & {
+	onClick?: () => void
 	lastMessage?: string
 };
 
-function ChannelCard(props: FriendCardProps) {
-	const [cardData, setCardData] = useState<userSchema>({
-		avatar: '',
-		elo: 1000,
-		intra_login: '',
-		nickname: '',
-		status: ''
-	})
-	function polishChannelUsers(users: FetchChannelUsers) {
-		const me = props.relation.userId;
-		if (props.user2user) { //direct channels
-			let target = users.find((e) => e.id !== me);
-			if (target) {
-				setCardData({
-					avatar: target.avatar,
-					elo: target.elo,
-					intra_login: target.intra_login,
-					nickname: target.nickname,
-					status: target.status
-				})
-			}
-		} else {
-			setCardData({
-				avatar: '',
-				elo: 0,
-				intra_login: '',
-				nickname: props.name,
-				status: 'online'
-			})
-		}
-	}
-	useEffect(() => {
-		fetchChannelUsers(props.id)
-			.then(polishChannelUsers).
-			catch(() => setCardData({
-				avatar: '',
-				elo: 1000,
-				intra_login: '',
-				nickname: '',
-				status: ''
-			}));
-	}, [])
-	return (
-		<Skeleton isLoaded={cardData.intra_login !== ''}>
-			<Flex
-				bg='pongBlue.300'
-				padding='1vw 1vw'
-				borderRadius='10'
-				borderStyle='solid'
-				borderColor='yellow.500'
-				borderWidth={2}
-				justifyContent='flex-start'
-				maxW='20vw'
-			>
-				<Avatar src={cardData.avatar} maxW='30%' />
-				<Box pr='5%' pl='5%' maxW='70%'>
-					<Heading
-						as='h6'
-						size='xs'
-						overflow='hidden'
-						textOverflow='ellipsis'
-					>
-						{cardData.nickname}
-					</Heading>
-					<Text
-						overflow='hidden'
-						textOverflow='ellipsis'
-						whiteSpace="nowrap"
-					>
-						{props.lastMessage ? props.lastMessage : ''}
-					</Text>
-				</Box>
-			</Flex>
-		</Skeleton>
-	);
-}
 type Message = {
 	id: string,
 	channel_id: number,
@@ -114,15 +38,16 @@ function MessageCard(props: MessageCardProps): JSX.Element {
 		<Flex
 			flexDir={thirdPartMsg ? 'row' : 'row-reverse'}
 		>
-			<Box bg={thirdPartMsg ? 'teal.600' : 'blue.400'} minW={'40%'} maxW={'70%'} borderRadius={10} p='1vh 1vw'>
-				<Text textAlign={thirdPartMsg ? 'start' : 'end'}>{props.time.toLocaleDateString()} {props.time.toTimeString().slice(0, 8)}</Text>
-				<Text textAlign={thirdPartMsg ? 'start' : 'end'}>{props.user_id}:</Text>
-				<Text>{props.message}</Text>
+			<Box bg={thirdPartMsg ? 'gray.200' : 'yellow.400'} minW={'40%'} maxW={'70%'} borderRadius={10} p='1vh 1vw'>
+				<Text color='black' textAlign={thirdPartMsg ? 'start' : 'end'}>{props.time.toLocaleDateString()} {props.time.toTimeString().slice(0, 8)}</Text>
+				<Text color='black' textAlign={thirdPartMsg ? 'start' : 'end'}>{props.user_id}:</Text>
+				<Text color='black'>{props.message}</Text>
 			</Box>
 		</Flex>
 	)
 }
-function MessageSection(props: any): JSX.Element {
+
+function MessageSection(props: ChannelComponentProps): JSX.Element {
 	const [messages, setMessages] = useState<Array<MessageCardProps>>([]);
 
 	useEffect(() => {
@@ -190,7 +115,9 @@ const dummyFriends = [
 
 export default function Chat(props: any) {
 	const [online, setOnline] = useState(false);
-	const [channelList, setChannelList] = useState<Array<FriendCardProps>>([])
+	const [activeChannel, setActiveChannel] = useState<undefined | ChannelComponentProps>(undefined);
+	const [myChannels, setMyChannels] = useState<MyChannels>([])
+
 	/**
 	 * {
 		"id": "baaf8ba7-ad95-4913-aad1-53bbcee4ba7e",
@@ -209,27 +136,17 @@ export default function Chat(props: any) {
 		setOnline(false);
 	}
 	useEffect(() => {
-		fetchMyChannels().then(e => {
-			setChannelList(e);
-		}).catch();
+		fetchMyChannels().then((e) => {
+			setMyChannels(e);
+		}).catch(() => setMyChannels([]));
 
-		// function onReceiveMessage(value: Message) {
-		//   console.warn(value.channel_id);
-		//   console.warn(chatRef.current);
-
-		//   if (value.channel_id === chatRef.current.chatInfo?.id) {
-		// 	setLocalMessages((previous) => [...previous, value]);
-		//   }
-		// }
 
 		chatSocket.on("connect", onConnect);
 		chatSocket.on("disconnect", onDisconnect);
-		// chatSocket.on("receive_message", onReceiveMessage);
 
 		return () => {
 			chatSocket.off("connect", onConnect);
 			chatSocket.off("disconnect", onDisconnect);
-			// chatSocket.off("receive_message", onReceiveMessage);
 		};
 	}, []);
 	return (
@@ -270,7 +187,8 @@ export default function Chat(props: any) {
 					/>
 				</Flex>
 				<Stack overflow={'auto'}>
-					{channelList.map(c => <ChannelCard {...c} key={`ChannelCard-${c.id}`} />)}
+					{/* {channelList.map(c => <ChannelCard {...c} key={`ChannelCard-${c.channelId}`} onClick={() => setActiveChannel(c)} />)} */}
+					{myChannels.map(e => <ChannelCard key={`ChannelCard-${e.channelId}`} {...e} onClick={() => setActiveChannel(e)} />)}
 				</Stack>
 
 			</Flex>
@@ -279,7 +197,7 @@ export default function Chat(props: any) {
 				justifyContent='space-between'
 				w='100%'
 			>
-				<MessageSection />
+				{activeChannel ? <MessageSection {...activeChannel} /> : <Skeleton isLoaded={false} h='100%' speed={3} startColor="pongBlue.400" endColor="yellow.300" />}
 			</Flex>
 		</Flex>
 

@@ -11,6 +11,7 @@ import { CreateMembershipDto } from './dto/create-membership-dto';
 import { UpdateChannelDto } from './dto/update-channel-dto';
 import { UpdateMembershipDto } from './dto/update-membership-dto';
 import { TokenClaims } from 'src/auth/auth.model';
+import { channel } from 'diagnostics_channel';
 
 @Injectable()
 export class ChatRepository {
@@ -75,16 +76,89 @@ export class ChatRepository {
 
   async getChannelsByUser(user: TokenClaims) {
     const userId = user.intra_login;
-    return this.prismaService.memberships.findMany({
+    const teste = this.prismaService.users.findUnique({
       where: {
-        userId: userId
+        id: userId
       },
       include: {
-        channel: true
-      },
-      distinct: ['channelId']
+        Memberships: {
+          select: {
+            id: false,
+            channelId: true,
+            userId: true,
+            owner: true,
+            administrator: true,
+            banned: true,
+            muted: true,
+            channel: {
+              select: {
+                id: true,
+                type: true,
+                name: true,
+                password: false,
+                protected: true,
+                user2user: true,
+                Memberships: {
+                  include: {
+                    user: {
+                      select: {
+                        id: true,
+                        nickname: true,
+                        avatar: true,
+                        intra_login: true,
+                        status: true
+                      }
+                    }
+                  },
+                  where: {
+                    NOT: {
+                      userId: userId
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     })
+    // const teste = this.prismaService.users.findUnique({
+    //   where: {
+    //     id: userId
+    //   },
+    //   include: {
+    //     Memberships: {
+    //       include: {
+    //         channel: {
+
+    //           include: {
+    //             Memberships: {
+    //               include: {
+    //                 user: {
+    //                   select: {
+    //                     id: true,
+    //                     nickname: true,
+    //                     avatar: true,
+    //                     intra_login: true,
+    //                     status: true
+    //                   }
+    //                 }
+    //               },
+    //               where: {
+    //                 NOT: {
+    //                   userId: userId
+    //                 }
+    //               }
+    //             }
+    //           }
+    //         }
+    //       }
+    //     }
+    //   }
+    // })
+    return teste
   }
+
   async getAllChannels(): Promise<Channels[]> {
     return this.prismaService.channels.findMany();
   }

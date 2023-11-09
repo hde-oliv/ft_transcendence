@@ -85,31 +85,6 @@ export async function fetchMessagesFromChannel(channelId: number) {
 	}
 }
 
-export async function fetchMyChannels() {
-	const token = localStorage.getItem("token");
-	if (token === null) throw new Error(`getMe could't get bearer token`);
-	const fetcher = pongAxios(token);
-
-	try {
-		const response = await fetcher.get(`chat/mychannels`);
-		const parsedData = z.array(myChannelsResponseSchema).parse(response.data);
-		const arr = parsedData.map(e => {
-			const channelData = channelResponseSchema.omit({ password: true }).parse(e.channel);
-			const relation = relationSchema.parse(e);
-			const returnVal = {
-				...channelData,
-				relation: relation
-			}
-			return returnVal;
-		});
-		// const final = myChannelsSchema.parse(arr[0]);
-		const final = z.array(myChannelsSchema).parse(arr)
-		return final;
-	} catch (e) {
-		console.warn(e);
-		return [];
-	}
-}
 
 const userSchema = z.object({
 	id: z.string(),
@@ -132,6 +107,55 @@ export async function fetchChannelUsers(id: number): Promise<FetchChannelUsers> 
 		const response = await fetcher.get(`chat/channel/${id}/users`)
 
 		return z.array(userSchema).parse(response.data);
+	} catch (e) {
+		return [];
+	}
+}
+
+const myChannelResponse = z.array(z.object({
+	channelId: z.number().int(),
+	userId: z.string(),
+	owner: z.boolean(),
+	administrator: z.boolean(),
+	banned: z.boolean(),
+	muted: z.boolean(),
+	channel: z.object({
+		id: z.number().int(),
+		type: z.enum(['private', 'public']),
+		name: z.string(),
+		protected: z.boolean(),
+		user2user: z.boolean(),
+		Memberships: z.array(z.object({
+			id: z.number().int(),
+			channelId: z.number().int(),
+			userId: z.string(),
+			owner: z.boolean(),
+			administrator: z.boolean(),
+			banned: z.boolean(),
+			muted: z.boolean(),
+			user: z.object(
+				{
+					id: z.string(),
+					nickname: z.string(),
+					avatar: z.string(),
+					intra_login: z.string(),
+					status: z.enum(['offline', 'online'])
+				}
+			)
+		}))
+	})
+}))
+export type MyChannels = z.infer<typeof myChannelResponse>;
+export type ChannelData = z.infer<typeof myChannelResponse.element>;
+
+export async function fetchMyChannels(): Promise<MyChannels> {
+	const token = localStorage.getItem("token");
+	if (token === null) throw new Error(`getMe could't get bearer token`);
+	const fetcher = pongAxios(token);
+	try {
+		const response = await fetcher.get(`chat/mychannels`)
+
+		return myChannelResponse.parse(response.data)
 	} catch (e) {
 		return [];
 	}
