@@ -25,6 +25,7 @@ import { CreateMembershipDto } from './dto/create-membership-dto';
 import { JwtAuthGuard } from 'src/auth/jwt.guard';
 import { JoinChannelDto, joinChannelSchema } from './dto/join-channel-dto';
 import { MembershipDto, membershipSchema } from './dto/membership-dto';
+import { TokenClaims } from 'src/auth/auth.model';
 
 // TODO: Block user logic
 
@@ -46,6 +47,12 @@ export class ChatController {
   @Get('/channel')
   async getAllChannels() {
     return this.chatService.getAllChannels();
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/mychannels')
+  async getUserChannels(@Request() req) {
+    return this.chatService.getChannelsByUser(req.user);
   }
 
   @UseGuards(JwtAuthGuard)

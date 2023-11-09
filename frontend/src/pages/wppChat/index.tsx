@@ -1,8 +1,10 @@
 import PageLayout from "@/components/pageLayout/PageLayout";
+import { fetchMyChannels } from "@/lib/fetchers/chat";
 import chatSocket from "@/lib/sockets/chatSocket";
 import { EmailIcon, RepeatIcon } from "@chakra-ui/icons";
 import { Avatar, Box, Button, Center, Flex, Heading, IconButton, Input, InputGroup, InputRightAddon, Stack, Switch, Text } from "@chakra-ui/react";
 import { ReactElement, useEffect, useState } from "react";
+import { myChannel } from "@/lib/fetchers/chat";
 
 type userSchema = {
 	nickname: string,
@@ -13,10 +15,11 @@ type userSchema = {
 }
 
 type FriendCardProps = userSchema & {
+	channel: myChannel,
 	lastMessage?: string
 };
 
-function FriendCard(props: FriendCardProps) {
+function ChannelCard(props: FriendCardProps) {
 	return (
 		<Flex
 			bg='pongBlue.300'
@@ -102,7 +105,7 @@ function MessageSection(props: any): JSX.Element {
 		<>
 			<Box flexGrow={1} bg='pongBlue' overflowY='auto'>
 				<Stack p='1vh 2vw'>
-					{messages.map(m => <MessageCard {...m} />)}
+					{messages.map(m => <MessageCard {...m} key={`${m.id}`} />)}
 				</Stack>
 			</Box>
 			<Box flexGrow={0} bg='pongBlue.300' pl='2vw' pr='2vw' pt='1vh' pb='1vh'>
@@ -143,7 +146,7 @@ const dummyFriends = [
 
 export default function Chat(props: any) {
 	const [online, setOnline] = useState(false);
-	const [friendList, setFriendList] = useState<Array<userSchema>>(dummyFriends)
+	const [channelList, setChannelList] = useState<Array<userSchema>>(dummyFriends)
 	/**
 	 * {
 		"id": "baaf8ba7-ad95-4913-aad1-53bbcee4ba7e",
@@ -153,14 +156,16 @@ export default function Chat(props: any) {
 		"time": "2023-11-07T00:32:41.867Z"
 	},
 	 */
-	useEffect(() => {
-		function onConnect() {
-			setOnline(true);
-		}
 
-		function onDisconnect() {
-			setOnline(false);
-		}
+	function onConnect() {
+		setOnline(true);
+	}
+
+	function onDisconnect() {
+		setOnline(false);
+	}
+	useEffect(() => {
+		fetchMyChannels().then().catch();
 
 		// function onReceiveMessage(value: Message) {
 		//   console.warn(value.channel_id);
@@ -220,7 +225,7 @@ export default function Chat(props: any) {
 					/>
 				</Flex>
 				<Stack overflow={'auto'}>
-					{friendList.map(f => <FriendCard {...f} />)}
+					{channelList.map(f => <ChannelCard {...f} key={`ChannelCard${f.intra_login}`} />)}
 				</Stack>
 
 			</Flex>

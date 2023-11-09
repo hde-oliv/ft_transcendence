@@ -26,16 +26,17 @@ import { SendMessageDto } from './dto/send-message-dto';
   transpors: ['websocket', 'webtransport'],
 })
 export class ChatGateway
-  implements OnGatewayConnection, OnGatewayInit, OnGatewayDisconnect
-{
+  implements OnGatewayConnection, OnGatewayInit, OnGatewayDisconnect {
   @WebSocketServer()
   wss: Server;
 
-  constructor(private chatService: ChatService) {}
+  constructor(private chatService: ChatService) { }
 
   private readonly logger = new Logger(ChatGateway.name);
 
   private clients: ClientSocket[] = [];
+
+  private mapClients = new Map<string, Socket>();
 
   async afterInit(server: Server) {
     this.logger.log('WebSocket Gateway Initialized');
@@ -58,6 +59,7 @@ export class ChatGateway
     const user = await this.chatService.getUserFromSocket(socket);
     const clientSocket = { user, socket };
     this.clients = [...this.clients, clientSocket];
+    this.mapClients.set(user.intra_login, socket);
     this.logger.log(`Client Connected: ${socket.id}`);
     this.logger.log(`All Clients: ${this.getClientList()} `);
   }

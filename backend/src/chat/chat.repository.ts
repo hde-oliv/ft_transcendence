@@ -10,6 +10,7 @@ import { CreateChannelDto } from './dto/create-channel-dto';
 import { CreateMembershipDto } from './dto/create-membership-dto';
 import { UpdateChannelDto } from './dto/update-channel-dto';
 import { UpdateMembershipDto } from './dto/update-membership-dto';
+import { TokenClaims } from 'src/auth/auth.model';
 
 @Injectable()
 export class ChatRepository {
@@ -68,6 +69,18 @@ export class ChatRepository {
     return this.prismaService.channels.findUniqueOrThrow({ where: { id } });
   }
 
+  async getChannelsByUser(user: TokenClaims) {
+    const userId = user.intra_login;
+    return this.prismaService.memberships.findMany({
+      where: {
+        userId: userId
+      },
+      include: {
+        channel: true
+      },
+      distinct: ['channelId']
+    })
+  }
   async getAllChannels(): Promise<Channels[]> {
     return this.prismaService.channels.findMany();
   }
