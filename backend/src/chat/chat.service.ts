@@ -403,8 +403,6 @@ export class ChatService {
   }
 
   async getUserFromSocket(socket: Socket) {
-    this.logger.error(socket.handshake.headers.authorization);
-
     const token = socket.handshake.headers.authorization
       ? socket.handshake.headers.authorization
       : '';

@@ -50,7 +50,10 @@ export class ChatGateway
     );
 
     this.clients = newClients;
-
+    const rooms = socket.rooms;
+    rooms.forEach(room => {
+      socket.leave(room);
+    })
     this.logger.log(`Client Disconnected: ${socket.id}`);
     this.logger.log(`All Clients: ${this.getClientList()} `);
   }
@@ -61,7 +64,33 @@ export class ChatGateway
     this.clients = [...this.clients, clientSocket];
     this.mapClients.set(user.intra_login, socket);
     this.logger.log(`Client Connected: ${socket.id}`);
-    this.logger.log(`All Clients: ${this.getClientList()} `);
+    const channels = (await this.chatService.getChannelsByUser(user)).map(e => {
+      return e.channelId.toString();
+    });
+    for (let channel of channels) {
+      socket.join(channel);
+    }
+    // let rooms: string[] = [];
+    // socket.rooms.forEach(e => rooms.push(e));
+    // this.logger.warn(rooms.join(','))
+  }
+
+  @SubscribeMessage('channel_message')
+  async handleMessageEvent(
+    @MessageBody() data: { message: string, channelId: number },
+    @ConnectedSocket() socket: Socket
+  ) {
+    console.log(data);
+    this.logger.warn('THIS IS A TEST FOR CHANNEL_MESSAGE')
+    const user: Users = await this.chatService.getUserFromSocket(socket); //TODO: messages must be sanitized before included!
+    const channel = await this.chatService.getChannel(data.channelId);
+    const message = await this.chatService.registerNewMessage(
+      {
+        channel_id: data.channelId,
+        message: data.message
+      }, user
+    )
+    socket.to(channel.id.toString()).emit('server_message', message);
   }
 
   @SubscribeMessage('send_message')

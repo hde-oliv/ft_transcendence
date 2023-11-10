@@ -1,5 +1,5 @@
 import PageLayout from "@/components/pageLayout/PageLayout";
-import { ChannelData, MyChannels, fetchMyChannels } from "@/lib/fetchers/chat";
+import { ChannelData, MyChannels, fetchMessagesFromChannel, fetchMyChannels } from "@/lib/fetchers/chat";
 import chatSocket from "@/lib/sockets/chatSocket";
 import { EmailIcon, RepeatIcon } from "@chakra-ui/icons";
 import { Box, Button, Center, Flex, IconButton, Input, InputGroup, InputRightAddon, Skeleton, Stack, Switch, Text } from "@chakra-ui/react";
@@ -7,6 +7,8 @@ import { ReactElement, useEffect, useState } from "react";
 import { myChannel } from "@/lib/fetchers/chat";
 import { fetchUserById } from "@/lib/fetchers/users";
 import { ChannelCard } from "./ChannelCard";
+import { Socket } from "socket.io-client";
+import { socket } from "../chat";
 
 export type userSchema = {
 	nickname: string,
@@ -17,6 +19,7 @@ export type userSchema = {
 
 export type ChannelComponentProps = ChannelData & {
 	onClick?: () => void
+	socket?: Socket,
 	lastMessage?: string
 };
 
@@ -27,6 +30,7 @@ type Message = {
 	message: string,
 	time: Date
 }
+
 type MessageCardProps = Message & {
 	me: string
 }
@@ -49,27 +53,32 @@ function MessageCard(props: MessageCardProps): JSX.Element {
 
 function MessageSection(props: ChannelComponentProps): JSX.Element {
 	const [messages, setMessages] = useState<Array<MessageCardProps>>([]);
+	const [text, setText] = useState('')
+	// content  { message: string, channelId: number }
 
-	useEffect(() => {
-		setMessages([
-			{
-				id: "baaf8ba7-ad95-4913-aad1-53bbcee4ba7e",
-				channel_id: 15,
-				user_id: "hde-camp",
-				message: "teste",
-				time: new Date("2023-11-07T00:32:41.867Z"),
-				me: "hde-camp"
-			},
-			{
-				id: "baaf8ba7-ad95-4913-aad1-53bbcee4ba7f",
-				channel_id: 15,
-				user_id: "hde-oliv",
-				message: "teste",
-				time: new Date("2023-11-07T00:35:41.867Z"),
-				me: "hde-camp"
+	async function send() {
+		const message = {
+			message: text,
+			channelId: props.channelId
+		}
+		console.log(`Inner socket ref online [${props.socket?.connected}]`)
+		if (props.socket) {
+			if (props.socket.connected) {
+				console.log(`emitting:`, message);
+				props.socket.emit('channel_message', message);
 			}
-		])
-	}, [])
+			else
+				console.log('Socket offline')
+		}
+	}
+	useEffect(() => {
+		fetchMessagesFromChannel(props.channelId).then(e => {
+			setMessages(e.map(e => {
+				return { ...e, me: props.userId }
+			}));
+		}).catch()
+		setMessages([])
+	}, [props])
 	return (
 		<>
 			<Box flexGrow={1} bg='pongBlue' overflowY='auto'>
@@ -79,7 +88,11 @@ function MessageSection(props: ChannelComponentProps): JSX.Element {
 			</Box>
 			<Box flexGrow={0} bg='pongBlue.300' pl='2vw' pr='2vw' pt='1vh' pb='1vh'>
 				<InputGroup bg='pongBlue.500'>
-					<Input />
+					<Input
+						value={text}
+						onChange={(e) => setText(e.target.value)}
+						onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); send() } }}
+					/>
 					<InputRightAddon>
 						<EmailIcon />
 					</InputRightAddon>
@@ -118,16 +131,6 @@ export default function Chat(props: any) {
 	const [activeChannel, setActiveChannel] = useState<undefined | ChannelComponentProps>(undefined);
 	const [myChannels, setMyChannels] = useState<MyChannels>([])
 
-	/**
-	 * {
-		"id": "baaf8ba7-ad95-4913-aad1-53bbcee4ba7e",
-		"channel_id": 15,
-		"user_id": "hde-camp",
-		"message": "teste",
-		"time": "2023-11-07T00:32:41.867Z"
-	},
-	 */
-
 	function onConnect() {
 		setOnline(true);
 	}
@@ -135,6 +138,12 @@ export default function Chat(props: any) {
 	function onDisconnect() {
 		setOnline(false);
 	}
+
+	function onServerMessage(...args: any[]) {
+		console.log('onServerMessage');
+		console.log(args);
+	}
+
 	useEffect(() => {
 		fetchMyChannels().then((e) => {
 			setMyChannels(e);
@@ -143,10 +152,12 @@ export default function Chat(props: any) {
 
 		chatSocket.on("connect", onConnect);
 		chatSocket.on("disconnect", onDisconnect);
+		chatSocket.on("server_message", onDisconnect);
 
 		return () => {
 			chatSocket.off("connect", onConnect);
 			chatSocket.off("disconnect", onDisconnect);
+			chatSocket.off("server_message", onServerMessage);
 		};
 	}, []);
 	return (
@@ -197,7 +208,7 @@ export default function Chat(props: any) {
 				justifyContent='space-between'
 				w='100%'
 			>
-				{activeChannel ? <MessageSection {...activeChannel} /> : <Skeleton isLoaded={false} h='100%' speed={3} startColor="pongBlue.400" endColor="yellow.300" />}
+				{activeChannel ? <MessageSection {...activeChannel} socket={chatSocket} /> : <Skeleton isLoaded={false} h='100%' speed={3} startColor="pongBlue.400" endColor="yellow.300" />}
 			</Flex>
 		</Flex>
 

@@ -1,5 +1,5 @@
 import pongAxios from "./pongAxios";
-import z, { boolean } from "zod";
+import z, { ZodError, boolean } from "zod";
 
 const channelResponseSchema = z.object({
 	id: z.number(),
@@ -70,6 +70,13 @@ export async function createChannel(requester: string, second_user: string) {
 	});
 	return channelResponseSchema.parse(response.data);
 }
+const messageResponseSchema = z.array(z.object({
+	id: z.string(),
+	channel_id: z.number().int(),
+	user_id: z.string(),
+	message: z.string(),
+	time: z.coerce.date()
+}));
 
 export async function fetchMessagesFromChannel(channelId: number) {
 	const token = localStorage.getItem("token");
@@ -78,9 +85,12 @@ export async function fetchMessagesFromChannel(channelId: number) {
 
 	try {
 		const response = await fetcher.get(`chat/channel/${channelId}/messages`);
-		return response.data;
+		return messageResponseSchema.parse(response.data);
 	} catch (e) {
-		console.warn(e);
+		if (e instanceof ZodError)
+			console.warn('Messages schema failed to validade');
+		else
+			console.warn(e);
 		return [];
 	}
 }
