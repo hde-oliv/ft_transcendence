@@ -2,7 +2,7 @@ import PageLayout from "@/components/pageLayout/PageLayout";
 import { ChannelData, MyChannels, fetchMessagesFromChannel, fetchMyChannels, messageResponseSchema } from "@/lib/fetchers/chat";
 import chatSocket from "@/lib/sockets/chatSocket";
 import { EmailIcon, RepeatIcon } from "@chakra-ui/icons";
-import { Box, Button, Center, Flex, IconButton, Input, InputGroup, InputRightAddon, Skeleton, Stack, Switch, Text } from "@chakra-ui/react";
+import { Box, Button, Center, Circle, Flex, IconButton, Input, InputGroup, InputRightAddon, Menu, MenuButton, MenuItem, MenuList, Skeleton, Stack, Switch, Text } from "@chakra-ui/react";
 import { ReactElement, useEffect, useRef, useState } from "react";
 import { myChannel } from "@/lib/fetchers/chat";
 import { fetchUserById } from "@/lib/fetchers/users";
@@ -198,11 +198,13 @@ export default function Chat(props: any) {
 		chatSocket.on("connect", onConnect);
 		chatSocket.on("disconnect", onDisconnect);
 		chatSocket.on("server_message", onServerMessage);
+		chatSocket.connect();
 
 		return () => {
 			chatSocket.off("connect", onConnect);
 			chatSocket.off("disconnect", onDisconnect);
 			chatSocket.off("server_message", onServerMessage);
+			chatSocket.disconnect();
 		};
 	}, []);
 	return (
@@ -219,28 +221,20 @@ export default function Chat(props: any) {
 				<Flex
 					justifyContent={'space-between'}
 					align={'center'}
-
-					pr='1vw'
 					mb='1vh'
-					h='10vh'
 					borderRadius={5}
 				>
-					<Button
-						colorScheme="green"
-						aria-label="connect"
-						leftIcon={<RepeatIcon />}
-						onClick={() => {
-							chatSocket.connected ? chatSocket.disconnect() : chatSocket.connect()
-						}}
-					>
-						{online ? 'Disconnect' : 'Connect'}
-					</Button>
-					<Switch
-						isReadOnly={true}
-						isChecked={online}
-						colorScheme={'green'}
-						size='lg'
-					/>
+					<Flex>
+						<Circle bg={online ? 'green.300' : 'gray.300'} size='2vh' mr='1vw' />
+						<Text fontWeight={'bold'} letterSpacing={'widest'} >{online ? 'Online' : 'Offiline'}</Text>
+					</Flex>
+					<Menu >
+						<MenuButton as={Button}>Set Status</MenuButton>
+						<MenuList>
+							<MenuItem>Online</MenuItem>
+							<MenuItem>Offline</MenuItem>
+						</MenuList>
+					</Menu>
 				</Flex>
 				<Stack overflow={'auto'}>
 					{myChannels.map((e, i) => <ChannelCard key={`ChannelCard-${e.channelId}`} {...e} onClick={() => setActiveChannel(i)} active={i === activeChannel} />)}
