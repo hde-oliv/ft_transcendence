@@ -90,7 +90,6 @@ function MessageSection(props: ChannelComponentProps): JSX.Element {
 			const tempMessages = [...messages, { ...parsedData, me: props.userId }];
 			setMessages(tempMessages);
 		}
-		console.log('onServerMessage_children')
 	}
 	useEffect(() => {
 		chatSocket.on('server_message', serverMessage)
