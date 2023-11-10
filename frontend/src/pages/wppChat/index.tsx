@@ -84,7 +84,12 @@ function MessageSection(props: ChannelComponentProps): JSX.Element {
 				console.log('Socket offline')
 		}
 	}
-	function serverMessage() {
+	function serverMessage(data: any) {
+		const parsedData = messageResponseSchema.element.parse(data);
+		if (parsedData.channel_id === props.channelId) {
+			const tempMessages = [...messages, { ...parsedData, me: props.userId }];
+			setMessages(tempMessages);
+		}
 		console.log('onServerMessage_children')
 	}
 	useEffect(() => {
