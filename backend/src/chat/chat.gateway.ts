@@ -91,6 +91,9 @@ export class ChatGateway
       }, user
     )
     socket.to(channel.id.toString()).emit('server_message', message);
+    socket.emit('server_message', message);
+    // socket.to(channel.id.toString()).emit('last_message', message);
+    return message;
   }
 
   @SubscribeMessage('send_message')

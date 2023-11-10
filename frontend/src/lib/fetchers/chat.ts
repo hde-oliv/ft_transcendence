@@ -70,7 +70,7 @@ export async function createChannel(requester: string, second_user: string) {
 	});
 	return channelResponseSchema.parse(response.data);
 }
-const messageResponseSchema = z.array(z.object({
+export const messageResponseSchema = z.array(z.object({
 	id: z.string(),
 	channel_id: z.number().int(),
 	user_id: z.string(),

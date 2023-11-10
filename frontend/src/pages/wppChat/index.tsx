@@ -1,14 +1,15 @@
 import PageLayout from "@/components/pageLayout/PageLayout";
-import { ChannelData, MyChannels, fetchMessagesFromChannel, fetchMyChannels } from "@/lib/fetchers/chat";
+import { ChannelData, MyChannels, fetchMessagesFromChannel, fetchMyChannels, messageResponseSchema } from "@/lib/fetchers/chat";
 import chatSocket from "@/lib/sockets/chatSocket";
 import { EmailIcon, RepeatIcon } from "@chakra-ui/icons";
 import { Box, Button, Center, Flex, IconButton, Input, InputGroup, InputRightAddon, Skeleton, Stack, Switch, Text } from "@chakra-ui/react";
-import { ReactElement, useEffect, useState } from "react";
+import { ReactElement, useEffect, useRef, useState } from "react";
 import { myChannel } from "@/lib/fetchers/chat";
 import { fetchUserById } from "@/lib/fetchers/users";
 import { ChannelCard } from "./ChannelCard";
 import { Socket } from "socket.io-client";
 import { socket } from "../chat";
+import { parse } from "path";
 
 export type userSchema = {
 	nickname: string,
@@ -54,34 +55,62 @@ function MessageCard(props: MessageCardProps): JSX.Element {
 function MessageSection(props: ChannelComponentProps): JSX.Element {
 	const [messages, setMessages] = useState<Array<MessageCardProps>>([]);
 	const [text, setText] = useState('')
-	// content  { message: string, channelId: number }
+	const messagesRef = useRef<HTMLDivElement>(null)
 
 	async function send() {
+		if (text === '')
+			return;
 		const message = {
 			message: text,
 			channelId: props.channelId
 		}
-		console.log(`Inner socket ref online [${props.socket?.connected}]`)
 		if (props.socket) {
 			if (props.socket.connected) {
-				console.log(`emitting:`, message);
-				props.socket.emit('channel_message', message);
+				try {
+					const response = await props.socket.emitWithAck('channel_message', message)
+					const parsedMessage = messageResponseSchema.element.parse(response);
+					const responseAsProps = {
+						...parsedMessage,
+						me: props.userId
+					}
+					const tmpMessages = [...messages, responseAsProps];
+					setMessages(tmpMessages);
+					setText('');
+				} catch (e) {
+					console.log(e); //TODO: make some king of popUp
+				}
 			}
 			else
 				console.log('Socket offline')
 		}
 	}
+	function serverMessage() {
+		console.log('onServerMessage_children')
+	}
+	useEffect(() => {
+		chatSocket.on('server_message', serverMessage)
+		return () => {
+			chatSocket.off('server_message', serverMessage)
+		}
+	})
 	useEffect(() => {
 		fetchMessagesFromChannel(props.channelId).then(e => {
 			setMessages(e.map(e => {
 				return { ...e, me: props.userId }
 			}));
 		}).catch()
-		setMessages([])
 	}, [props])
+	useEffect(() => {
+		if (messagesRef.current) {
+			messagesRef.current.scrollTo({
+				behavior: 'smooth',
+				top: messagesRef.current.scrollHeight
+			})
+		}
+	}, [messages])
 	return (
 		<>
-			<Box flexGrow={1} bg='pongBlue' overflowY='auto'>
+			<Box flexGrow={1} bg='pongBlue' overflowY='auto' ref={messagesRef}>
 				<Stack p='1vh 2vw'>
 					{messages.map(m => <MessageCard {...m} key={`${m.id}`} />)}
 				</Stack>
@@ -94,7 +123,7 @@ function MessageSection(props: ChannelComponentProps): JSX.Element {
 						onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); send() } }}
 					/>
 					<InputRightAddon>
-						<EmailIcon />
+						<EmailIcon onClick={send} focusable={true} />
 					</InputRightAddon>
 				</InputGroup>
 			</Box>
@@ -128,8 +157,9 @@ const dummyFriends = [
 
 export default function Chat(props: any) {
 	const [online, setOnline] = useState(false);
-	const [activeChannel, setActiveChannel] = useState<undefined | ChannelComponentProps>(undefined);
-	const [myChannels, setMyChannels] = useState<MyChannels>([])
+	// const [activeChannel, setActiveChannel] = useState<undefined | ChannelComponentProps>(undefined);
+	const [activeChannel, setActiveChannel] = useState<number>(-1);
+	const [myChannels, setMyChannels] = useState<ChannelComponentProps[]>([])
 
 	function onConnect() {
 		setOnline(true);
@@ -139,9 +169,20 @@ export default function Chat(props: any) {
 		setOnline(false);
 	}
 
-	function onServerMessage(...args: any[]) {
-		console.log('onServerMessage');
-		console.log(args);
+	function onServerMessage(data: any) {
+		const message = messageResponseSchema.element.parse(data);
+		if (activeChannel > -1) {
+			if (message.channel_id !== myChannels[activeChannel].channelId) {
+				const tempChannels: ChannelComponentProps[] = [];
+				myChannels.forEach(e => tempChannels.push({ ...e }));
+				let targetChannel = tempChannels.find(e => e.channelId === message.channel_id);
+				if (targetChannel) {
+					targetChannel.lastMessage = message.message;
+					setMyChannels(tempChannels); //TODO validate
+				}
+
+			}
+		}
 	}
 
 	useEffect(() => {
@@ -152,7 +193,7 @@ export default function Chat(props: any) {
 
 		chatSocket.on("connect", onConnect);
 		chatSocket.on("disconnect", onDisconnect);
-		chatSocket.on("server_message", onDisconnect);
+		chatSocket.on("server_message", onServerMessage);
 
 		return () => {
 			chatSocket.off("connect", onConnect);
@@ -198,8 +239,7 @@ export default function Chat(props: any) {
 					/>
 				</Flex>
 				<Stack overflow={'auto'}>
-					{/* {channelList.map(c => <ChannelCard {...c} key={`ChannelCard-${c.channelId}`} onClick={() => setActiveChannel(c)} />)} */}
-					{myChannels.map(e => <ChannelCard key={`ChannelCard-${e.channelId}`} {...e} onClick={() => setActiveChannel(e)} />)}
+					{myChannels.map((e, i) => <ChannelCard key={`ChannelCard-${e.channelId}`} {...e} onClick={() => setActiveChannel(i)} active={i === activeChannel} />)}
 				</Stack>
 
 			</Flex>
@@ -208,7 +248,7 @@ export default function Chat(props: any) {
 				justifyContent='space-between'
 				w='100%'
 			>
-				{activeChannel ? <MessageSection {...activeChannel} socket={chatSocket} /> : <Skeleton isLoaded={false} h='100%' speed={3} startColor="pongBlue.400" endColor="yellow.300" />}
+				{activeChannel >= 0 ? <MessageSection {...(myChannels[activeChannel])} socket={chatSocket} /> : <Skeleton isLoaded={false} h='100%' speed={3} startColor="pongBlue.400" endColor="yellow.300" />}
 			</Flex>
 		</Flex>
 

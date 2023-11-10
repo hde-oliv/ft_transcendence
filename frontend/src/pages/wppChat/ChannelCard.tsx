@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { ChannelComponentProps, userSchema } from ".";
 
 
-export function ChannelCard(props: ChannelComponentProps) {
+export function ChannelCard(props: ChannelComponentProps & { active: boolean }) {
 	// const [cardData, setCardData] = useState<userSchema>(dataFromProps());
 	// const channelData = props.channel;
 	// const channelMembers = props.channel.Memberships.map(e => e.user);
@@ -29,7 +29,7 @@ export function ChannelCard(props: ChannelComponentProps) {
 	}
 	return (
 		<Flex
-			bg='pongBlue.300'
+			bg={props.active ? 'yellow.400' : 'pongBlue.300'}
 			padding='1vw 1vw'
 			borderRadius='10'
 			borderStyle='solid'
@@ -46,6 +46,8 @@ export function ChannelCard(props: ChannelComponentProps) {
 					size='xs'
 					overflow='hidden'
 					textOverflow='ellipsis'
+					letterSpacing={'widest'}
+					textColor={props.active ? 'black' : 'gray.300'}
 				>
 					{cardData.nickname}
 				</Heading>
@@ -53,6 +55,7 @@ export function ChannelCard(props: ChannelComponentProps) {
 					overflow='hidden'
 					textOverflow='ellipsis'
 					whiteSpace="nowrap"
+					textColor={props.active ? 'black' : 'gray.300'}
 				>
 					{props.lastMessage ? props.lastMessage : ''}
 				</Text>
