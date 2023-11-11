@@ -6,7 +6,7 @@ import {
   fetchMessagesFromChannel,
 } from "@/lib/fetchers/chat";
 import { MeResponseData, getMe } from "@/lib/fetchers/me";
-import fetchUsers from "@/lib/fetchers/users";
+import { fetchUsers } from "@/lib/fetchers/users";
 import { AddIcon } from "@chakra-ui/icons";
 import {
   List,
@@ -51,7 +51,7 @@ import React, {
 import { Socket, io } from "socket.io-client";
 import { nodeModuleNameResolver } from "typescript";
 
-const URL = "http://localhost:9090";
+const URL = "https://transcendence.ngrok.io/game-socket";
 
 const token = () => {
   if (typeof window !== "undefined") return localStorage.getItem("token") ?? "";

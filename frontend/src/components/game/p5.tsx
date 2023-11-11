@@ -14,12 +14,12 @@ const sketch: Sketch = (p5) => {
   // NOTE: With WEBGL the coordinates 0,0 starts at the middle of the canvas
   p5.setup = () => {
     p5.createCanvas(1620, 780);
-    p = new Player();
-    b = new Ball();
-    for (var i = 0; i < 4; i++) {
-      balls[i] = new Ball();
-    }
-    a = new Ai();
+    /* p = new Player();
+     * b = new Ball(); */
+    /* for (var i = 0; i < 4; i++) {
+     *   balls[i] = new Ball();
+     * }
+     * a = new Ai(); */
   };
 
   function Ball(this: any) {

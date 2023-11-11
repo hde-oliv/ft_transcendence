@@ -5,7 +5,7 @@ import {
   fetchMessagesFromChannel,
 } from "@/lib/fetchers/chat";
 import { MeResponseData, getMe } from "@/lib/fetchers/me";
-import fetchUsers from "@/lib/fetchers/users";
+import { fetchUsers } from "@/lib/fetchers/users";
 import { AddIcon } from "@chakra-ui/icons";
 import {
   List,
@@ -52,7 +52,7 @@ import { nodeModuleNameResolver } from "typescript";
 
 const ChatContext = createContext<ChatContextType>({} as ChatContextType);
 
-const URL = "http://localhost:3000";
+const URL = "https://transcendence.ngrok.io";
 
 const token = () => {
   if (typeof window !== "undefined") return localStorage.getItem("token") ?? "";
@@ -314,7 +314,7 @@ function ChatModal(props: PropsWithChildren & { isOpen: any; onClose: any }) {
                     mb="2"
                     p="3"
                   >
-                    <Text fontSize="xs">{msg.time}</Text>
+                    <Text fontSize="xs">{String(msg.time)}</Text>
                     <Text fontSize="xs">{msg.user_id} says:</Text>
                     <Text color="white" fontSize="sm">
                       {msg.message}
@@ -393,7 +393,7 @@ interface Message {
   channel_id: number;
   user_id: string;
   message: string;
-  time: string;
+  time: Date;
 }
 
 interface ChatInfo {

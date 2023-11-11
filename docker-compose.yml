@@ -1,26 +1,18 @@
 version: "3.3"
 
 services:
-  traefik:
-    image: "traefik:v2.10"
-    container_name: "traefik"
-    networks:
-      - transcendence
-    command:
-      - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.web.address=:80"
-    depends_on:
-      - nextjs-frontend
-      - nestjs-backend
+  nginx:
+    container_name: nginx
+    image: "nginx:alpine-slim"
     ports:
-      - "80:80"
-      - "8080:8080"
+        - "7000:7000"
+    networks:
+        - transcendence
+    restart: on-failure
     volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./nginx:/etc/nginx/conf.d"
 
-  nextjs-frontend:
+  frontend:
     container_name: frontend
     build:
       context: ./frontend
@@ -29,13 +21,8 @@ services:
       - transcendence
     env_file: ./frontend/.env.docker
     restart: on-failure
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.nextjs-frontend.rule=Host(`transcendence.localhost`)"
-      - "traefik.http.routers.nextjs-frontend.entrypoints=web"
-      - "traefik.http.services.nextjs-frontend.loadbalancer.server.port=80"
 
-  nestjs-backend:
+  backend:
     container_name: backend
     build:
       context: ./backend

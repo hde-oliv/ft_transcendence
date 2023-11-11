@@ -1,4 +1,4 @@
-import pongAxios from "./pongAxios";
+import { pongAxios } from "./pongAxios";
 import z from "zod";
 
 // TODO: Validation
@@ -10,18 +10,18 @@ import z from "zod";
 //   elo: z.number(),
 // });
 
-export default async function fetchUsers() {
-	const token = localStorage.getItem("token");
-	if (token === null) throw new Error(`getMe could't get bearer token`);
-	const fetcher = pongAxios(token);
-	const response = await fetcher.get("user");
-	return response.data;
+export async function fetchUsers() {
+  const token = localStorage.getItem("token");
+  if (token === null) throw new Error(`getMe could't get bearer token`);
+  const fetcher = pongAxios(token);
+  const response = await fetcher.get("user");
+  return response.data;
 }
 
 export async function fetchUserById(id: string) {
-	const token = localStorage.getItem("token");
-	if (token === null) throw new Error(`getMe could't get bearer token`);
-	const fetcher = pongAxios(token);
-	const response = await fetcher.get(`user/${id}`);
-	return response.data;
+  const token = localStorage.getItem("token");
+  if (token === null) throw new Error(`getMe could't get bearer token`);
+  const fetcher = pongAxios(token);
+  const response = await fetcher.get(`user/${id}`);
+  return response.data;
 }
