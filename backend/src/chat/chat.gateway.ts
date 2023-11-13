@@ -10,10 +10,11 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { ChatService } from './chat.service';
-import { Logger } from '@nestjs/common';
+import { Logger, UseFilters } from '@nestjs/common';
 import { Channels, Memberships, Users } from '@prisma/client';
 import { map, without } from 'lodash';
 import { SendMessageDto } from './dto/send-message-dto';
+import { ChatFilter } from './chat.filter';
 
 // NOTE: Chat only works in the /chat page
 // TODO: Create a global websocket to handle user status later
@@ -26,11 +27,12 @@ import { SendMessageDto } from './dto/send-message-dto';
   transpors: ['websocket', 'webtransport'],
 })
 export class ChatGateway
-  implements OnGatewayConnection, OnGatewayInit, OnGatewayDisconnect {
+  implements OnGatewayConnection, OnGatewayInit, OnGatewayDisconnect
+{
   @WebSocketServer()
   wss: Server;
 
-  constructor(private chatService: ChatService) { }
+  constructor(private chatService: ChatService) {}
 
   private readonly logger = new Logger(ChatGateway.name);
 
@@ -38,10 +40,12 @@ export class ChatGateway
 
   private mapClients = new Map<string, Socket>();
 
+  @UseFilters(new ChatFilter())
   async afterInit(server: Server) {
     this.logger.log('WebSocket Gateway Initialized');
   }
 
+  @UseFilters(new ChatFilter())
   async handleDisconnect(socket: Socket) {
     const user = await this.chatService.getUserFromSocket(socket);
 
@@ -51,22 +55,25 @@ export class ChatGateway
 
     this.clients = newClients;
     const rooms = socket.rooms;
-    rooms.forEach(room => {
+    rooms.forEach((room) => {
       socket.leave(room);
-    })
+    });
     this.logger.log(`Client Disconnected: ${socket.id}`);
     this.logger.log(`All Clients: ${this.getClientList()} `);
   }
 
+  @UseFilters(new ChatFilter())
   async handleConnection(socket: Socket) {
     const user = await this.chatService.getUserFromSocket(socket);
     const clientSocket = { user, socket };
     this.clients = [...this.clients, clientSocket];
     this.mapClients.set(user.intra_login, socket);
     this.logger.log(`Client Connected: ${socket.id}`);
-    const channels = (await this.chatService.getChannelsByUser(user)).map(e => {
-      return e.channelId.toString();
-    });
+    const channels = (await this.chatService.getChannelsByUser(user)).map(
+      (e) => {
+        return e.channelId.toString();
+      },
+    );
     for (let channel of channels) {
       socket.join(channel);
     }
@@ -75,27 +82,30 @@ export class ChatGateway
     // this.logger.warn(rooms.join(','))
   }
 
+  @UseFilters(new ChatFilter())
   @SubscribeMessage('channel_message')
   async handleMessageEvent(
-    @MessageBody() data: { message: string, channelId: number },
-    @ConnectedSocket() socket: Socket
+    @MessageBody() data: { message: string; channelId: number },
+    @ConnectedSocket() socket: Socket,
   ) {
     console.log(data);
-    this.logger.warn('THIS IS A TEST FOR CHANNEL_MESSAGE')
+    this.logger.warn('THIS IS A TEST FOR CHANNEL_MESSAGE');
     const user: Users = await this.chatService.getUserFromSocket(socket); //TODO: messages must be sanitized before included!
     const channel = await this.chatService.getChannel(data.channelId);
     const message = await this.chatService.registerNewMessage(
       {
         channel_id: data.channelId,
-        message: data.message
-      }, user
-    )
+        message: data.message,
+      },
+      user,
+    );
     socket.to(channel.id.toString()).emit('server_message', message);
     socket.emit('server_message', message);
     // socket.to(channel.id.toString()).emit('last_message', message);
     return message;
   }
 
+  @UseFilters(new ChatFilter())
   @SubscribeMessage('send_message')
   async handleNewMessage(
     @MessageBody() data: SendMessageDto,
