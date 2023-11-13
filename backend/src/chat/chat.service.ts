@@ -17,6 +17,7 @@ import { CreateChannelDto } from './dto/create-channel-dto';
 import { TokenClaims } from 'src/auth/auth.model';
 import { UpdateChannelDto } from './dto/update-channel-dto';
 import { JoinChannelDto } from './dto/join-channel-dto';
+import { WsException } from '@nestjs/websockets';
 
 // TODO: try except blocks
 // TODO: How banned will work on frontend?
@@ -28,7 +29,7 @@ export class ChatService {
     private authService: AuthService,
     private userService: UsersService,
     private chatRepository: ChatRepository,
-  ) { }
+  ) {}
 
   private readonly logger = new Logger(ChatService.name);
 
@@ -75,9 +76,8 @@ export class ChatService {
 
   async getChannelsByUser(user: TokenClaims) {
     const data = await this.chatRepository.getChannelsByUser(user);
-    if (data)
-      return data.Memberships;
-    return []
+    if (data) return data.Memberships;
+    return [];
   }
 
   // throws
@@ -411,9 +411,15 @@ export class ChatService {
       throw new UnauthorizedException('Invalid credentials.');
     }
 
-    const payload = await this.authService.decodeToken(token);
-    if (!payload) {
-      throw new UnauthorizedException('Invalid credentials.');
+    let payload;
+
+    try {
+      payload = await this.authService.decodeToken(token);
+      if (!payload) {
+        throw new UnauthorizedException('Invalid credentials.');
+      }
+    } catch (e) {
+      throw new WsException('Invalid credentials.');
     }
 
     let user: Users;
@@ -422,7 +428,7 @@ export class ChatService {
         intra_login: payload.intra_login,
       });
     } catch (e) {
-      throw new InternalServerErrorException();
+      throw new WsException('User not found.');
     }
 
     return user;
