@@ -26,6 +26,7 @@ import { useRouter } from 'next/router';
 import { CheckIcon, AddIcon } from '@chakra-ui/icons';
 import PageLayout from '@/components/pageLayout/PageLayout';
 import { NextPageWithLayout } from '../_app';
+import { getAllFriends, getFriendsById } from '@/lib/fetchers/friends';
 
 
 function PlayCard(props: PropsWithChildren) {
@@ -171,8 +172,17 @@ function ContactRow(props: PropsWithChildren & { online: boolean }) {
 		</Flex>
 	);
 }
-function FriendCard(props: PropsWithChildren) {
-
+function FriendCard(props: { id: string }) {
+	useEffect(() => {
+		// getAllFriends().then(e => console.log(e)).catch(e => console.log(e));
+		getFriendsById(props.id).then(e => console.log(e)).catch(e => console.log(e));
+		/*
+		getAllFriends
+		getFriendsById
+		getFriendsByUser
+		createFriendship
+ */
+	}, [props.id])
 	return (
 		<Flex flexDir='column' h='370px' w='370px' alignItems='stretch'>
 			<Heading textAlign='center' pt='1vh'>Chats</Heading>
@@ -205,7 +215,7 @@ const Dashboard: NextPageWithLayout = () => {
 				<ConfigsCard />
 			</WrapItem>
 			<WrapItem borderRadius='30' borderWidth='2px' borderColor='yellow.400'>
-				<FriendCard />
+				<FriendCard id='hde-camp' />
 			</WrapItem>
 		</Wrap>
 	)

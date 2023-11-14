@@ -1,4 +1,5 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
+import { getToken } from "../TokenMagagment";
 
 /**
  * @description
@@ -9,6 +10,10 @@ import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
 export const baseUrl = "http://localhost:3000";
 
 export function pongAxios(token?: string): AxiosInstance {
+	let localToken = token;
+	if (!token) {
+		localToken = getToken();
+	} //TODO, all calls to pongAxios dont need to provide a token anymore, also, this function will throw if no token is available
 	const config: AxiosRequestConfig = {
 		baseURL: baseUrl,
 		headers: {
@@ -18,6 +23,6 @@ export function pongAxios(token?: string): AxiosInstance {
 		},
 	};
 
-	if (token && config.headers) config.headers.Authorization = `Bearer ${token}`;
+	if (localToken && config.headers) config.headers.Authorization = `Bearer ${localToken}`;
 	return axios.create(config);
 }

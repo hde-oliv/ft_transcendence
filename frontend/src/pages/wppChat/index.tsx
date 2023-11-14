@@ -219,9 +219,7 @@ export default function Chat(props: any) {
 
 
 	const onServerMessage = useCallback((data: any) => {
-		console.log('onserverMessage_Father_Component');
 		const message = messageResponseSchema.element.parse(data);
-		console.log(message)
 		if (activeChannel > -1) {
 			if (message.channel_id !== myChannels[activeChannel].channelId) {
 				const tempChannels: ChannelComponentProps[] = [];
@@ -235,7 +233,7 @@ export default function Chat(props: any) {
 				}
 			}
 		}
-	}, [])
+	}, [activeChannel, myChannels])
 
 
 	useEffect(() => {

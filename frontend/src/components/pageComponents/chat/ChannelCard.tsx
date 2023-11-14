@@ -13,12 +13,21 @@ export function ChannelCard(
 	const cardData = dataFromProps();
 	function dataFromProps() {
 		if (props.channel.user2user) {
-			return {
-				avatar: props.channel.Memberships[0].user.avatar,
-				intra_login: props.channel.Memberships[0].user.intra_login,
-				nickname: props.channel.Memberships[0].user.nickname,
-				status: props.channel.Memberships[0].user.status,
-			};
+			if (props.channel.Memberships.length > 0) {
+				return {
+					avatar: props.channel.Memberships[0].user.avatar,
+					intra_login: props.channel.Memberships[0].user.intra_login,
+					nickname: props.channel.Memberships[0].user.nickname,
+					status: props.channel.Memberships[0].user.status,
+				};
+			} else {
+				return {
+					avatar: "",
+					intra_login: "",
+					nickname: props.channel.name,
+					status: "online",
+				}
+			}
 		} else {
 			return {
 				avatar: "",
