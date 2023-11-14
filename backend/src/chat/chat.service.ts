@@ -419,7 +419,7 @@ export class ChatService {
         throw new UnauthorizedException('Invalid credentials.');
       }
     } catch (e) {
-      throw new WsException('Invalid credentials.');
+      throw new UnauthorizedException('Invalid credentials.');
     }
 
     let user: Users;
@@ -428,7 +428,7 @@ export class ChatService {
         intra_login: payload.intra_login,
       });
     } catch (e) {
-      throw new WsException('User not found.');
+      throw new NotFoundException('User not found.');
     }
 
     return user;
