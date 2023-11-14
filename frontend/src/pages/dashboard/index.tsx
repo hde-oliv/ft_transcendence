@@ -175,7 +175,7 @@ function ContactRow(props: PropsWithChildren & { online: boolean }) {
 function FriendCard(props: { id: string }) {
 	useEffect(() => {
 		// getAllFriends().then(e => console.log(e)).catch(e => console.log(e));
-		getFriendsById(props.id).then(e => console.log(e)).catch(e => console.log(e));
+		// getFriendsById(props.id).then(e => console.log(e)).catch(e => console.log(e));
 		/*
 		getAllFriends
 		getFriendsById

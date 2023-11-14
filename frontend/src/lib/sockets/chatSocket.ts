@@ -1,16 +1,12 @@
 import { io } from "socket.io-client";
-import { baseUrl } from "../fetchers/pongAxios";
+import { wsBaseUrl } from "../fetchers/pongAxios";
+import { getToken } from "../TokenMagagment";
 
 
-const token = () => {
-	if (typeof window !== "undefined") return localStorage.getItem("token") ?? "";
-	return "";
-};
-
-const chatSocket = io(baseUrl, {
+const chatSocket = io(wsBaseUrl, {
 	autoConnect: false,
 	extraHeaders: {
-		Authorization: token()
+		Authorization: getToken()
 	}
 })
 
