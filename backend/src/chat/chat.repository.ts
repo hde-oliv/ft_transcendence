@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   Channels,
@@ -231,10 +231,32 @@ export class ChatRepository {
     });
   }
 
-  async getChannelMessages(channelId: number): Promise<Array<MessageEntity>> {
-    return this.prismaService.messages.findMany({
-      where: { channel_id: Number(channelId) },
+  async getChannelMessages(channelId: number, user: TokenClaims): Promise<Array<MessageEntity>> {
+    const membership = await this.prismaService.memberships.findFirst({
+      where: {
+        AND: [
+          { channelId: channelId },
+          { userId: user.intra_login }
+        ]
+      }
+    })
+    if (membership === null)
+      throw new UnauthorizedException()
+    const messages = await this.prismaService.messages.findMany({
+      where: {
+        channel_id: channelId
+      }
     });
+    const blockedUsers = (await this.prismaService.blockedUsers.findMany({
+      select: {
+        targer_id: true
+      },
+      where: {
+        issuer_id: user.intra_login
+      }
+    })).map(e => e.targer_id);
+    const validMessages = messages.filter(e => !blockedUsers.includes(e.user_id));
+    return validMessages;
   }
 
   async getChannelByName(name: string): Promise<Channels> {

@@ -157,7 +157,7 @@ export class ChatController {
   @UseGuards(JwtAuthGuard)
   @Get('/channel/:id/messages')
   async getChannelMessages(@Request() req, @Param('id') id: number) {
-    return this.chatService.getChannelMessages(id);
+    return this.chatService.getChannelMessages(id, req.user);
   }
 
   @UseGuards(JwtAuthGuard)
