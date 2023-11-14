@@ -90,7 +90,7 @@ function PongNavBar(props: PongBarNavProps): JSX.Element {
 		} else {
 			logOff(router, localStorage);
 		}
-	}, [])
+	}, [router])
 	useEffect(() => {
 		function updateWid() {
 			setIsWide(window.innerWidth > 770)

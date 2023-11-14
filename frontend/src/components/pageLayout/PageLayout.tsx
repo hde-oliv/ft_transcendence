@@ -1,12 +1,11 @@
 'use client'
-import { createContext, PropsWithChildren, ReactElement, useEffect, useState } from 'react';
+import { createContext, ReactElement, useEffect, useState } from 'react';
 import { Grid, GridItem } from '@chakra-ui/react';
 import React from 'react';
 
 import { ChakraProvider } from "@chakra-ui/react";
 import theme from "@/lib/Theme";
 
-import { useRouter } from 'next/router';
 import PongNavBar from '../nav/PongNavBar';
 import { getMe, MeResponseData } from '@/lib/fetchers/me';
 
@@ -17,7 +16,6 @@ const defaultMe = {
 	otp_enabled: false
 }
 
-// export const ApplicationContext = createContext<{ me: MeResponseData, setMe: (args?: any) => any | void }>({ me: defaultMe, setMe: () => { } });
 export const MeStateContext = createContext<[MeResponseData, () => Promise<void>]>([defaultMe, async () => { }]);
 
 export default function PageLayout({ children }: { children: ReactElement }) {
@@ -34,7 +32,7 @@ export default function PageLayout({ children }: { children: ReactElement }) {
 	useEffect(() => {
 		if (me.intra_login === '')
 			updateMe();
-	}, [])
+	}, [me])
 	return (
 		<ChakraProvider theme={theme}>
 			<MeStateContext.Provider value={[me, updateMe]}>
