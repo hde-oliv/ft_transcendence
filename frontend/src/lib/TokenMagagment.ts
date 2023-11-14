@@ -10,8 +10,16 @@ export function clearToken(ls: Storage) {
 	localStorage.removeItem('tokenExp',);
 }
 export function getToken() {
-	const token = localStorage.getItem('token')
-	if (!token)
-		throw new Error('No Token Available', { cause: 'localStorage token value not found' });
-	return token;
+	try {
+		if (typeof window === "undefined")
+			return '';
+		const token = localStorage.getItem('token')
+		if (!token)
+			throw new Error('No Token Available');
+		return token;
+	} catch (e) {
+		if (e instanceof Error)
+			console.warn(e);
+		return ''
+	}
 }
