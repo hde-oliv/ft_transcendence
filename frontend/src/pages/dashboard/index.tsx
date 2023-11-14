@@ -171,7 +171,8 @@ function ContactRow(props: PropsWithChildren & { online: boolean }) {
 		</Flex>
 	);
 }
-function ChatsCard(props: PropsWithChildren) {
+function FriendCard(props: PropsWithChildren) {
+
 	return (
 		<Flex flexDir='column' h='370px' w='370px' alignItems='stretch'>
 			<Heading textAlign='center' pt='1vh'>Chats</Heading>
@@ -204,7 +205,7 @@ const Dashboard: NextPageWithLayout = () => {
 				<ConfigsCard />
 			</WrapItem>
 			<WrapItem borderRadius='30' borderWidth='2px' borderColor='yellow.400'>
-				<ChatsCard />
+				<FriendCard />
 			</WrapItem>
 		</Wrap>
 	)
