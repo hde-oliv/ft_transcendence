@@ -2,7 +2,7 @@ import { ChannelData, fetchChannelUsers } from "@/lib/fetchers/chat";
 import { FetchChannelUsers } from "@/lib/fetchers/chat";
 import { Avatar, Box, Flex, Heading, Skeleton, Text } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
-import { ChannelComponentProps, userSchema } from "../../../pages/wppChat";
+import { ChannelComponentProps, userSchema } from "../../../pages/chat";
 
 export function ChannelCard(
 	props: ChannelComponentProps & { active: boolean }
