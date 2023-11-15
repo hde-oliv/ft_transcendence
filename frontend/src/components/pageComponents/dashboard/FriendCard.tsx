@@ -1,9 +1,10 @@
 'use client';
-import { Avatar, AvatarBadge, Box, Button, Center, Flex, Heading, Input, Modal, ModalBody, ModalContent, ModalOverlay, Stack, Text, VStack, useDisclosure } from '@chakra-ui/react';
+import { Avatar, AvatarBadge, Box, Button, Center, Flex, Heading, Input, Modal, ModalBody, ModalContent, ModalOverlay, Stack, Tab, TabList, TabPanel, TabPanels, Tabs, Text, VStack, useDisclosure } from '@chakra-ui/react';
 import { AddIcon } from '@chakra-ui/icons';
 import { ReturnUserSchema, fetchUsers } from '@/lib/fetchers/users';
 import { useCallback, useEffect, useState } from 'react';
 import diacriticalNormalize from '@/lib/diacriticalNormalize';
+import { createFriendship } from '@/lib/fetchers/friends';
 
 
 function ContactRow(props: { online: boolean }) {
@@ -27,7 +28,7 @@ function ContactRow(props: { online: boolean }) {
 	);
 }
 
-function UserCard(props: { userData: ReturnUserSchema }) {
+function UserCard(props: { userData: ReturnUserSchema, me: string }) {
 	return (
 		<Flex w='100%' p='1vh 1vw' justifyContent='space-between' borderRadius={10} borderColor={'yellow.300'} borderWidth={2}>
 			<Box w='50%'>
@@ -48,12 +49,17 @@ function UserCard(props: { userData: ReturnUserSchema }) {
 				<Text>{props.userData.elo}</Text>
 			</Box>
 			<Box>
-				<Button colorScheme='green'>Add</Button>
+				<Button
+					colorScheme='green'
+					onClick={() => { createFriendship({ fOne: props.me, fTwo: props.userData.intra_login }) }}
+				>
+					Add
+				</Button>
 			</Box>
 		</Flex>
 	)
 }
-function AddFriendModal(props: { isOpen: boolean, onOpen: () => void, onClose: () => void }) {
+function AddFriendModal(props: { isOpen: boolean, onOpen: () => void, onClose: () => void, me: string }) {
 	const [text, setText] = useState('');
 	const [allUsers, setAllUsers] = useState<Array<ReturnUserSchema>>([]);
 	const [visibleUsers, setVisibleUsers] = useState<Array<ReturnUserSchema>>([]);
@@ -73,7 +79,7 @@ function AddFriendModal(props: { isOpen: boolean, onOpen: () => void, onClose: (
 	useEffect(visibleUserCallback, [allUsers])
 	useEffect(() => {
 		if (props.isOpen)
-			fetchUsers().then(e => setAllUsers(e)).catch(e => console.log(e));
+			fetchUsers().then(e => setAllUsers(e.filter(e => e.intra_login !== props.me))).catch(e => console.log(e));
 	}, [props.isOpen])
 	useEffect(() => {
 		const filterTimeout = setTimeout(visibleUserCallback, 300);
@@ -90,21 +96,32 @@ function AddFriendModal(props: { isOpen: boolean, onOpen: () => void, onClose: (
 		>
 			<ModalOverlay />
 			<ModalContent bg='pongBlue.500'>
-				<ModalBody >
-					<Flex flexDir={'column'} h='70vh' overflow={'hidden'}>
-						<Heading textAlign={'center'} color='yellow.300'>Find a friend</Heading>
-						<Input
-							value={text}
-							minH={'2.5em'}
-							onChange={(e) => setText(e.target.value)}
-							bg='pongBlue.300'
-							placeholder='type a nickname or intra login' />
-						<Stack overflow={'auto'} mt='1vh' >
-							{visibleUsers.map(e => <UserCard userData={e} key={`addFriend-${e.intra_login}`} />)}
-							{visibleUsers.length === 0 ? (<Center><Heading color='red.400'>No User Found</Heading></Center>) : undefined}
-						</Stack>
-					</Flex>
-				</ModalBody>
+				<Tabs isLazy>
+					<TabList>
+						<Tab>Add new Friends</Tab>
+						<Tab>Pending Invites</Tab>
+
+					</TabList>
+					<TabPanels>
+						<TabPanel>
+							<ModalBody >
+								<Flex flexDir={'column'} h='70vh' overflow={'hidden'}>
+									<Input
+										value={text}
+										minH={'2.5em'}
+										onChange={(e) => setText(e.target.value)}
+										bg='pongBlue.300'
+										placeholder='type a nickname or intra login' />
+									<Stack overflow={'auto'} mt='1vh' >
+										{visibleUsers.map(e => <UserCard userData={e} me={props.me} key={`addFriend-${e.intra_login}`} />)}
+										{visibleUsers.length === 0 ? (<Center><Heading color='red.400'>No User Found</Heading></Center>) : undefined}
+									</Stack>
+								</Flex>
+							</ModalBody>
+						</TabPanel>
+					</TabPanels>
+				</Tabs>
+
 			</ModalContent>
 		</Modal>
 	)
@@ -158,7 +175,7 @@ export function FriendCard(props: { id: string; }) {
 					<ContactRow online={true} />
 				</VStack>
 			</Flex>
-			<AddFriendModal isOpen={isOpen} onOpen={onOpen} onClose={onClose} />
+			<AddFriendModal isOpen={isOpen} onOpen={onOpen} onClose={onClose} me={props.id} />
 		</>
 	);
 }

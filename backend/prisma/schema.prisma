@@ -96,9 +96,10 @@ model BlockedUsers {
 }
 
 model Invites {
-  id        String @id @default(uuid())
+  id        String  @id @default(uuid())
   user_id   String
   target_id String
+  fulfilled Boolean @default(false)
 
   sender Users @relation("sent_invites", fields: [user_id], references: [id])
   target Users @relation("received_invites", fields: [target_id], references: [id])

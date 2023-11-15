@@ -15,7 +15,7 @@ export function getToken() {
 			return '';
 		const token = localStorage.getItem('token')
 		if (!token)
-			throw new Error('No Token Available');
+			return ''
 		return token;
 	} catch (e) {
 		if (e instanceof Error)
