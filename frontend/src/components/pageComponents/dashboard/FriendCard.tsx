@@ -80,13 +80,13 @@ function AddFriendModal(props: { isOpen: boolean, onOpen: () => void, onClose: (
 	useEffect(() => {
 		if (props.isOpen)
 			fetchUsers().then(e => setAllUsers(e.filter(e => e.intra_login !== props.me))).catch(e => console.log(e));
-	}, [props.isOpen])
+	}, [props.isOpen, props.me])
 	useEffect(() => {
 		const filterTimeout = setTimeout(visibleUserCallback, 300);
 		return (() => {
 			clearTimeout(filterTimeout);
 		})
-	}, [text])
+	}, [text, visibleUserCallback])
 	return (
 		<Modal
 			onClose={props.onClose}
