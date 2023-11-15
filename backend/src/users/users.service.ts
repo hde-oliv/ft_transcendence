@@ -2,10 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { UsersRepository } from './users.repository';
 import { CreateUserDto } from './dto/create-user-dto';
 import { UpdateOTPUserDto } from './dto/update-otp-user-dto';
+import { returnUserSchema } from './dto/return-user-dto';
 
 @Injectable()
 export class UsersService {
-  constructor(private userRepository: UsersRepository) {}
+  constructor(private userRepository: UsersRepository) { }
 
   getUser(param: { id: string }) {
     return this.userRepository.getUserById(param.id);
@@ -21,8 +22,8 @@ export class UsersService {
     return this.userRepository.getUserByIntra(param.intra_login);
   }
 
-  getAllUsers() {
-    return this.userRepository.getAllUsers();
+  async getAllUsers() {
+    return (await this.userRepository.getAllUsers()).map(e => returnUserSchema.parse(e));
   }
 
   create(user: CreateUserDto) {

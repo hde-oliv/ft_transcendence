@@ -7,9 +7,9 @@ import {
 	InputRightAddon, Stack
 } from "@chakra-ui/react";
 import { useEffect, useRef, useState } from "react";
-import { ChannelComponentProps, MessageCardProps, MessageCard } from ".";
+import { ChannelComponentProps, MessageCardProps, MessageCard } from "../../../pages/chat";
 
-export function MessageSection(props: ChannelComponentProps): JSX.Element {
+export default function MessageSection(props: ChannelComponentProps): JSX.Element {
 	const [messages, setMessages] = useState<Array<MessageCardProps>>([]);
 	const [text, setText] = useState("");
 	const messagesRef = useRef<HTMLDivElement>(null);

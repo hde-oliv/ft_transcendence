@@ -34,7 +34,7 @@ import { ReactElement, useCallback, useEffect, useState } from "react";
 
 import { ChannelCard } from "../../components/pageComponents/chat/ChannelCard";
 import { Socket } from "socket.io-client";
-import { MessageSection } from "./MessageSection";
+import MessageSection from "../../components/pageComponents/chat/MessageSection";
 
 
 export type userSchema = {

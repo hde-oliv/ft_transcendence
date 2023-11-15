@@ -1,7 +1,7 @@
 'use client'
 import { PropsWithChildren, ReactElement, useEffect, useRef, useState } from 'react';
 import PongPageMenu from '../../components/nav/PongNavBar'
-import { Avatar, AvatarBadge, Box, Button, Card, CardBody, CardFooter, CardHeader, Center, Flex, Heading, Icon, Skeleton, Text, VStack, Wrap, WrapItem } from '@chakra-ui/react';
+import { Avatar, AvatarBadge, Box, Button, Card, CardBody, CardFooter, CardHeader, Center, Flex, Heading, Icon, Skeleton, Text, Wrap, WrapItem } from '@chakra-ui/react';
 import {
 	Stat,
 	StatLabel,
@@ -23,10 +23,11 @@ import {
 	TableContainer,
 } from '@chakra-ui/react'
 import { useRouter } from 'next/router';
-import { CheckIcon, AddIcon } from '@chakra-ui/icons';
+import { CheckIcon } from '@chakra-ui/icons';
 import PageLayout from '@/components/pageLayout/PageLayout';
 import { NextPageWithLayout } from '../_app';
-import { getAllFriends, getFriendsById } from '@/lib/fetchers/friends';
+import { createFriendship, getAllFriends, getFriendsById, getFriendsByUser } from '@/lib/fetchers/friends';
+import { FriendCard } from '../../components/pageComponents/dashboard/FriendCard';
 
 
 function PlayCard(props: PropsWithChildren) {
@@ -152,49 +153,7 @@ function ConfigsCard(props: PropsWithChildren) {
 		</Center>
 	)
 }
-function ContactRow(props: PropsWithChildren & { online: boolean }) {
-	const { online } = props;
-	const color = online ? 'green.300' : 'gray.300'
-	return (
-		<Flex w='100%' pl='1vw' pr='1vw' justifyContent='space-between'>
-			<Box>
-				<Avatar>
-					<AvatarBadge boxSize='1.25em' bg={color} />
-				</Avatar>
-				<Box display='inline-block'>
-					<Heading fontWeight='medium' size='md' pl='1vw'>hde-camp</Heading>
-					<Heading fontWeight='light' size='xs' pl='1vw'>hde-camp</Heading>
-				</Box>
-			</Box>
-			<Box>
-				<Text>21:23</Text>
-			</Box>
-		</Flex>
-	);
-}
-function FriendCard(props: { id: string }) {
-	useEffect(() => {
-		// getAllFriends().then(e => console.log(e)).catch(e => console.log(e));
-		// getFriendsById(props.id).then(e => console.log(e)).catch(e => console.log(e));
-		/*
-		getAllFriends
-		getFriendsById
-		getFriendsByUser
-		createFriendship
- */
-	}, [props.id])
-	return (
-		<Flex flexDir='column' h='370px' w='370px' alignItems='stretch'>
-			<Heading textAlign='center' pt='1vh'>Chats</Heading>
-			<Button rightIcon={<AddIcon />} mb='2vh' mt='1vh' colorScheme='yellow'>Add friend</Button>
-			<VStack>
-				<ContactRow online={true} />
-				<ContactRow online={false} />
-				<ContactRow online={true} />
-			</VStack>
-		</Flex>
-	)
-}
+
 const Dashboard: NextPageWithLayout = () => {
 	const router = useRouter();
 	return (
