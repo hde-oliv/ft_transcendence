@@ -27,18 +27,15 @@ import { ChatFilter } from './chat.filter';
   transpors: ['websocket', 'webtransport'],
 })
 export class ChatGateway
-  implements OnGatewayConnection, OnGatewayInit, OnGatewayDisconnect
-{
+  implements OnGatewayConnection, OnGatewayInit, OnGatewayDisconnect {
   @WebSocketServer()
   wss: Server;
 
-  constructor(private chatService: ChatService) {}
+  constructor(private chatService: ChatService) { }
 
   private readonly logger = new Logger(ChatGateway.name);
 
   private clients: ClientSocket[] = [];
-
-  private mapClients = new Map<string, Socket>();
 
   @UseFilters(new ChatFilter())
   async afterInit(server: Server) {
@@ -67,7 +64,6 @@ export class ChatGateway
     const user = await this.chatService.getUserFromSocket(socket);
     const clientSocket = { user, socket };
     this.clients = [...this.clients, clientSocket];
-    this.mapClients.set(user.intra_login, socket);
     this.logger.log(`Client Connected: ${socket.id}`);
     const channels = (await this.chatService.getChannelsByUser(user)).map(
       (e) => {
