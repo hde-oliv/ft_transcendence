@@ -4,31 +4,44 @@ import { AddIcon } from '@chakra-ui/icons';
 import { ReturnUserSchema, fetchUsers } from '@/lib/fetchers/users';
 import { useCallback, useEffect, useState } from 'react';
 import diacriticalNormalize from '@/lib/diacriticalNormalize';
-import { createFriendship } from '@/lib/fetchers/friends';
+import { createFriendship, getAllFriends } from '@/lib/fetchers/friends';
 
 
-function ContactRow(props: { online: boolean }) {
-	const { online } = props;
-	const color = online ? 'green.300' : 'gray.300'
+function ContactRow(props: ReturnUserSchema) {
+	const color = props.status === 'online' ? 'green.300' : 'gray.300'
 	return (
 		<Flex w='100%' pl='1vw' pr='1vw' justifyContent='space-between'>
 			<Box>
-				<Avatar>
+				<Avatar src={props.avatar}>
 					<AvatarBadge boxSize='1.25em' bg={color} />
 				</Avatar>
 				<Box display='inline-block'>
-					<Heading fontWeight='medium' size='md' pl='1vw'>hde-camp</Heading>
-					<Heading fontWeight='light' size='xs' pl='1vw'>hde-camp</Heading>
+					<Heading fontWeight='medium' size='md' pl='1vw'>{props.nickname}</Heading>
+					<Heading fontWeight='light' size='xs' pl='1vw'>{props.intra_login}</Heading>
 				</Box>
 			</Box>
-			<Box>
-				<Text>21:23</Text>
+			<Box display='inline-block'>
+				<Heading fontWeight='medium' size='md' pl='1vw'>Elo</Heading>
+				<Heading fontWeight='light' size='xs' pl='1vw'>{props.elo}</Heading>
 			</Box>
 		</Flex>
 	);
 }
 
-function UserCard(props: { userData: ReturnUserSchema, me: string }) {
+function UserCard(props: { userData: ReturnUserSchema & { friend: boolean }, me: string, sync: () => void }) {
+	const [loading, setLoading] = useState(false);
+
+	async function addFriend() {
+		setLoading(true);
+		try {
+			await createFriendship({ fOne: props.me, fTwo: props.userData.intra_login });
+			props.sync();
+		} catch (e) {
+			console.warn('Could not add friend');
+		}
+		setLoading(false);
+	}
+
 	return (
 		<Flex w='100%' p='1vh 1vw' justifyContent='space-between' borderRadius={10} borderColor={'yellow.300'} borderWidth={2}>
 			<Box w='50%'>
@@ -48,38 +61,55 @@ function UserCard(props: { userData: ReturnUserSchema, me: string }) {
 				<Heading size='sm'>Elo</Heading>
 				<Text>{props.userData.elo}</Text>
 			</Box>
-			<Box>
+			<Center>
 				<Button
+					isDisabled={props.userData.friend}
+					isLoading={loading}
 					colorScheme='green'
-					onClick={() => { createFriendship({ fOne: props.me, fTwo: props.userData.intra_login }) }}
+					onClick={addFriend}
 				>
-					Add
+					{props.userData.friend ? 'Friend' : 'Add'}
 				</Button>
-			</Box>
+			</Center>
 		</Flex>
 	)
 }
-function AddFriendModal(props: { isOpen: boolean, onOpen: () => void, onClose: () => void, me: string }) {
+function AddFriendModal(props: { isOpen: boolean, onOpen: () => void, onClose: () => void, me: string, friendList: Array<ReturnUserSchema>, sync: () => void }) {
 	const [text, setText] = useState('');
 	const [allUsers, setAllUsers] = useState<Array<ReturnUserSchema>>([]);
-	const [visibleUsers, setVisibleUsers] = useState<Array<ReturnUserSchema>>([]);
+	const [visibleUsers, setVisibleUsers] = useState<Array<ReturnUserSchema & { friend: boolean }>>([]);
 
 	const visibleUserCallback = useCallback(() => {
 		if (text !== '') {
-			let tmp: Array<ReturnUserSchema> = [...allUsers.filter(e => {
+			let withoutMe: Array<ReturnUserSchema> = [...allUsers.filter(e => {
 				let filter = diacriticalNormalize(text);
 				return diacriticalNormalize(e.nickname.toLocaleLowerCase()).includes(filter) || diacriticalNormalize(e.intra_login.toLocaleLowerCase()).includes(filter);
-			})];
-			setVisibleUsers(tmp)
+			})]
+			const addedFriendStatus = withoutMe.map(e => {
+				return {
+					...e,
+					friend: props.friendList.some(f => f.intra_login === e.intra_login)
+				}
+
+			})
+			setVisibleUsers(addedFriendStatus)
 		} else {
-			setVisibleUsers(allUsers);
+			const addedFriendStatus = allUsers.map(e => {
+				return {
+					...e,
+					friend: props.friendList.some(f => f.intra_login === e.intra_login)
+				}
+
+			})
+			setVisibleUsers(addedFriendStatus)
 		}
 	}, [text, allUsers]);
 
 	useEffect(visibleUserCallback, [allUsers])
 	useEffect(() => {
-		if (props.isOpen)
+		if (props.isOpen) {
 			fetchUsers().then(e => setAllUsers(e.filter(e => e.intra_login !== props.me))).catch(e => console.log(e));
+		}
 	}, [props.isOpen, props.me])
 	useEffect(() => {
 		const filterTimeout = setTimeout(visibleUserCallback, 300);
@@ -96,32 +126,20 @@ function AddFriendModal(props: { isOpen: boolean, onOpen: () => void, onClose: (
 		>
 			<ModalOverlay />
 			<ModalContent bg='pongBlue.500'>
-				<Tabs isLazy>
-					<TabList>
-						<Tab>Add new Friends</Tab>
-						<Tab>Pending Invites</Tab>
-
-					</TabList>
-					<TabPanels>
-						<TabPanel>
-							<ModalBody >
-								<Flex flexDir={'column'} h='70vh' overflow={'hidden'}>
-									<Input
-										value={text}
-										minH={'2.5em'}
-										onChange={(e) => setText(e.target.value)}
-										bg='pongBlue.300'
-										placeholder='type a nickname or intra login' />
-									<Stack overflow={'auto'} mt='1vh' >
-										{visibleUsers.map(e => <UserCard userData={e} me={props.me} key={`addFriend-${e.intra_login}`} />)}
-										{visibleUsers.length === 0 ? (<Center><Heading color='red.400'>No User Found</Heading></Center>) : undefined}
-									</Stack>
-								</Flex>
-							</ModalBody>
-						</TabPanel>
-					</TabPanels>
-				</Tabs>
-
+				<ModalBody >
+					<Flex flexDir={'column'} h='70vh' overflow={'hidden'}>
+						<Input
+							value={text}
+							minH={'2.5em'}
+							onChange={(e) => setText(e.target.value)}
+							bg='pongBlue.300'
+							placeholder='type a nickname or intra login' />
+						<Stack overflow={'auto'} mt='1vh' >
+							{visibleUsers.map(e => <UserCard userData={e} me={props.me} key={`addFriend-${e.intra_login}`} sync={props.sync} />)}
+							{visibleUsers.length === 0 ? (<Center><Heading color='red.400'>No User Found</Heading></Center>) : undefined}
+						</Stack>
+					</Flex>
+				</ModalBody>
 			</ModalContent>
 		</Modal>
 	)
@@ -150,16 +168,15 @@ function AddFriendModal(props: { isOpen: boolean, onOpen: () => void, onClose: (
 
 export function FriendCard(props: { id: string; }) {
 	const { isOpen, onOpen, onClose } = useDisclosure();
+	const [friends, setFriends] = useState<Array<ReturnUserSchema>>([]);
+
+
 	useEffect(() => {
-		// fetchUsers().then(e => console.log(e)).catch(e => console.log(e));
-		// getAllFriends().then(e => console.log(e)).catch(e => console.log(e)); //Get friends of the caller
-		// getFriendsById(props.id).then(e => console.log(e)).catch(e => console.log(e)); //getFriend data?
-		// getFriendsByUser(props.id).then(e => console.log(e)).catch(e => console.log(e)); // ??
-		// createFriendship()
+		getAllFriends().then(e => setFriends(e)).catch(e => { })
 	}, [props.id])
 	return (
 		<>
-			<Flex flexDir='column' h='370px' w='370px' alignItems='stretch'>
+			<Flex flexDir='column' h='370px' w='370px' alignItems='stretch' pl='1vw' pr='1vw'>
 				<Heading textAlign='center' pt='1vh'>Friends</Heading>
 				<Button
 					onClick={onOpen}
@@ -169,13 +186,17 @@ export function FriendCard(props: { id: string; }) {
 					colorScheme='yellow'>
 					Add friend
 				</Button>
-				<VStack>
-					<ContactRow online={true} />
-					<ContactRow online={false} />
-					<ContactRow online={true} />
+				<VStack overflow={'auto'}>
+					{friends.map(f => <ContactRow {...f} />)}
 				</VStack>
 			</Flex>
-			<AddFriendModal isOpen={isOpen} onOpen={onOpen} onClose={onClose} me={props.id} />
+			<AddFriendModal
+				isOpen={isOpen}
+				onOpen={onOpen}
+				onClose={onClose}
+				me={props.id}
+				friendList={friends}
+				sync={() => { getAllFriends().then(e => setFriends(e)).catch(e => { }) }} />
 		</>
 	);
 }

@@ -1,10 +1,12 @@
 import { pongAxios } from "./pongAxios";
+import z from 'zod'
+import { ReturnUserSchema, returnUserSchema } from "./users";
 
-export async function getAllFriends() {
+export async function getAllFriends(): Promise<Array<ReturnUserSchema>> {
 	const fetcher = pongAxios();
 
 	const response = await fetcher.get('/friend')
-	return response.data;
+	return z.array(returnUserSchema).parse(response.data);
 }
 export async function getFriendsById(id: string) {
 	const fetcher = pongAxios();
