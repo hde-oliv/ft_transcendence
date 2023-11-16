@@ -10,7 +10,7 @@ import { CreateFriendshipDto } from './dto/create-friendship-dto';
 
 @Injectable()
 export class FriendRepository {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(private readonly prismaService: PrismaService) { }
 
   async createFriendship(
     new_friendship: CreateFriendshipDto,
@@ -22,8 +22,35 @@ export class FriendRepository {
     });
   }
 
-  async getAllFriendships(): Promise<Friendships[]> {
-    return this.prismaService.friendships.findMany();
+  async getAllFriendships(userId: string) {
+    return this.prismaService.friendships.findMany({
+      where: {
+        OR: [
+          { fOne: userId },
+          { fTwo: userId },
+        ]
+      },
+      select: {
+        friend_one: {
+          select: {
+            nickname: true,
+            avatar: true,
+            intra_login: true,
+            status: true,
+            elo: true,
+          }
+        },
+        friend_two: {
+          select: {
+            nickname: true,
+            avatar: true,
+            intra_login: true,
+            status: true,
+            elo: true,
+          }
+        }
+      }
+    });
   }
 
   async getFriendshipById(id: string): Promise<Friendships> {

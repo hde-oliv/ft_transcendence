@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { FriendRepository } from './friend.repository';
 import { CreateFriendshipDto } from './dto/create-friendship-dto';
+import { ReturnUserDto, returnUserSchema } from 'src/users/dto/return-user-dto';
 import { ChatService } from 'src/chat/chat.service';
 import { TokenClaims } from 'src/auth/auth.model';
 import { v4 as uuidv4 } from 'uuid';
@@ -11,9 +12,15 @@ export class FriendService {
     private friendRepository: FriendRepository,
     private chatService: ChatService,
   ) {}
+  async getAllFriendships(userId: string) {
+    const friendships = await this.friendRepository.getAllFriendships(userId);
+    const complete: Array<ReturnUserDto> = [];
+    friendships.forEach((e) => {
+      complete.push(returnUserSchema.parse(e.friend_one));
+      complete.push(returnUserSchema.parse(e.friend_two));
+    });
 
-  async getAllFriendships() {
-    return await this.friendRepository.getAllFriendships();
+    return complete.filter((e) => e.intra_login !== userId);
   }
 
   async getFriendshipById(id: string) {

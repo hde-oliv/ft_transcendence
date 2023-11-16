@@ -10,6 +10,7 @@ import {
 import { JwtAuthGuard } from 'src/auth/jwt.guard';
 import { FriendService } from './friend.service';
 import { CreateFriendshipDto } from './dto/create-friendship-dto';
+import userFromReq from 'utils/userFromReq';
 
 @Controller('friend')
 export class FriendController {
@@ -17,8 +18,9 @@ export class FriendController {
 
   @UseGuards(JwtAuthGuard)
   @Get()
-  async getAllFriendships() {
-    return await this.friendService.getAllFriendships();
+  async getAllFriendships(@Request() req) {
+    const user = userFromReq(req);
+    return await this.friendService.getAllFriendships(user.intra_login);
   }
 
   @UseGuards(JwtAuthGuard)
