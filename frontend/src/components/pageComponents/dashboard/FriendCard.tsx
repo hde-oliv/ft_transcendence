@@ -103,7 +103,7 @@ function AddFriendModal(props: { isOpen: boolean, onOpen: () => void, onClose: (
 			})
 			setVisibleUsers(addedFriendStatus)
 		}
-	}, [text, allUsers]);
+	}, [text, allUsers, props.friendList]);
 
 	useEffect(visibleUserCallback, [allUsers])
 	useEffect(() => {
@@ -145,27 +145,6 @@ function AddFriendModal(props: { isOpen: boolean, onOpen: () => void, onClose: (
 	)
 }
 
-//<>
-//	<style>
-//		{`
-//	/* Hide the scrollbar but keep the ability to scroll */
-//	::-webkit-scrollbar {
-//		width: 0 !important;
-//	}
-//
-//	/* Optional: Style the track and handle for a better visual appearance */
-//	::-webkit-scrollbar-track {
-//		background: transparent;
-//	}
-//
-//	::-webkit-scrollbar-thumb {
-//		background: #888;
-//		border-radius: 8px;
-//	}
-//	`}
-//	</style>
-//</>
-
 export function FriendCard(props: { id: string; }) {
 	const { isOpen, onOpen, onClose } = useDisclosure();
 	const [friends, setFriends] = useState<Array<ReturnUserSchema>>([]);
@@ -183,11 +162,13 @@ export function FriendCard(props: { id: string; }) {
 					rightIcon={<AddIcon />}
 					mb='2vh'
 					mt='1vh'
+					minH='2em'
+					size={'lg'}
 					colorScheme='yellow'>
 					Add friend
 				</Button>
 				<VStack overflow={'auto'}>
-					{friends.map(f => <ContactRow {...f} />)}
+					{friends.map(f => <ContactRow {...f} key={`friendLine-${f.intra_login}`} />)}
 				</VStack>
 			</Flex>
 			<AddFriendModal

@@ -21,7 +21,7 @@ import {
   UpdateChannelDto,
   updateChannelSchema,
 } from './dto/update-channel-dto';
-import { CreateMembershipDto } from './dto/create-membership-dto';
+import { CreateMembershipDto, createMembershipSchema } from './dto/create-membership-dto';
 import { JwtAuthGuard } from 'src/auth/jwt.guard';
 import { JoinChannelDto, joinChannelSchema } from './dto/join-channel-dto';
 import { MembershipDto, membershipSchema } from './dto/membership-dto';
@@ -94,6 +94,7 @@ export class ChatController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @UsePipes(new ZodValidationPipe(createMembershipSchema))
   @Post('/channel/user/invite')
   async inviteUser(@Request() req, @Body() body: CreateMembershipDto) {
     return this.chatService.inviteUser(req.user, body);

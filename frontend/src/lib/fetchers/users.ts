@@ -18,9 +18,7 @@ export async function fetchUsers(): Promise<Array<ReturnUserSchema>> {
 }
 
 export async function fetchUserById(id: string) {
-	const token = localStorage.getItem("token");
-	if (token === null) throw new Error(`getMe could't get bearer token`);
-	const fetcher = pongAxios(token);
+	const fetcher = pongAxios();
 	const response = await fetcher.get(`user/${id}`);
 	return response.data;
 }
