@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/jwt.guard';
 import { FriendService } from './friend.service';
 import { CreateFriendshipDto } from './dto/create-friendship-dto';
@@ -27,7 +35,10 @@ export class FriendController {
 
   @UseGuards(JwtAuthGuard)
   @Post()
-  async createFriendship(@Body() new_friendship: CreateFriendshipDto) {
-    return await this.friendService.createFriendship(new_friendship);
+  async createFriendship(
+    @Request() req,
+    @Body() new_friendship: CreateFriendshipDto,
+  ) {
+    return await this.friendService.createFriendship(req.user, new_friendship);
   }
 }
