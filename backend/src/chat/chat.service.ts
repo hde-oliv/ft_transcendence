@@ -103,7 +103,7 @@ export class ChatService {
     id: number,
     token: TokenClaims,
     UpdateChannelDto: UpdateChannelDto,
-  ) {
+  ): Promise<Channels> {
     const channel = await this.chatRepository.getChannel(id);
 
     const memberships = await this.chatRepository.getMembershipsbyChannel(

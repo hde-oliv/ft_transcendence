@@ -266,7 +266,11 @@ export default function Chat(props: any) {
 			</Flex>
 			<Flex flexDir="column" justifyContent="space-between" w="100%">
 				{activeChannel >= 0 ? (
-					<MessageSection {...myChannels[activeChannel]} socket={chatSocket} />
+					<MessageSection
+						{...myChannels[activeChannel]}
+						socket={chatSocket}
+						syncAll={() => { fetchMyChannels().then(e => setMyChannels(e)).catch(() => setMyChannels([])) }} //TODO: this will erase notifications, this function should add last message where needed
+					/>
 				) : (
 					<Skeleton
 						isLoaded={false}

@@ -105,6 +105,13 @@ const createMembershipSchema = z.object({
 	muted: z.boolean().optional(),
 });
 
+export const updateChannelSchema = z.object({
+	name: z.string().optional(),
+	type: z.string().optional(),
+	password: z.string().optional(),
+	protected: z.boolean().optional(),
+});
+
 export type FetchChannelUsers = Array<user>;
 export type myChannelResponse = z.infer<typeof myChannelsResponseSchema>;
 export type channelResponse = z.infer<typeof channelResponseSchema>;
@@ -112,6 +119,7 @@ export type MyChannels = z.infer<typeof myChannelResponse>;
 export type ChannelData = z.infer<typeof myChannelResponse.element>;
 export type myChannel = z.infer<typeof myChannelsSchema>;
 export type createChannelParams = z.infer<typeof newChannel>
+export type UpdateChannelSchemma = z.infer<typeof updateChannelSchema>;
 type CreateMembershipSchema = z.infer<typeof createMembershipSchema>;
 
 export async function createChannel(channelData: createChannelParams) {
@@ -167,5 +175,9 @@ export async function fetchMyChannels(): Promise<MyChannels> {
 
 export async function inviteUserToChannel(data: CreateMembershipSchema) {
 	const fetcher = pongAxios();
-	return await fetcher.post('/channel/user/invite', data);
+	return await fetcher.post('/chat/channel/user/invite', data);
+}
+export async function patchChannel(channelId: number, data: UpdateChannelSchemma): Promise<any> {
+	const fetcher = pongAxios();
+	return await fetcher.patch(`/chat/channel/${channelId}`, data);
 }

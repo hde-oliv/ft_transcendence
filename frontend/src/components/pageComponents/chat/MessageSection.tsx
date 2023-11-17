@@ -1,16 +1,132 @@
-import { ChannelData, fetchMessagesFromChannel, messageResponseSchema } from "@/lib/fetchers/chat";
+import { ChannelData, UpdateChannelSchemma, fetchMessagesFromChannel, messageResponseSchema, patchChannel, updateChannelSchema } from "@/lib/fetchers/chat";
 import chatSocket from "@/lib/sockets/chatSocket";
-import { CloseIcon, EmailIcon, SettingsIcon } from "@chakra-ui/icons";
+import { CloseIcon, EmailIcon, LockIcon, SettingsIcon, UnlockIcon } from "@chakra-ui/icons";
 import {
 	Avatar,
 	Box, Button, Center, Checkbox, Collapse, Drawer, DrawerBody, DrawerContent, DrawerFooter, DrawerHeader, DrawerOverlay, Flex, FormControl, FormLabel, Heading, IconButton, Input,
 	InputGroup,
-	InputRightAddon, Stack, Switch, Text, useDisclosure
+	InputRightAddon, Select, Stack, Switch, Text, useDisclosure
 } from "@chakra-ui/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChannelComponentProps, MessageCardProps, MessageCard } from "../../../pages/chat";
+import z, { ZodError } from 'zod'
 
-export default function MessageSection(props: ChannelComponentProps): JSX.Element {
+function GroupSettings(props: { membership: Omit<ChannelComponentProps, 'channel'>, channel: ChannelData['channel'], syncAll: () => void }) {
+	const { isOpen, onClose, onOpen } = useDisclosure();
+	const [editingPsw, setEditinPsw] = useState(false);
+	const [pswOne, setPswOne] = useState('')
+	const [pswTwo, setPswTwo] = useState('')
+	const [channelType, setChannelType] = useState(props.channel.type);
+	const [channelName, setChannelName] = useState(props.channel.name);
+
+	useEffect(() => {
+		setPswOne('');
+		setPswTwo('');
+		setChannelType(props.channel.type);
+		setChannelName(props.channel.name);
+	}, [props.channel.id])
+	if (props.channel.user2user)
+		return undefined;
+	const pswError = (pswOne !== '' && pswTwo !== '') && pswOne !== pswTwo;
+	const pswDone = (pswOne !== '' && pswTwo !== '') && pswOne === pswTwo;
+	const pswDisable = props.channel.protected && !editingPsw
+	const canSave = (channelName !== props.channel.name) || (channelType !== props.channel.type) || (pswDone || pswDisable);
+	async function saveConfig() {
+		try {
+			const updatedChannelConfig = updateChannelSchema.parse({
+				name: channelName,
+				type: channelType,
+				password: pswDone ? pswOne : '',
+				protected: pswDone
+			});
+			await patchChannel(props.channel.id, updatedChannelConfig);
+			props.syncAll();
+		} catch (e) {
+			if (e instanceof ZodError)
+				console.warn('Error build patchChannel object');
+		}
+	}
+	return (
+		<Center>
+			<IconButton colorScheme="yellow" size='lg' icon={<SettingsIcon />} aria-label="channel settings" onClick={onOpen} />
+			<Drawer isOpen={isOpen} placement="right" onClose={onClose} size={'lg'} colorScheme="yellow">
+				<DrawerOverlay />
+				<DrawerContent >
+					<DrawerHeader>Channel Settings &nbsp; {props.channel.protected ? <LockIcon /> : <UnlockIcon />} </DrawerHeader>
+					<DrawerBody>
+						<FormLabel >Channel Name</FormLabel>
+						<Input
+							value={channelName}
+							onChange={({ target }) => setChannelName(target.value)}
+							isDisabled={!props.membership.administrator}
+							key='channelNameInput' />
+
+						<FormLabel mt='2vh'>Type</FormLabel>
+						<Select isDisabled={!props.membership.administrator} value={channelType} onChange={(e) => setChannelType(e.target.value as 'private' | 'public')} key='channelTypeSelection'>
+							<option value='public'>Public</option>
+							<option value='private'>Private</option>
+						</Select>
+						<FormLabel mt='2vh'>Password</FormLabel>
+						<Checkbox
+							display={'block'}
+							ml='2vw'
+							size='lg'
+							isDisabled={!props.membership.administrator}
+							colorScheme="yellow"
+							isChecked={editingPsw}
+							onChange={(e) => {
+								console.log(`value:${e.target.value}`)
+								console.log(`checked:${e.target.checked}`)
+								setEditinPsw(e.target.checked)
+							}}
+						/>
+						<Collapse in={editingPsw}>
+							<Flex flexDir="column">
+								<Input
+									isDisabled={!props.membership.administrator}
+									key='pswOneInput'
+									placeholder="Type the new password"
+									type="password"
+									isInvalid={pswError}
+									value={pswOne}
+									onChange={(e) => setPswOne(e.target.value)}
+									borderColor={pswDone ? 'green.300' : undefined}
+									mt='1vh' />
+								<Input
+									isDisabled={!props.membership.administrator}
+									key='pswTwoInput'
+									placeholder="Confirm the above password"
+									type="password"
+									isInvalid={pswError}
+									value={pswTwo}
+									onChange={(e) => setPswTwo(e.target.value)}
+									borderColor={pswDone ? 'green.300' : undefined}
+									mt='1vh' />
+							</Flex>
+						</Collapse>
+						<Flex justifyContent={'end'}>
+							{pswDisable ? <Heading mr='2vw' alignSelf={'center'} size='sm' color="red.300">This will disable password</Heading> : undefined}
+							<Button
+								mt='1vh'
+								colorScheme="green"
+								isDisabled={!props.membership.administrator || !canSave}
+								alignSelf={'end'}
+								onClick={saveConfig}
+							>
+								Save
+							</Button>
+						</Flex>
+					</DrawerBody>
+					<DrawerFooter>
+						<IconButton size='lg' colorScheme='yellow' icon={<CloseIcon />} onClick={onClose} aria-label="close channel settings" />
+					</DrawerFooter>
+				</DrawerContent>
+			</Drawer>
+		</Center >
+	)
+}
+
+export default function MessageSection(props: ChannelComponentProps & { syncAll: () => void }): JSX.Element {
 	const [messages, setMessages] = useState<Array<MessageCardProps>>([]);
 
 	const [text, setText] = useState("");
@@ -69,41 +185,7 @@ export default function MessageSection(props: ChannelComponentProps): JSX.Elemen
 			});
 		}
 	}, [messages]);
-	function GroupSettings(props: { membership: Omit<ChannelComponentProps, 'channel'>, channel: ChannelData['channel'] }) {
-		const { isOpen, onClose, onOpen } = useDisclosure();
-		const { isOpen: editingPsw, onClose: closePws, onOpen: openPsw } = useDisclosure();
 
-		return (
-			<Center>
-				<IconButton colorScheme="yellow" size='lg' icon={<SettingsIcon />} aria-label="channel settings" onClick={onOpen} />
-				<Drawer isOpen={isOpen} placement="right" onClose={onClose} size={'lg'}>
-					<DrawerOverlay />
-					<DrawerContent>
-						<DrawerHeader>Channel Settings</DrawerHeader>
-						<DrawerBody>
-							<FormControl>
-								<FormLabel >Channel Name</FormLabel>
-								<Input isDisabled={true} value={channelName} />
-
-								<FormLabel mt='2vh'>Password</FormLabel>
-								<Checkbox colorScheme="yellow" checked={editingPsw} onChange={(e) => { !editingPsw ? openPsw() : closePws() }} />
-								<Collapse in={editingPsw}>
-									<Flex>
-										<Input type="password" isInvalid={false} />
-										<Input type="password" isInvalid={true} />
-									</Flex>
-								</Collapse>
-							</FormControl>
-						</DrawerBody>
-						<DrawerFooter>
-							<IconButton size='lg' colorScheme='yellow' icon={<CloseIcon />} onClick={onClose} aria-label="close channel settings" />
-
-						</DrawerFooter>
-					</DrawerContent>
-				</Drawer>
-			</Center >
-		)
-	}
 	return (
 		<>
 			<Flex bg='pongBlue.300' p='2vh 1vw' justify={'space-between'}>
@@ -115,6 +197,7 @@ export default function MessageSection(props: ChannelComponentProps): JSX.Elemen
 					<Heading>{channelName}</Heading>
 				</Flex>
 				<GroupSettings
+					syncAll={props.syncAll}
 					channel={props.channel}
 					membership={{
 						channelId: props.channelId,
