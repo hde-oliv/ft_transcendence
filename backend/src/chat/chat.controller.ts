@@ -21,7 +21,10 @@ import {
   UpdateChannelDto,
   updateChannelSchema,
 } from './dto/update-channel-dto';
-import { CreateMembershipDto, createMembershipSchema } from './dto/create-membership-dto';
+import {
+  CreateMembershipDto,
+  createMembershipSchema,
+} from './dto/create-membership-dto';
 import { JwtAuthGuard } from 'src/auth/jwt.guard';
 import { JoinChannelDto, joinChannelSchema } from './dto/join-channel-dto';
 import { MembershipDto, membershipSchema } from './dto/membership-dto';
@@ -31,14 +34,13 @@ import { TokenClaims } from 'src/auth/auth.model';
 
 @Controller('chat')
 export class ChatController {
-  constructor(private readonly chatService: ChatService) { }
+  constructor(private readonly chatService: ChatService) {}
 
   @UseGuards(JwtAuthGuard)
   @Get('/mychannels')
   async getUserChannels(@Request() req) {
     return this.chatService.getChannelsByUser(req.user);
   }
-
 
   @UseGuards(JwtAuthGuard)
   @UsePipes(new ZodValidationPipe(createChannelSchema))
@@ -49,7 +51,6 @@ export class ChatController {
   ) {
     return this.chatService.createChannel(req.user, createChannelDto);
   }
-
 
   @UseGuards(JwtAuthGuard)
   @Get('/channel')
@@ -163,7 +164,7 @@ export class ChatController {
 
   @UseGuards(JwtAuthGuard)
   @Get('/channel/:id/users')
-  async getChannelData(@Request() req, @Param('id') id: any) {
+  async getChannelUsers(@Request() req, @Param('id') id: any) {
     return this.chatService.getChannelDataById(id);
   }
 

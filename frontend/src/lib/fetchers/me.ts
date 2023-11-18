@@ -17,17 +17,13 @@ type UpdateUserDto = {
 export type MeResponseData = z.infer<typeof meResponseData>;
 
 export async function getMe() {
-  const token = localStorage.getItem("token");
-  if (token === null) throw new Error(`getMe could't get bearer token`);
-  const fetcher = pongAxios(token);
+  const fetcher = pongAxios();
   const response = await fetcher.get("me");
   return meResponseData.parse(response.data);
 }
 
 export async function updateMe(params: UpdateUserDto) {
-  const token = localStorage.getItem("token");
-  if (token === null) throw new Error(`getMe could't get bearer token`);
-  const fetcher = pongAxios(token);
+  const fetcher = pongAxios();
   const response = await fetcher.post("me", params);
   if (response.status !== 201) {
     console.log(response);
