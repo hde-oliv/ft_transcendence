@@ -2,6 +2,7 @@ import {
 	ChannelData,
 	UpdateChannelSchemma,
 	fetchMessagesFromChannel,
+	inviteUserToChannel,
 	messageResponseSchema,
 	patchChannel,
 	updateChannelSchema,
@@ -342,6 +343,7 @@ export function MessageSection(
 						/>) : (<Avatar
 							mr="2vw"
 							name={channelName}
+							bg='yellow.300'
 						/>)
 					}
 					<Heading>{channelName}</Heading>
@@ -416,71 +418,53 @@ export function InviteMembers(props: {
 	const [text, setText] = useState("");
 	const [me, setMe] = useContext(MeStateContext);
 
+	const members = membersFromChannel(props.channel);
 	const [friends, setFriends] = useState<Array<ReturnUserSchema>>([]);
-	const [members, setMembers] = useState<Array<ReturnUserSchema>>([]);
 
 	const [visibleUsers, setVisibleUsers] = useState<
-		Array<ReturnUserSchema & { friend: boolean }>
+		Array<Omit<ReturnUserSchema, 'elo'>>
 	>([]);
 
-	useEffect(() => {
-		getMembers(props.channel.id)
-			.then((e) => setMembers(e))
-			.catch((e) => { });
-	}, []);
-
-	useEffect(() => {
-		if (me === null) {
-			getMe()
-				.then((e) => setMe(e))
-				.catch((e) => setMe(null));
-		}
-	});
 
 	useEffect(() => {
 		if (isOpen) {
 			getAllFriends()
 				.then((e) =>
-					setFriends(e.filter((e) => e.intra_login !== me?.intra_login)),
+					setFriends(e.filter((e) => e.intra_login !== me.intra_login)),
 				)
 				.catch((e) => console.log(e));
 		}
-	}, [isOpen, me?.intra_login]);
+	}, [isOpen, me, props]);
 
 	const visibleUserCallback = useCallback(() => {
+		const notMemberFriends = friends.filter(e => {
+			return !(members.some(f => f.intra_login === e.intra_login));
+		})
+		let filteredNonMembers;
 		if (text !== "") {
-			let withoutMe: Array<ReturnUserSchema> = [
-				...members.filter((e) => {
-					let filter = diacriticalNormalize(text);
-					return (
-						diacriticalNormalize(e.nickname.toLocaleLowerCase()).includes(
-							filter,
-						) ||
-						diacriticalNormalize(e.intra_login.toLocaleLowerCase()).includes(
-							filter,
-						)
-					);
-				}),
-			];
-			const addedFriendStatus = withoutMe.map((e) => {
+			let inputFilteredUsers: Array<Omit<ReturnUserSchema, 'elo'>> = notMemberFriends.filter((e) => {
+				let filter = diacriticalNormalize(text.toLocaleLowerCase());
+				return (
+					diacriticalNormalize(e.nickname.toLocaleLowerCase()).includes(
+						filter,
+					) ||
+					diacriticalNormalize(e.intra_login.toLocaleLowerCase()).includes(
+						filter,
+					)
+				);
+			});
+			filteredNonMembers = inputFilteredUsers.map((e) => {
 				return {
-					...e,
-					friend: friends.some((f) => f.intra_login === e.intra_login),
+					...e
 				};
 			});
-			setVisibleUsers(addedFriendStatus);
 		} else {
-			const addedFriendStatus = friends.map((e) => {
-				return {
-					...e,
-					friend: friends.some((f) => f.intra_login === e.intra_login),
-				};
-			});
-			setVisibleUsers(addedFriendStatus);
+			filteredNonMembers = notMemberFriends;
 		}
+		setVisibleUsers(filteredNonMembers);
 	}, [text, members, friends]);
 
-	useEffect(visibleUserCallback, [friends]);
+	useEffect(visibleUserCallback, [friends, text]);
 
 	return (
 		<Center>
@@ -510,25 +494,22 @@ export function InviteMembers(props: {
 									onChange={(e) => setText(e.target.value)}
 									bg="pongBlue.300"
 									placeholder="Type a nickname or intra login"
+									aria-label="Filter members input"
 								/>
 								<IconButton
 									colorScheme="yellow"
 									icon={<CloseIcon />}
-									onClick={onClose}
-									aria-label="close add friend"
+									onClick={() => setText('')}
+									aria-label="clear filter input"
 								/>
 							</HStack>
 							<Stack overflow={"auto"} mt="1vh">
 								{visibleUsers.map((e) => (
 									<InviteUserCard
 										userData={e}
-										me={me?.intra_login ?? ""}
-										key={`addFriend-${e.intra_login}`}
-										sync={() => {
-											getAllFriends()
-												.then((e) => setFriends(e))
-												.catch((e) => { });
-										}}
+										channelId={props.channel.id}
+										key={`addChannelMember-${e.intra_login}`}
+										sync={props.syncAll}
 									/>
 								))}
 								{visibleUsers.length === 0 ? (
@@ -555,8 +536,8 @@ export function InviteMembers(props: {
 }
 
 function InviteUserCard(props: {
-	userData: ReturnUserSchema & { friend: boolean };
-	me: string;
+	userData: Omit<ReturnUserSchema, 'elo'>;
+	channelId: number,
 	sync: () => void;
 }) {
 	const [loading, setLoading] = useState(false);
@@ -564,13 +545,13 @@ function InviteUserCard(props: {
 	async function addFriend() {
 		setLoading(true);
 		try {
-			await createFriendship({
-				fOne: props.me,
-				fTwo: props.userData.intra_login,
-			});
+			await inviteUserToChannel({
+				channelId: props.channelId,
+				userId: props.userData.intra_login
+			})
 			props.sync();
 		} catch (e) {
-			console.warn("Could not add friend");
+			console.warn(`Could add ${props.userData.nickname} to channel.`);
 		}
 		setLoading(false);
 	}
@@ -597,18 +578,13 @@ function InviteUserCard(props: {
 					</Heading>
 				</Box>
 			</Box>
-			<Box w="30%">
-				<Heading size="sm">Elo</Heading>
-				<Text>{props.userData.elo}</Text>
-			</Box>
 			<Center>
 				<Button
-					isDisabled={props.userData.friend}
 					isLoading={loading}
 					colorScheme="green"
 					onClick={addFriend}
 				>
-					{props.userData.friend ? "Friend" : "Add"}
+					Add
 				</Button>
 			</Center>
 		</Flex>
