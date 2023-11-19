@@ -334,15 +334,16 @@ export function MessageSection(
 		<>
 			<Flex bg="pongBlue.300" p="2vh 1vw" justify={"space-between"}>
 				<Flex>
-					<Avatar
-						mr="2vw"
-						name={channelName}
-						src={
-							props.channel.user2user
-								? props.channel.Memberships[0].user.avatar
-								: undefined
-						}
-					/>
+					{
+						props.channel.user2user ? (<Avatar
+							mr="2vw"
+							name={channelName}
+							src={props.channel.Memberships[0].user.avatar}
+						/>) : (<Avatar
+							mr="2vw"
+							name={channelName}
+						/>)
+					}
 					<Heading>{channelName}</Heading>
 				</Flex>
 				{props.channel.user2user ? (
