@@ -8,10 +8,7 @@ export const steps = [
 	},
 ];
 export async function verifyOTP(otp: string) {
-	//TODO allow fetchers to throw errors?
-	const token = localStorage.getItem("token");
-	if (token === null) return false;
-	const fetcher = pongAxios(token);
+	const fetcher = pongAxios();
 	try {
 		const response = await fetcher.post("auth/otp/verify", { token: otp });
 		if (response.status === 201) return true;
