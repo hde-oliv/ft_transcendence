@@ -60,20 +60,22 @@ import { createFriendship, getAllFriends } from "@/lib/fetchers/friends";
 import { getMembers } from "@/lib/fetchers/members";
 import { MeStateContext } from "@/components/pageLayout/PageLayout";
 
-function membersFromChannel(channel: ChannelData['channel']): Array<Omit<ReturnUserSchema, 'elo'>> {
-	return channel.Memberships.map(e => {
+function membersFromChannel(
+	channel: ChannelData["channel"],
+): Array<Omit<ReturnUserSchema, "elo">> {
+	return channel.Memberships.map((e) => {
 		return {
 			status: e.user.status,
 			avatar: e.user.avatar,
 			intra_login: e.user.intra_login,
 			nickname: e.user.nickname,
-		}
-	})
+		};
+	});
 }
-function MemberRow(props: Omit<ReturnUserSchema, 'elo'>) {
+function MemberRow(props: Omit<ReturnUserSchema, "elo">) {
 	const color = props.status === "online" ? "green.300" : "gray.300";
 	return (
-		<Flex w="100%" p='1vh 1vw' justifyContent="space-between">
+		<Flex w="100%" p="1vh 1vw" justifyContent="space-between">
 			<Box>
 				<Avatar src={props.avatar}>
 					<AvatarBadge boxSize="1.25em" bg={color} />
@@ -157,7 +159,7 @@ function GroupSettings(props: {
 				colorScheme="yellow"
 			>
 				<DrawerOverlay />
-				<DrawerContent>
+				<DrawerContent bgColor={"pongBlue.200"}>
 					<DrawerHeader>
 						<HStack>
 							<Text>Channel Settings &nbsp; </Text>
@@ -246,10 +248,33 @@ function GroupSettings(props: {
 								Save
 							</Button>
 						</Flex>
-						<Flex mt='3vh' p='1vh 1vw' overflow={'auto'} borderWidth={1} borderColor={'yellow.300'} borderRadius={'md'} flexDir={'column'} maxH='30vh'>
-							<Heading size='md' mb='1vh'> Members</Heading>
-							<MemberRow avatar={me.avatar} intra_login={me.intra_login} nickname={me.nickname} status="online" key={`ch${props.channel.id}-${me.intra_login}`} />
-							{members.map(e => <MemberRow {...e} key={`ch${props.channel.id}-${e.intra_login}`} />)}
+						<Flex
+							mt="3vh"
+							p="1vh 1vw"
+							overflow={"auto"}
+							borderWidth={1}
+							borderColor={"yellow.300"}
+							borderRadius={"md"}
+							flexDir={"column"}
+							maxH="30vh"
+						>
+							<Heading size="md" mb="1vh">
+								{" "}
+								Members
+							</Heading>
+							<MemberRow
+								avatar={me.avatar}
+								intra_login={me.intra_login}
+								nickname={me.nickname}
+								status="online"
+								key={`ch${props.channel.id}-${me.intra_login}`}
+							/>
+							{members.map((e) => (
+								<MemberRow
+									{...e}
+									key={`ch${props.channel.id}-${e.intra_login}`}
+								/>
+							))}
 						</Flex>
 					</DrawerBody>
 					<DrawerFooter>
@@ -405,9 +430,79 @@ export function MessageSection(
 			</Box>
 		</>
 	);
+	return (
+		<>
+			<Flex bg="pongBlue.300" p="2vh 1vw" justify={"space-between"}>
+				<Flex>
+					{props.channel.user2user ? (
+						<Avatar
+							mr="2vw"
+							name={channelName}
+							src={props.channel.Memberships[0].user.avatar}
+						/>
+					) : (
+						<Avatar mr="2vw" name={channelName} />
+					)}
+					<Heading>{channelName}</Heading>
+				</Flex>
+				{props.channel.user2user ? (
+					<>{/* TODO: Add here component to block the other user */}</>
+				) : (
+					<HStack>
+						<InviteMembers
+							syncAll={props.syncAll}
+							channel={props.channel}
+							membership={{
+								channelId: props.channelId,
+								userId: props.userId,
+								owner: props.owner,
+								administrator: props.administrator,
+								banned: props.banned,
+								muted: props.muted,
+							}}
+						/>
+						<GroupSettings
+							syncAll={props.syncAll}
+							channel={props.channel}
+							membership={{
+								channelId: props.channelId,
+								userId: props.userId,
+								owner: props.owner,
+								administrator: props.administrator,
+								banned: props.banned,
+								muted: props.muted,
+							}}
+						/>
+					</HStack>
+				)}
+			</Flex>
+			<Box flexGrow={1} bg="pongBlue" overflowY="auto" ref={messagesRef}>
+				<Stack p="1vh 2vw">
+					{messages.map((m) => (
+						<MessageCard {...m} key={`${m.id}`} />
+					))}
+				</Stack>
+			</Box>
+			<Box flexGrow={0} bg="pongBlue.300" pl="2vw" pr="2vw" pt="1vh" pb="1vh">
+				<InputGroup bg="pongBlue.500">
+					<Input
+						value={text}
+						onChange={(e) => setText(e.target.value)}
+						onKeyDown={(e) => {
+							if (e.key === "Enter") {
+								e.preventDefault();
+								send();
+							}
+						}}
+					/>
+					<InputRightAddon>
+						<EmailIcon onClick={send} focusable={true} />
+					</InputRightAddon>
+				</InputGroup>
+			</Box>
+		</>
+	);
 }
-
-
 
 export function InviteMembers(props: {
 	membership: Omit<ChannelComponentProps, "channel">;
