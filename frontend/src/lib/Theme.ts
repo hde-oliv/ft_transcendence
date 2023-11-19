@@ -51,6 +51,24 @@ const theme = extendTheme({
         fontWeight: "medium",
       },
     },
+    DrawerContent: {
+      baseStyle: {
+        bg: "pongBlue.200",
+      },
+    },
+    MenuItem: {
+      baseStyle: {
+        _hover: {
+          bg: "whiteAlpha.200",
+        },
+        bgColor: "pongBlue.400",
+      },
+    },
+    MenuList: {
+      baseStyle: {
+        bgColor: "pongBlue.400",
+      },
+    },
   },
 });
 
