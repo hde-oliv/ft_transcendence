@@ -64,6 +64,11 @@ import diacriticalNormalize from "@/lib/diacriticalNormalize";
 import { createFriendship, getAllFriends } from "@/lib/fetchers/friends";
 import { getMembers } from "@/lib/fetchers/members";
 import { MeStateContext } from "@/components/pageLayout/PageLayout";
+import KickIcon from "@/components/icons/KickIcon";
+import MuteIcon from "@/components/icons/MuteIcon";
+import BanIcon from "@/components/icons/BanIcon";
+import SuperIcon from "@/components/icons/SuperIcon";
+import CrownIcon from "@/components/icons/CrownIcon";
 
 function membersFromChannel(
   channel: ChannelData["channel"],
@@ -135,15 +140,20 @@ function MemberRow(props: {
         ) : (
           <Center>
             <VStack mr="4">
+
               <Button
+                rightIcon={<BanIcon boxSize={'1.5em'} />}
                 isDisabled={!membership.administrator}
                 colorScheme="red"
                 size="sm"
                 aria-label="ban user"
+                minW={'7em'}
               >
                 Ban
               </Button>
               <Button
+                rightIcon={<KickIcon boxSize={'2em'} />}
+                minW={'7em'}
                 isDisabled={!membership.administrator}
                 colorScheme="green"
                 size="sm"
@@ -154,6 +164,8 @@ function MemberRow(props: {
             </VStack>
             <VStack>
               <Button
+                rightIcon={<MuteIcon boxSize={'1.5em'} />}
+                minW={'7em'}
                 isDisabled={!membership.administrator}
                 colorScheme="yellow"
                 size="sm"
@@ -163,6 +175,8 @@ function MemberRow(props: {
               </Button>
               <Tooltip label="Give Administrator powers to user">
                 <Button
+                  rightIcon={<CrownIcon boxSize={'1.8em'} />}
+                  minW={'7em'}
                   isDisabled={!membership.owner}
                   colorScheme="blue"
                   size="sm"
