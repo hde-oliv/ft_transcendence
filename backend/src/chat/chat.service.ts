@@ -270,7 +270,7 @@ export class ChatService {
       channel.id,
     );
 
-    await this.checkSelf(token.intra_login, userId);
+    this.checkSelf(token.intra_login, userId);
     await this.checkAdmin(token.intra_login, memberships);
 
     // If throws, the another user is not a Owner or Admin (ALL Owners are Admins)
@@ -396,8 +396,8 @@ export class ChatService {
   }
 
   // throws
-  async checkSelf(userId1: string, userId2: string) {
-    if (userId1 !== userId2) {
+  checkSelf(userId1: string, userId2: string) {
+    if (userId1 === userId2) {
       throw new UnauthorizedException('Trying to alter yourself.');
     }
   }

@@ -1,9 +1,13 @@
 import {
   ChannelData,
   UpdateChannelSchemma,
+  promoteChannelAdmin,
+  banFromChannel,
   fetchMessagesFromChannel,
   inviteUserToChannel,
+  kickFromChannel,
   messageResponseSchema,
+  muteInChannel,
   patchChannel,
   updateChannelSchema,
 } from "@/lib/fetchers/chat";
@@ -100,8 +104,8 @@ function MemberRow(props: {
   );
 
   // NOTE: Why my membership is not in the array?
-  console.log({ memberships: channel.Memberships });
-  console.log({ intra: user.intra_login, chanop, admin });
+  // console.log({ memberships: channel.Memberships });
+  // console.log({ intra: user.intra_login, chanop, admin });
 
   const color = user.status === "online" ? "green.300" : "gray.300";
   return (
@@ -148,6 +152,11 @@ function MemberRow(props: {
                 size="sm"
                 aria-label="ban user"
                 minW={'7em'}
+                onClick={() => {
+                  banFromChannel(props.channel.id, props.user.intra_login).then(e => {
+                    console.log(e); //TODO replace this by and update membership function
+                  }).catch(e => console.error(e))
+                }}
               >
                 Ban
               </Button>
@@ -158,6 +167,11 @@ function MemberRow(props: {
                 colorScheme="green"
                 size="sm"
                 aria-label="kick user"
+                onClick={() => {
+                  kickFromChannel(props.channel.id, props.user.intra_login).then(e => {
+                    console.log(e); //TODO replace this by and update membership function
+                  }).catch(e => console.error(e))
+                }}
               >
                 Kick
               </Button>
@@ -170,6 +184,11 @@ function MemberRow(props: {
                 colorScheme="yellow"
                 size="sm"
                 aria-label="mute user"
+                onClick={() => {
+                  muteInChannel(props.channel.id, props.user.intra_login).then(e => {
+                    console.log(e); //TODO replace this by and update membership function
+                  }).catch(e => console.error(e))
+                }}
               >
                 Mute
               </Button>
@@ -181,6 +200,11 @@ function MemberRow(props: {
                   colorScheme="blue"
                   size="sm"
                   aria-label="admin user"
+                  onClick={() => {
+                    promoteChannelAdmin(props.channel.id, props.user.intra_login).then(e => {
+                      console.log(e); //TODO replace this by and update membership function
+                    }).catch(e => console.error(e))
+                  }}
                 >
                   Admin
                 </Button>
