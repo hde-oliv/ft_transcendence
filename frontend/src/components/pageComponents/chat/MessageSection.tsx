@@ -1,9 +1,13 @@
 import {
   ChannelData,
   UpdateChannelSchemma,
+  promoteChannelAdmin,
+  banFromChannel,
   fetchMessagesFromChannel,
   inviteUserToChannel,
+  kickFromChannel,
   messageResponseSchema,
+  muteInChannel,
   patchChannel,
   updateChannelSchema,
 } from "@/lib/fetchers/chat";
@@ -64,9 +68,14 @@ import diacriticalNormalize from "@/lib/diacriticalNormalize";
 import { createFriendship, getAllFriends } from "@/lib/fetchers/friends";
 import { getMembers } from "@/lib/fetchers/members";
 import { MeStateContext } from "@/components/pageLayout/PageLayout";
+import KickIcon from "@/components/icons/KickIcon";
+import MuteIcon from "@/components/icons/MuteIcon";
+import BanIcon from "@/components/icons/BanIcon";
+import SuperIcon from "@/components/icons/SuperIcon";
+import CrownIcon from "@/components/icons/CrownIcon";
 
 function membersFromChannel(
-  channel: ChannelData["channel"],
+  channel: ChannelData["channel"]
 ): Array<Omit<ReturnUserSchema, "elo">> {
   return channel.Memberships.map((e) => {
     return {
@@ -77,26 +86,23 @@ function membersFromChannel(
     };
   });
 }
+function membershipsFromChannel(channel: ChannelData["channel"]): ChannelData["channel"]["Memberships"] {
+  return channel.Memberships.map((e) => {
+    return {
+      ...e
+    };
+  });
+}
 
 // TODO: add Membership type
 function MemberRow(props: {
-  user: Omit<ReturnUserSchema, "elo">;
-  membership: Omit<ChannelComponentProps, "channel">;
+  owner: boolean, admin: boolean,
+  membership: Omit<ChannelComponentProps, "channel"> & { user: Omit<ReturnUserSchema, 'elo'> };
   channel: ChannelData["channel"];
 }) {
-  const { user, membership, channel } = props;
+  const { membership, channel, owner, admin } = props;
+  const user = membership.user;
   const [me] = useContext(MeStateContext);
-
-  const chanop = channel.Memberships.some(
-    (m) => user.intra_login === m.userId && m.owner === true,
-  );
-  const admin = channel.Memberships.some(
-    (m) => user.intra_login == m.userId && m.administrator === true,
-  );
-
-  // NOTE: Why my membership is not in the array?
-  console.log({ memberships: channel.Memberships });
-  console.log({ intra: user.intra_login, chanop, admin });
 
   const color = user.status === "online" ? "green.300" : "gray.300";
   return (
@@ -115,14 +121,14 @@ function MemberRow(props: {
               {user.intra_login}
             </Heading>
           </Box>
-          {chanop ? (
+          {props.membership.owner ? (
             <Tooltip label="Owner">
               <Button size="xs">O</Button>
             </Tooltip>
           ) : (
             <></>
           )}
-          {admin ? (
+          {props.membership.administrator ? (
             <Tooltip label="Admin">
               <Button size="xs">A</Button>
             </Tooltip>
@@ -135,38 +141,67 @@ function MemberRow(props: {
         ) : (
           <Center>
             <VStack mr="4">
+
               <Button
-                isDisabled={!membership.administrator}
+                rightIcon={<BanIcon boxSize={'1.5em'} />}
+                isDisabled={!(admin || owner)}
                 colorScheme="red"
                 size="sm"
                 aria-label="ban user"
+                minW={'7em'}
+                onClick={() => {
+                  banFromChannel(props.channel.id, props.membership.userId).then(e => {
+                    console.log(e); //TODO replace this by and update membership function
+                  }).catch(e => console.error(e))
+                }}
               >
                 Ban
               </Button>
               <Button
-                isDisabled={!membership.administrator}
+                rightIcon={<KickIcon boxSize={'2em'} />}
+                minW={'7em'}
+                isDisabled={!(admin || owner)}
                 colorScheme="green"
                 size="sm"
                 aria-label="kick user"
+                onClick={() => {
+                  kickFromChannel(props.channel.id, props.membership.userId).then(e => {
+                    console.log(e); //TODO replace this by and update membership function
+                  }).catch(e => console.error(e))
+                }}
               >
                 Kick
               </Button>
             </VStack>
             <VStack>
               <Button
-                isDisabled={!membership.administrator}
+                rightIcon={<MuteIcon boxSize={'1.5em'} />}
+                minW={'7em'}
+                isDisabled={!(admin || owner)}
                 colorScheme="yellow"
                 size="sm"
                 aria-label="mute user"
+                onClick={() => {
+                  muteInChannel(props.channel.id, props.membership.userId).then(e => {
+                    console.log(e); //TODO replace this by and update membership function
+                  }).catch(e => console.error(e))
+                }}
               >
                 Mute
               </Button>
               <Tooltip label="Give Administrator powers to user">
                 <Button
-                  isDisabled={!membership.owner}
+                  rightIcon={<CrownIcon boxSize={'1.8em'} />}
+                  minW={'7em'}
+                  isDisabled={!(admin || owner)}
                   colorScheme="blue"
                   size="sm"
                   aria-label="admin user"
+                  onClick={() => {
+                    promoteChannelAdmin(props.channel.id, props.membership.userId).then(e => {
+                      console.log(e); //TODO replace this by and update membership function
+                    }).catch(e => console.error(e))
+                  }}
                 >
                   Admin
                 </Button>
@@ -193,7 +228,7 @@ function GroupSettings(props: {
 
   const [me, setMe] = useContext(MeStateContext);
 
-  const members = membersFromChannel(props.channel);
+  const memberships = membershipsFromChannel(props.channel);
 
   useEffect(() => {
     setPswOne("");
@@ -349,24 +384,40 @@ function GroupSettings(props: {
                 Members
               </Heading>
               <MemberRow
-                user={{
-                  avatar: me.avatar,
-                  intra_login: me.intra_login,
-                  nickname: me.nickname,
-                  status: "online",
-                }}
+                owner={props.membership.administrator}
+                admin={props.membership.owner}
                 key={`ch${props.channel.id}-${me.intra_login}`}
-                membership={props.membership}
+                membership={{
+                  ...props.membership,
+                  user: {
+                    avatar: me.avatar,
+                    intra_login: me.intra_login,
+                    nickname: me.nickname,
+                    status: "online",
+                  }
+                }}
                 channel={props.channel}
               />
-              {members.map((e) => (
-                <MemberRow
-                  user={{ ...e }}
-                  key={`ch${props.channel.id}-${e.intra_login}`}
-                  membership={props.membership}
-                  channel={props.channel}
-                />
-              ))}
+              {memberships.map((e) => {
+                let user = e.user
+                return (
+                  <MemberRow
+                    owner={props.membership.administrator}
+                    admin={props.membership.owner}
+                    key={`ch${props.channel.id}-${user.intra_login}`}
+                    membership={{
+                      administrator: e.administrator,
+                      banned: e.banned,
+                      channelId: e.channelId,
+                      muted: e.muted,
+                      owner: e.owner,
+                      userId: e.userId,
+                      user: e.user
+                    }}
+                    channel={props.channel}
+                  />
+                )
+              })}
             </Flex>
           </DrawerBody>
           <DrawerFooter>
@@ -470,78 +521,6 @@ export function MessageSection(
             />
           ) : (
             <Avatar mr="2vw" name={channelName} bg="yellow.300" />
-          )}
-          <Heading>{channelName}</Heading>
-        </Flex>
-        {props.channel.user2user ? (
-          <>{/* TODO: Add here component to block the other user */}</>
-        ) : (
-          <HStack>
-            <InviteMembers
-              syncAll={props.syncAll}
-              channel={props.channel}
-              membership={{
-                channelId: props.channelId,
-                userId: props.userId,
-                owner: props.owner,
-                administrator: props.administrator,
-                banned: props.banned,
-                muted: props.muted,
-              }}
-            />
-            <GroupSettings
-              syncAll={props.syncAll}
-              channel={props.channel}
-              membership={{
-                channelId: props.channelId,
-                userId: props.userId,
-                owner: props.owner,
-                administrator: props.administrator,
-                banned: props.banned,
-                muted: props.muted,
-              }}
-            />
-          </HStack>
-        )}
-      </Flex>
-      <Box flexGrow={1} bg="pongBlue" overflowY="auto" ref={messagesRef}>
-        <Stack p="1vh 2vw">
-          {messages.map((m) => (
-            <MessageCard {...m} key={`${m.id}`} />
-          ))}
-        </Stack>
-      </Box>
-      <Box flexGrow={0} bg="pongBlue.300" pl="2vw" pr="2vw" pt="1vh" pb="1vh">
-        <InputGroup bg="pongBlue.500">
-          <Input
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                send();
-              }
-            }}
-          />
-          <InputRightAddon>
-            <EmailIcon onClick={send} focusable={true} />
-          </InputRightAddon>
-        </InputGroup>
-      </Box>
-    </>
-  );
-  return (
-    <>
-      <Flex bg="pongBlue.300" p="2vh 1vw" justify={"space-between"}>
-        <Flex>
-          {props.channel.user2user ? (
-            <Avatar
-              mr="2vw"
-              name={channelName}
-              src={props.channel.Memberships[0].user.avatar}
-            />
-          ) : (
-            <Avatar mr="2vw" name={channelName} />
           )}
           <Heading>{channelName}</Heading>
         </Flex>
