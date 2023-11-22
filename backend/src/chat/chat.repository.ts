@@ -122,40 +122,6 @@ export class ChatRepository {
         }
       }
     })
-    // const teste = this.prismaService.users.findUnique({
-    //   where: {
-    //     id: userId
-    //   },
-    //   include: {
-    //     Memberships: {
-    //       include: {
-    //         channel: {
-
-    //           include: {
-    //             Memberships: {
-    //               include: {
-    //                 user: {
-    //                   select: {
-    //                     id: true,
-    //                     nickname: true,
-    //                     avatar: true,
-    //                     intra_login: true,
-    //                     status: true
-    //                   }
-    //                 }
-    //               },
-    //               where: {
-    //                 NOT: {
-    //                   userId: userId
-    //                 }
-    //               }
-    //             }
-    //           }
-    //         }
-    //       }
-    //     }
-    //   }
-    // })
     return teste
   }
 

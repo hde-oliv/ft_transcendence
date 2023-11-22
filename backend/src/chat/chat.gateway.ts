@@ -73,9 +73,6 @@ export class ChatGateway
     for (let channel of channels) {
       socket.join(channel);
     }
-    // let rooms: string[] = [];
-    // socket.rooms.forEach(e => rooms.push(e));
-    // this.logger.warn(rooms.join(','))
   }
 
   @UseFilters(new ChatFilter())

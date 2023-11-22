@@ -34,7 +34,7 @@ import { TokenClaims } from 'src/auth/auth.model';
 
 @Controller('chat')
 export class ChatController {
-  constructor(private readonly chatService: ChatService) {}
+  constructor(private readonly chatService: ChatService) { }
 
   @UseGuards(JwtAuthGuard)
   @Get('/mychannels')
