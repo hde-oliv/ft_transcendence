@@ -5,9 +5,9 @@ services:
     container_name: nginx
     image: "nginx:alpine-slim"
     ports:
-        - "7000:7000"
+      - "7000:7000"
     networks:
-        - transcendence
+      - transcendence
     restart: on-failure
     volumes:
       - "./nginx:/etc/nginx/conf.d"
@@ -19,7 +19,7 @@ services:
       dockerfile: ./Dockerfile
     networks:
       - transcendence
-    env_file: ./frontend/.env.docker
+    env_file: ./frontend/.env.production
     restart: on-failure
 
   backend:
