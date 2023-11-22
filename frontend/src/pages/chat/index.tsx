@@ -149,7 +149,15 @@ export default function Chat(props: any) {
   async function updateChannelCards() {
     try {
       let response = await fetchMyChannels();
-      setMyChannels(response);
+      let parsedResp: Array<ChannelComponentProps> = response.map((newChan) => {
+        let old = myChannels.find(oldChan => oldChan.channelId === newChan.channelId)
+        let lastMessage: string = old?.lastMessage ?? '';
+        return {
+          ...newChan,
+          lastMessage
+        }
+      })
+      setMyChannels(parsedResp);
     } catch (e) {
       setMyChannels([]);
     }
@@ -284,11 +292,12 @@ export default function Chat(props: any) {
           <MessageSection
             {...myChannels[activeChannel]}
             socket={chatSocket}
-            syncAll={() => {
-              fetchMyChannels()
-                .then((e) => setMyChannels(e))
-                .catch(() => setMyChannels([]));
-            }} // TODO: this will erase notifications, this function should add last message where needed
+            syncAll={updateChannelCards}
+          // syncAll={() => {
+          //   fetchMyChannels()
+          //     .then((e) => setMyChannels(e))
+          //     .catch(() => setMyChannels([]));
+          // }} // TODO: this will erase notifications, this function should add last message where needed
           />
         ) : (
           <Skeleton
