@@ -1,4 +1,4 @@
-import PageLayout from "@/components/pageLayout/PageLayout";
+import PageLayout, { SocketContext } from "@/components/pageLayout/PageLayout";
 import {
   ChannelData,
   MyChannels,
@@ -7,7 +7,6 @@ import {
   fetchMyChannels,
   messageResponseSchema,
 } from "@/lib/fetchers/chat";
-import chatSocket from "@/lib/sockets/chatSocket";
 import { AddIcon, RepeatIcon } from "@chakra-ui/icons";
 import {
   Box,
@@ -30,10 +29,9 @@ import {
   Text,
   useDisclosure,
 } from "@chakra-ui/react";
-import { ReactElement, useCallback, useEffect, useState } from "react";
+import { ReactElement, useCallback, useContext, useEffect, useState } from "react";
 
 import { ChannelCard } from "../../components/pageComponents/chat/ChannelCard";
-import { Socket } from "socket.io-client";
 import { MessageSection } from "@/components/pageComponents/chat/MessageSection";
 
 export type userSchema = {
@@ -45,7 +43,6 @@ export type userSchema = {
 
 export type ChannelComponentProps = ChannelData & {
   onClick?: () => void;
-  socket?: Socket;
   lastMessage?: string;
 };
 
@@ -87,14 +84,14 @@ export function MessageCard(props: MessageCardProps): JSX.Element {
 }
 
 export default function Chat(props: any) {
-  const [online, setOnline] = useState(false);
+  const socket = useContext(SocketContext);
+  const [online, setOnline] = useState(socket.connected);
   // const [activeChannel, setActiveChannel] = useState<undefined | ChannelComponentProps>(undefined);
   const [activeChannel, setActiveChannel] = useState<number>(-1);
   const [myChannels, setMyChannels] = useState<ChannelComponentProps[]>([]);
   const [groupName, setGroupName] = useState("");
   const [groupPsw, setGroupPsw] = useState("");
   const [loading, setLoading] = useState(false);
-
   const { onOpen, onClose, isOpen, onToggle } = useDisclosure();
 
   function onConnect() {
@@ -163,25 +160,26 @@ export default function Chat(props: any) {
     }
   }
   useEffect(() => {
+
     fetchMyChannels()
       .then((e) => setMyChannels(e))
       .catch(() => setMyChannels([]));
-    chatSocket.on("connect", onConnect);
-    chatSocket.on("disconnect", onDisconnect);
-    chatSocket.connect();
+    socket.on("connect", onConnect);
+    socket.on("disconnect", onDisconnect);
+    socket.connect();
 
     return () => {
-      chatSocket.off("connect", onConnect);
-      chatSocket.off("disconnect", onDisconnect);
-      chatSocket.disconnect();
+      socket.off("connect", onConnect);
+      socket.off("disconnect", onDisconnect);
+      socket.disconnect();
     };
-  }, []);
+  }, [socket]);
   useEffect(() => {
-    chatSocket.on("server_message", onServerMessage);
+    socket.on("server_message", onServerMessage);
     return () => {
-      chatSocket.off("server_message", onServerMessage);
+      socket.off("server_message", onServerMessage);
     };
-  }, [onServerMessage]);
+  }, [socket, onServerMessage]);
   return (
     <Flex h="100%" alignItems={"stretch"}>
       <Flex
@@ -291,13 +289,7 @@ export default function Chat(props: any) {
         {activeChannel >= 0 ? (
           <MessageSection
             {...myChannels[activeChannel]}
-            socket={chatSocket}
             syncAll={updateChannelCards}
-          // syncAll={() => {
-          //   fetchMyChannels()
-          //     .then((e) => setMyChannels(e))
-          //     .catch(() => setMyChannels([]));
-          // }} // TODO: this will erase notifications, this function should add last message where needed
           />
         ) : (
           <Skeleton

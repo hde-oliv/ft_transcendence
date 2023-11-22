@@ -11,7 +11,6 @@ import {
   patchChannel,
   updateChannelSchema,
 } from "@/lib/fetchers/chat";
-import chatSocket from "@/lib/sockets/chatSocket";
 import {
   AddIcon,
   CloseIcon,
@@ -63,15 +62,12 @@ import {
 } from "../../../pages/chat";
 import z, { ZodError } from "zod";
 import { ReturnUserSchema, fetchUsers } from "@/lib/fetchers/users";
-import { MeResponseData, getMe } from "@/lib/fetchers/me";
 import diacriticalNormalize from "@/lib/diacriticalNormalize";
 import { createFriendship, getAllFriends } from "@/lib/fetchers/friends";
-import { getMembers } from "@/lib/fetchers/members";
-import { MeStateContext } from "@/components/pageLayout/PageLayout";
+import { MeStateContext, SocketContext } from "@/components/pageLayout/PageLayout";
 import KickIcon from "@/components/icons/KickIcon";
 import MuteIcon from "@/components/icons/MuteIcon";
 import BanIcon from "@/components/icons/BanIcon";
-import SuperIcon from "@/components/icons/SuperIcon";
 import CrownIcon from "@/components/icons/CrownIcon";
 
 function membersFromChannel(
@@ -449,6 +445,7 @@ export function MessageSection(
   props: ChannelComponentProps & { syncAll: () => void },
 ): JSX.Element {
   const [messages, setMessages] = useState<Array<MessageCardProps>>([]);
+  const socket = useContext(SocketContext);
 
   const [text, setText] = useState("");
   const messagesRef = useRef<HTMLDivElement>(null);
@@ -462,10 +459,10 @@ export function MessageSection(
       message: text,
       channelId: props.channelId,
     };
-    if (props.socket) {
-      if (props.socket.connected) {
+    if (socket) {
+      if (socket.connected) {
         try {
-          const response = await props.socket.emitWithAck(
+          const response = await socket.emitWithAck(
             "channel_message",
             message,
           );
@@ -484,9 +481,9 @@ export function MessageSection(
     }
   }
   useEffect(() => {
-    chatSocket.on("server_message", serverMessage);
+    socket.on("server_message", serverMessage);
     return () => {
-      chatSocket.off("server_message", serverMessage);
+      socket.off("server_message", serverMessage);
     };
   });
   useEffect(() => {
