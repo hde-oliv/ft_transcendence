@@ -221,7 +221,7 @@ export default function Chat(props: any) {
           />
         </Flex>
 
-        <Collapse endingHeight="60%" startingHeight={0} in={isOpen}>
+        <Collapse endingHeight="42em" startingHeight={0} in={isOpen}>
           <Flex
             bg="pongBlue.500"
             borderRadius={5}
