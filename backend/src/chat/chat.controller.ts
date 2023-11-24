@@ -113,14 +113,14 @@ export class ChatController {
   @UsePipes(new ZodValidationPipe(membershipSchema))
   @Post('/channel/user/ban')
   async banUser(@Request() req, @Body() body: MembershipDto) {
-    return this.chatService.banUser(req.user, body.channelId, body.userId);
+    return this.chatService.banUpdater(req.user, body.channelId, body.userId, true)
   }
 
   @UseGuards(JwtAuthGuard)
   @UsePipes(new ZodValidationPipe(membershipSchema))
   @Post('/channel/user/unban')
   async unbanUser(@Request() req, @Body() body: MembershipDto) {
-    return this.chatService.unbanUser(req.user, body.channelId, body.userId);
+    return this.chatService.banUpdater(req.user, body.channelId, body.userId, false)
   }
 
   // TODO: temporarily mute user
@@ -142,18 +142,14 @@ export class ChatController {
   @UsePipes(new ZodValidationPipe(membershipSchema))
   @Post('/channel/user/admin')
   async setAdminUser(@Request() req, @Body() body: MembershipDto) {
-    return this.chatService.setAdminUser(req.user, body.channelId, body.userId);
+    return this.chatService.adminUpdater(req.user, body.channelId, body.userId, true)
   }
 
   @UseGuards(JwtAuthGuard)
   @UsePipes(new ZodValidationPipe(membershipSchema))
   @Post('/channel/user/unadmin')
   async unsetAdminUser(@Request() req, @Body() body: MembershipDto) {
-    return this.chatService.unsetAdminUser(
-      req.user,
-      body.channelId,
-      body.userId,
-    );
+    return this.chatService.adminUpdater(req.user, body.channelId, body.userId, false)
   }
 
   @UseGuards(JwtAuthGuard)

@@ -177,7 +177,17 @@ export class ChatService {
       channel.id,
     );
   }
-
+  private getIssuerTargetMemberships(memberships: Memberships[], token: TokenClaims, userId: string, channel: Channels) {
+    if (userId === token.intra_login)
+      throw new BadRequestException('You cannot perform this action on yourself.');
+    const issuerMembership = memberships.find(e => e.userId === token.intra_login);
+    const targetMembership = memberships.find(e => e.userId === userId);
+    if (!issuerMembership)
+      throw new BadRequestException(`${token.intra_login} is not a member of ${channel.name}.`)
+    if (!targetMembership)
+      throw new BadRequestException(`${userId} is not a member of ${channel.name}.`)
+    return { issuerMembership, targetMembership };
+  }
   // throws
   async inviteUser(
     token: TokenClaims,
@@ -205,17 +215,36 @@ export class ChatService {
       channel.id,
     );
 
-    this.checkSelf(token.intra_login, userId);
-    await this.checkAdmin(token.intra_login, memberships);
+    const { issuerMembership, targetMembership } = this.getIssuerTargetMemberships(memberships, token, userId, channel);
 
-    // If throws, the another user is not a Owner or Admin (ALL Owners are Admins)
-    try {
-      await this.checkAdmin(userId, memberships);
-      throw new ForbiddenException('Cannot kick an Admin/Owner.');
-    } catch (e) {
-      return await this.chatRepository.deleteMembership(userId, channel.id);
-    }
+    this.checkSelf(token.intra_login, userId);
+    if (!issuerMembership.administrator || !issuerMembership.owner)
+      throw new ForbiddenException(`You can't kick other members`);
+    if (targetMembership.owner)
+      throw new ForbiddenException(`Channel owner cannot be kicked`);
+    if (targetMembership.administrator && !issuerMembership.owner)
+      throw new ForbiddenException(`Only channel owner can kick administrators`);
+
+    return await this.chatRepository.deleteMembership(userId, channel.id);
   }
+
+  async banUpdater(token: TokenClaims, channelId: number, userId: string, banned: boolean) {
+    const channel = await this.chatRepository.getChannel(channelId);
+    const memberships = await this.chatRepository.getMembershipsbyChannel(
+      channel.id,
+    );
+    const { issuerMembership, targetMembership } = this.getIssuerTargetMemberships(memberships, token, userId, channel);
+
+    if (!issuerMembership.administrator || !issuerMembership.owner)
+      throw new ForbiddenException(`You can't change the ban status of other members`);
+    if (targetMembership.owner)
+      throw new ForbiddenException(`Channel owner cannot be banned/unbanned`);
+    if (targetMembership.administrator && !issuerMembership.owner)
+      throw new ForbiddenException(`Only channel owner can ban/unban administrators`);
+    return this.chatRepository.updateMembershipById(targetMembership.id, { banned: banned }) //TODO this action should also remove the user from the channel room
+  }
+
+
 
   // throws
   async banUser(token: TokenClaims, channelId: number, userId: string) {
@@ -226,14 +255,14 @@ export class ChatService {
     );
 
     this.checkSelf(token.intra_login, userId);
-    await this.checkAdmin(token.intra_login, memberships);
+    this.checkAdmin(token.intra_login, memberships);
 
     // If throws, the another user is not a Owner or Admin (ALL Owners are Admins)
     try {
-      await this.checkAdmin(userId, memberships);
+      this.checkAdmin(userId, memberships);
       throw new ForbiddenException('Cannot kick an Admin/Owner.');
     } catch (e) {
-      return await this.chatRepository.updateMembership(userId, channel.id, {
+      return this.chatRepository.updateMembership(userId, channel.id, {
         banned: true,
       });
     }
@@ -305,37 +334,15 @@ export class ChatService {
     }
   }
 
-  // throws
-  async setAdminUser(token: TokenClaims, channelId: number, userId: string) {
+  async adminUpdater(token: TokenClaims, channelId: number, userId: string, isAdmin: boolean) {
     const channel = await this.chatRepository.getChannel(channelId);
-
     const memberships = await this.chatRepository.getMembershipsbyChannel(
       channel.id,
     );
-    const targetMembership = memberships.find(e => e.userId === userId);
-    if (!targetMembership)
-      throw new BadRequestException(`User ${userId} isn't in channel ${channel.name}`);
-
-    this.checkSelf(token.intra_login, userId);
-    this.checkOwner(token.intra_login, memberships);
-
-    return this.chatRepository.updateMembershipById(targetMembership.id, { administrator: true });
-  }
-
-  // throws
-  async unsetAdminUser(token: TokenClaims, channelId: number, userId: string) {
-    const channel = await this.chatRepository.getChannel(channelId);
-
-    const memberships = await this.chatRepository.getMembershipsbyChannel(
-      channel.id,
-    );
-
-    this.checkSelf(token.intra_login, userId);
-    this.checkOwner(token.intra_login, memberships);
-
-    return await this.chatRepository.updateMembership(userId, channel.id, {
-      administrator: false,
-    });
+    const { issuerMembership, targetMembership } = this.getIssuerTargetMemberships(memberships, token, userId, channel);
+    if (!issuerMembership.owner)
+      throw new ForbiddenException(`Only channel owner can promote and demote admins`);
+    return this.chatRepository.updateMembershipById(targetMembership.id, { administrator: isAdmin });
   }
 
   async getDirectChannelByUsers(user1: string, user2: string) {
