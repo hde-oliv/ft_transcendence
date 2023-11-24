@@ -1,6 +1,6 @@
 'use client'
 import { createContext, ReactElement, useEffect, useState } from 'react';
-import { Grid, GridItem } from '@chakra-ui/react';
+import { Grid, GridItem, useToast } from '@chakra-ui/react';
 import React from 'react';
 
 import { ChakraProvider } from "@chakra-ui/react";
@@ -23,7 +23,7 @@ export const MeStateContext = createContext<[MeResponseData, () => Promise<void>
 export const SocketContext = createContext(applicationSocket);
 
 export default function PageLayout({ children }: { children: ReactElement }) {
-
+  const toast = useToast();
   const [me, setMe] = useState<MeResponseData>(defaultMe);
   const updateMe = async () => {
     try {
@@ -33,14 +33,25 @@ export default function PageLayout({ children }: { children: ReactElement }) {
       console.log('manage different possible errors'); //TODO
     }
   };
+  function channelKick(data: { name: string }) {
+    toast({
+      title: `You were kicked from "${data.name}" channel.`,
+      description: "This is sad",
+      status: 'warning',
+      duration: 3000,
+      isClosable: true,
+    })
+  }
   useEffect(() => {
     if (me.intra_login === '')
       updateMe();
   }, [me]);
   useEffect(() => {
     applicationSocket.connect();
+    applicationSocket.on('kiked', channelKick);
     return (() => {
       applicationSocket.disconnect()
+      applicationSocket.off('kiked', channelKick);
     })
   }, []);
   return (

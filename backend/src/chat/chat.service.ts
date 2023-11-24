@@ -18,6 +18,8 @@ import { TokenClaims } from 'src/auth/auth.model';
 import { UpdateChannelDto } from './dto/update-channel-dto';
 import { JoinChannelDto } from './dto/join-channel-dto';
 import { WsException } from '@nestjs/websockets';
+import { SocketGateway } from './chat.gateway';
+import { WebsocketService } from './websocket.service';
 
 // TODO: try except blocks
 // TODO: How banned will work on frontend?
@@ -29,6 +31,7 @@ export class ChatService {
     private authService: AuthService,
     private userService: UsersService,
     private chatRepository: ChatRepository,
+    private socketService: WebsocketService
   ) { }
 
   private readonly logger = new Logger(ChatService.name);
@@ -225,6 +228,7 @@ export class ChatService {
     if (targetMembership.administrator && !issuerMembership.owner)
       throw new ForbiddenException(`Only channel owner can kick administrators`);
 
+    this.socketService.emitToUser(targetMembership.userId, 'kiked', { name: channel.name });
     return await this.chatRepository.deleteMembership(userId, channel.id);
   }
 

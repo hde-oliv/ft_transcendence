@@ -162,7 +162,7 @@ function MemberRow(props: {
                 aria-label="kick user"
                 onClick={() => {
                   kickFromChannel(props.channel.id, props.membership.userId).then(e => {
-                    console.log(e); //TODO replace this by and update membership function
+                    console.log(`replace this for some way of updating this channel data`); //TODO replace this by and update membership function
                   }).catch(e => console.error(e))
                 }}
               >

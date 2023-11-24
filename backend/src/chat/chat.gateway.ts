@@ -10,11 +10,12 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { ChatService } from './chat.service';
-import { Logger, UseFilters } from '@nestjs/common';
+import { Injectable, Logger, UseFilters } from '@nestjs/common';
 import { Channels, Memberships, Users } from '@prisma/client';
 import { map, without } from 'lodash';
 import { SendMessageDto } from './dto/send-message-dto';
 import { ChatFilter } from './chat.filter';
+import { WebsocketService } from './websocket.service';
 
 // NOTE: Chat only works in the /chat page
 // TODO: Create a global websocket to handle user status later
@@ -26,19 +27,22 @@ import { ChatFilter } from './chat.filter';
   },
   transpors: ['websocket', 'webtransport'],
 })
-export class ChatGateway
+export class SocketGateway
   implements OnGatewayConnection, OnGatewayInit, OnGatewayDisconnect {
-  @WebSocketServer()
-  wss: Server;
+  @WebSocketServer() server: Server;
 
-  constructor(private chatService: ChatService) { }
+  constructor(
+    private chatService: ChatService,
+    private socketService: WebsocketService
+  ) { }
 
-  private readonly logger = new Logger(ChatGateway.name);
+  private readonly logger = new Logger(SocketGateway.name);
 
   private clients: ClientSocket[] = [];
 
   @UseFilters(new ChatFilter())
   async afterInit(server: Server) {
+    this.socketService.server = this.server;
     this.logger.log('WebSocket Gateway Initialized');
   }
 
@@ -51,6 +55,7 @@ export class ChatGateway
     );
 
     this.clients = newClients;
+    this.socketService.clients = newClients;
     const rooms = socket.rooms;
     rooms.forEach((room) => {
       socket.leave(room);
@@ -60,9 +65,10 @@ export class ChatGateway
   }
 
   @UseFilters(new ChatFilter())
-  async handleConnection(socket: Socket) {
+  async handleConnection(socket: Socket) { //set user as online!
     const user = await this.chatService.getUserFromSocket(socket);
     const clientSocket = { user, socket };
+    this.socketService.clients = [...this.clients, clientSocket];
     this.clients = [...this.clients, clientSocket];
     this.logger.log(`Client Connected: ${socket.id}`);
     const channels = (await this.chatService.getChannelsByUser(user)).map(
