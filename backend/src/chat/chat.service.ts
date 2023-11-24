@@ -1,10 +1,10 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   InternalServerErrorException,
   Logger,
   NotFoundException,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { AuthService } from 'src/auth/auth.service';
 import { UsersService } from 'src/users/users.service';
@@ -110,8 +110,7 @@ export class ChatService {
       channel.id,
     );
 
-    // TODO: Should be async?
-    await this.checkOwner(token.intra_login, memberships);
+    this.checkOwner(token.intra_login, memberships);
 
     return await this.chatRepository.updateChannel(
       channel.id,
@@ -128,7 +127,7 @@ export class ChatService {
       channel.id,
     );
 
-    await this.checkOwner(token.intra_login, memberships);
+    this.checkOwner(token.intra_login, memberships);
 
     // Not checking for throws 'cause I already got the channel
     await this.chatRepository.deleteMembershipsbyChannel(channel.id);
@@ -151,7 +150,7 @@ export class ChatService {
     // check if password is correct
     if (channel.protected) {
       if (channel.password !== joinChannelDto.password) {
-        throw new UnauthorizedException('Wrong password.');
+        throw new ForbiddenException('Wrong password.');
       }
     }
 
@@ -192,7 +191,7 @@ export class ChatService {
       channel.id,
     );
 
-    await this.checkOwner(token.intra_login, memberships);
+    this.checkOwner(token.intra_login, memberships);
 
     return await this.chatRepository.createMembership(createMembershipDto);
   }
@@ -206,13 +205,13 @@ export class ChatService {
       channel.id,
     );
 
-    await this.checkSelf(token.intra_login, userId);
+    this.checkSelf(token.intra_login, userId);
     await this.checkAdmin(token.intra_login, memberships);
 
     // If throws, the another user is not a Owner or Admin (ALL Owners are Admins)
     try {
       await this.checkAdmin(userId, memberships);
-      throw new UnauthorizedException('Cannot kick an Admin/Owner.');
+      throw new ForbiddenException('Cannot kick an Admin/Owner.');
     } catch (e) {
       return await this.chatRepository.deleteMembership(userId, channel.id);
     }
@@ -226,13 +225,13 @@ export class ChatService {
       channel.id,
     );
 
-    await this.checkSelf(token.intra_login, userId);
+    this.checkSelf(token.intra_login, userId);
     await this.checkAdmin(token.intra_login, memberships);
 
     // If throws, the another user is not a Owner or Admin (ALL Owners are Admins)
     try {
       await this.checkAdmin(userId, memberships);
-      throw new UnauthorizedException('Cannot kick an Admin/Owner.');
+      throw new ForbiddenException('Cannot kick an Admin/Owner.');
     } catch (e) {
       return await this.chatRepository.updateMembership(userId, channel.id, {
         banned: true,
@@ -248,13 +247,13 @@ export class ChatService {
       channel.id,
     );
 
-    await this.checkSelf(token.intra_login, userId);
+    this.checkSelf(token.intra_login, userId);
     await this.checkAdmin(token.intra_login, memberships);
 
     // If throws, the another user is not a Owner or Admin (ALL Owners are Admins)
     try {
       await this.checkAdmin(userId, memberships);
-      throw new UnauthorizedException('Cannot kick an Admin/Owner.');
+      throw new ForbiddenException('Cannot kick an Admin/Owner.');
     } catch (e) {
       return await this.chatRepository.updateMembership(userId, channel.id, {
         banned: false,
@@ -276,7 +275,7 @@ export class ChatService {
     // If throws, the another user is not a Owner or Admin (ALL Owners are Admins)
     try {
       await this.checkAdmin(userId, memberships);
-      throw new UnauthorizedException('Cannot kick an Admin/Owner.');
+      throw new ForbiddenException('Cannot kick an Admin/Owner.');
     } catch (e) {
       return await this.chatRepository.updateMembership(userId, channel.id, {
         muted: true,
@@ -292,13 +291,13 @@ export class ChatService {
       channel.id,
     );
 
-    await this.checkSelf(token.intra_login, userId);
+    this.checkSelf(token.intra_login, userId);
     await this.checkAdmin(token.intra_login, memberships);
 
     // If throws, the another user is not a Owner or Admin (ALL Owners are Admins)
     try {
       await this.checkAdmin(userId, memberships);
-      throw new UnauthorizedException('Cannot kick an Admin/Owner.');
+      throw new ForbiddenException('Cannot kick an Admin/Owner.');
     } catch (e) {
       return await this.chatRepository.updateMembership(userId, channel.id, {
         muted: false,
@@ -313,13 +312,14 @@ export class ChatService {
     const memberships = await this.chatRepository.getMembershipsbyChannel(
       channel.id,
     );
+    const targetMembership = memberships.find(e => e.userId === userId);
+    if (!targetMembership)
+      throw new BadRequestException(`User ${userId} isn't in channel ${channel.name}`);
 
-    await this.checkSelf(token.intra_login, userId);
-    await this.checkOwner(token.intra_login, memberships);
+    this.checkSelf(token.intra_login, userId);
+    this.checkOwner(token.intra_login, memberships);
 
-    return await this.chatRepository.updateMembership(userId, channel.id, {
-      administrator: true,
-    });
+    return this.chatRepository.updateMembershipById(targetMembership.id, { administrator: true });
   }
 
   // throws
@@ -330,8 +330,8 @@ export class ChatService {
       channel.id,
     );
 
-    await this.checkSelf(token.intra_login, userId);
-    await this.checkOwner(token.intra_login, memberships);
+    this.checkSelf(token.intra_login, userId);
+    this.checkOwner(token.intra_login, memberships);
 
     return await this.chatRepository.updateMembership(userId, channel.id, {
       administrator: false,
@@ -354,18 +354,18 @@ export class ChatService {
   }
 
   // throws
-  async checkOwner(userId: string, memberships: Memberships[]) {
+  checkOwner(userId: string, memberships: Memberships[]) {
     const membership = memberships.find(
       (m) => m.userId === userId && m.owner === true,
     );
 
     if (!membership) {
-      throw new UnauthorizedException('Not owner.');
+      throw new ForbiddenException('Not owner.');
     }
   }
 
   // throws
-  async checkMembership(userId: string, memberships: Memberships[]) {
+  checkMembership(userId: string, memberships: Memberships[]) {
     const membership = memberships.find((m) => m.userId === userId);
 
     if (!membership) {
@@ -374,31 +374,30 @@ export class ChatService {
   }
 
   // throws
-  async checkBan(userId: string, memberships: Memberships[]) {
+  checkBan(userId: string, memberships: Memberships[]) {
     const membership = memberships.find(
       (m) => m.userId === userId && m.banned === true,
     );
 
     if (membership) {
-      throw new UnauthorizedException('Banned.');
+      throw new ForbiddenException('Banned.');
     }
   }
 
   // throws
-  async checkAdmin(userId: string, memberships: Memberships[]) {
+  checkAdmin(userId: string, memberships: Memberships[]) {
     const membership = memberships.find(
-      (m) => m.userId === userId && m.administrator === true,
-    );
+      (m) => m.userId === userId && m.administrator === true);
 
     if (!membership) {
-      throw new UnauthorizedException('Not administrator.');
+      throw new ForbiddenException('Not administrator.');
     }
   }
 
   // throws
   checkSelf(userId1: string, userId2: string) {
     if (userId1 === userId2) {
-      throw new UnauthorizedException('Trying to alter yourself.');
+      throw new ForbiddenException('You cannot alter yourself.');
     }
   }
 
@@ -408,7 +407,7 @@ export class ChatService {
       : '';
 
     if (token === '') {
-      throw new UnauthorizedException('Invalid credentials.');
+      throw new ForbiddenException('Invalid credentials.');
     }
 
     let payload;
@@ -416,10 +415,10 @@ export class ChatService {
     try {
       payload = await this.authService.decodeToken(token);
       if (!payload) {
-        throw new UnauthorizedException('Invalid credentials.');
+        throw new ForbiddenException('Invalid credentials.');
       }
     } catch (e) {
-      throw new UnauthorizedException('Invalid credentials.');
+      throw new ForbiddenException('Invalid credentials.');
     }
 
     let user: Users;

@@ -170,6 +170,14 @@ export class ChatRepository {
     });
   }
 
+  async updateMembershipById(membershipId: number, updatedMembership: UpdateMembershipDto) {
+    return this.prismaService.memberships.update({
+      where: {
+        id: membershipId
+      },
+      data: { ...updatedMembership }
+    })
+  }
   async registerNewMessage(
     newMessage: NewMessageDto,
     user_id: string,
