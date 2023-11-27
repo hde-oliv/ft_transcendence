@@ -9,6 +9,8 @@ import {
   muteInChannel,
   patchChannel,
   updateChannelSchema,
+  unbanFromChannel,
+  unmuteInChannel,
 } from "@/lib/fetchers/chat";
 import {
   AddIcon,
@@ -74,6 +76,7 @@ import KickIcon from "@/components/icons/KickIcon";
 import MuteIcon from "@/components/icons/MuteIcon";
 import BanIcon from "@/components/icons/BanIcon";
 import CrownIcon from "@/components/icons/CrownIcon";
+import UndoIcon from "@/components/icons/UndoIcon";
 
 function membersFromChannel(
   channel: ChannelData["channel"]
@@ -107,6 +110,8 @@ function MemberRow(props: {
   const updateChats = useContext(ChatContext);
 
   const color = user.status === "online" ? "green.300" : "gray.300";
+  const Buttons = [];
+
   return (
     <>
       <Divider />
@@ -145,24 +150,32 @@ function MemberRow(props: {
             <VStack mr="4">
 
               <Button
-                rightIcon={<BanIcon boxSize={'1.5em'} />}
+                rightIcon={membership.banned ? <UndoIcon boxSize={'1.5em'} /> : <BanIcon boxSize={'1.5em'} />}
                 isDisabled={!(admin || owner)}
                 colorScheme="red"
                 size="sm"
                 aria-label="ban user"
-                minW={'7em'}
+                minW={'8em'}
+                maxW={'8em'}
                 onClick={() => {
-                  banFromChannel(props.channel.id, props.membership.userId).then(e => {
-                    updateChats();
-                  }).catch(e => console.error(e))
+                  if (membership.banned) {
+                    banFromChannel(props.channel.id, props.membership.userId).then(e => {
+                      updateChats();
+                    }).catch(e => console.error(e))
+                  } else {
+                    unbanFromChannel(props.channel.id, props.membership.userId).then(e => {
+                      updateChats();
+                    }).catch(e => console.error(e))
+                  }
                 }}
               >
-                Ban
+                {membership.banned ? 'Unban' : 'Ban'}
               </Button>
               <Button
                 rightIcon={<KickIcon boxSize={'2em'} />}
-                minW={'7em'}
-                isDisabled={!(admin || owner)}
+                minW={'8em'}
+                maxW={'8em'}
+                isDisabled={!(admin || owner) || membership.banned}
                 colorScheme="green"
                 size="sm"
                 aria-label="kick user"
@@ -178,24 +191,33 @@ function MemberRow(props: {
             <VStack>
               <Button
                 rightIcon={<MuteIcon boxSize={'1.5em'} />}
-                minW={'7em'}
-                isDisabled={!(admin || owner)}
+                minW={'8em'}
+                maxW={'8em'}
+                isDisabled={!(admin || owner) || membership.banned}
                 colorScheme="yellow"
                 size="sm"
                 aria-label="mute user"
                 onClick={() => {
-                  muteInChannel(props.channel.id, props.membership.userId).then(e => {
-                    updateChats();
-                  }).catch(e => console.error(e))
+                  if (membership.muted) {
+                    unmuteInChannel(props.channel.id, props.membership.userId).then(e => {
+                      updateChats();
+                    }).catch(e => console.error(e))
+                  } else {
+
+                    muteInChannel(props.channel.id, props.membership.userId).then(e => {
+                      updateChats();
+                    }).catch(e => console.error(e))
+                  }
                 }}
               >
-                Mute
+                {membership.muted ? 'Unmute' : 'Mute'}
               </Button>
               <Tooltip label="Give Administrator powers to user">
                 <Button
                   rightIcon={<CrownIcon boxSize={'1.8em'} />}
-                  minW={'7em'}
-                  isDisabled={!(admin || owner)}
+                  minW={'8em'}
+                  maxW={'8em'}
+                  isDisabled={!(admin || owner) || membership.banned}
                   colorScheme="blue"
                   size="sm"
                   aria-label="admin user"

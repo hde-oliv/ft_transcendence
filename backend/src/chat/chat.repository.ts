@@ -114,6 +114,9 @@ export class ChatRepository {
                     NOT: {
                       userId: userId
                     }
+                  },
+                  orderBy: {
+                    id: 'asc'
                   }
                 }
               }
