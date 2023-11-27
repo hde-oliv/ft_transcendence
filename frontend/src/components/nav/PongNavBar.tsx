@@ -185,7 +185,10 @@ function UserClickableAvatar(props: { isWide: boolean }) {
       <PopoverContent borderRadius={"xl"} bgColor={"pongBlue.400"}>
         <PopoverArrow bgColor={"pongBlue.400"} />
         <PopoverBody>
-          <Container _hover={{ bg: "whiteAlpha.200" }} onClick={() => router.push('/account')}>
+          <Container
+            _hover={{ bg: "whiteAlpha.200" }}
+            cursor="pointer"
+            onClick={() => router.push('/account')}>
             Account
           </Container>
           <Container
