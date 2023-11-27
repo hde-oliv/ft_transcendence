@@ -11,6 +11,7 @@ import {
   updateChannelSchema,
   unbanFromChannel,
   unmuteInChannel,
+  demoteChannelAdmin,
 } from "@/lib/fetchers/chat";
 import {
   AddIcon,
@@ -77,6 +78,7 @@ import MuteIcon from "@/components/icons/MuteIcon";
 import BanIcon from "@/components/icons/BanIcon";
 import CrownIcon from "@/components/icons/CrownIcon";
 import UndoIcon from "@/components/icons/UndoIcon";
+import DowngradeIcon from "@/components/icons/DowngradeIcon";
 
 function membersFromChannel(
   channel: ChannelData["channel"]
@@ -203,7 +205,6 @@ function MemberRow(props: {
                       updateChats();
                     }).catch(e => console.error(e))
                   } else {
-
                     muteInChannel(props.channel.id, props.membership.userId).then(e => {
                       updateChats();
                     }).catch(e => console.error(e))
@@ -214,7 +215,7 @@ function MemberRow(props: {
               </Button>
               <Tooltip label="Give Administrator powers to user">
                 <Button
-                  rightIcon={<CrownIcon boxSize={'1.8em'} />}
+                  rightIcon={membership.administrator ? <DowngradeIcon boxSize={'1.8em'} /> : <CrownIcon boxSize={'1.8em'} />}
                   minW={'8em'}
                   maxW={'8em'}
                   isDisabled={!(admin || owner) || membership.banned}
@@ -222,12 +223,18 @@ function MemberRow(props: {
                   size="sm"
                   aria-label="admin user"
                   onClick={() => {
-                    promoteChannelAdmin(props.channel.id, props.membership.userId).then(e => {
-                      updateChats();
-                    }).catch(e => console.error(e))
+                    if (membership.administrator) {
+                      demoteChannelAdmin(props.channel.id, props.membership.userId).then(e => {
+                        updateChats();
+                      }).catch(e => console.error(e))
+                    } else {
+                      promoteChannelAdmin(props.channel.id, props.membership.userId).then(e => {
+                        updateChats();
+                      }).catch(e => console.error(e))
+                    }
                   }}
                 >
-                  Admin
+                  {membership.administrator ? 'Demote' : 'Admin'}
                 </Button>
               </Tooltip>
             </VStack>
