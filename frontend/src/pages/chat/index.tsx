@@ -29,7 +29,7 @@ import {
   Text,
   useDisclosure,
 } from "@chakra-ui/react";
-import { ReactElement, useCallback, useContext, useEffect, useState } from "react";
+import { ReactElement, createContext, useCallback, useContext, useEffect, useState } from "react";
 
 import { ChannelCard } from "../../components/pageComponents/chat/ChannelCard";
 import { MessageSection } from "@/components/pageComponents/chat/MessageSection";
@@ -83,16 +83,18 @@ export function MessageCard(props: MessageCardProps): JSX.Element {
   );
 }
 
+export const ChatContext = createContext<() => void>(() => { });
+
 export default function Chat(props: any) {
   const socket = useContext(SocketContext);
   const [online, setOnline] = useState(socket.connected);
-  // const [activeChannel, setActiveChannel] = useState<undefined | ChannelComponentProps>(undefined);
   const [activeChannel, setActiveChannel] = useState<number>(-1);
   const [myChannels, setMyChannels] = useState<ChannelComponentProps[]>([]);
   const [groupName, setGroupName] = useState("");
   const [groupPsw, setGroupPsw] = useState("");
   const [loading, setLoading] = useState(false);
   const { onOpen, onClose, isOpen, onToggle } = useDisclosure();
+
 
   function onConnect() {
     setOnline(true);
@@ -181,127 +183,129 @@ export default function Chat(props: any) {
     };
   }, [socket, onServerMessage]);
   return (
-    <Flex h="100%" alignItems={"stretch"}>
-      <Flex
-        flexDir={"column"}
-        minW={"20vw"}
-        bg="pongBlue.200"
-        pt="1vh"
-        pl="1vw"
-        pr="1vw"
-        overflowY="auto"
-      >
+    <ChatContext.Provider value={updateChannelCards}>
+      <Flex h="100%" alignItems={"stretch"}>
         <Flex
-          justifyContent={"space-between"}
-          align={"center"}
-          mb="1vh"
-          borderRadius={5}
+          flexDir={"column"}
+          minW={"20vw"}
+          bg="pongBlue.200"
+          pt="1vh"
+          pl="1vw"
+          pr="1vw"
+          overflowY="auto"
         >
-          <Center>
-            <Circle
-              bg={online ? "green.300" : "gray.300"}
-              size="2vh"
-              mr="1vw"
-            />
-            <Text
-              fontSize="xl"
-              fontWeight={"bold"}
-              letterSpacing={"wider"}
-              color="white"
-            >
-              {online ? "Online" : "Offline"}
-            </Text>
-          </Center>
-          <IconButton
-            size="sm"
-            aria-label="create new group"
-            colorScheme="green"
-            icon={<AddIcon />}
-            onClick={onToggle}
-          />
-        </Flex>
-
-        <Collapse endingHeight="42em" startingHeight={0} in={isOpen}>
           <Flex
-            bg="pongBlue.500"
+            justifyContent={"space-between"}
+            align={"center"}
+            mb="1vh"
             borderRadius={5}
-            flexDir={"column"}
-            p="1.5vh 1vw"
           >
-            <Heading color="gray.300" as="h6" size="xs">
-              Channel Name:
-            </Heading>
-            <Input
-              size="sm"
-              mt="1"
-              placeholder="Group name"
-              borderRadius="md"
-              value={groupName}
-              onChange={(e) => setGroupName(e.target.value)}
-            />
-            <Heading pt="1vh" color="gray.300" as="h6" size="xs">
-              Password:
-            </Heading>
-            <Input
-              size="sm"
-              mt="1"
-              borderRadius="md"
-              placeholder="Password (optional)"
-              type="password"
-              value={groupPsw}
-              onChange={(e) => setGroupPsw(e.target.value)}
-            />
-            <Flex justify={"space-around"} pb="1vh" pt="1vh">
-              <Button
-                size="md"
-                colorScheme="green"
-                isDisabled={!Boolean(groupName) || loading}
-                onClick={createNewChannel}
+            <Center>
+              <Circle
+                bg={online ? "green.300" : "gray.300"}
+                size="2vh"
+                mr="1vw"
+              />
+              <Text
+                fontSize="xl"
+                fontWeight={"bold"}
+                letterSpacing={"wider"}
+                color="white"
               >
-                Confirm
-              </Button>
-              <Button
-                size="md"
-                colorScheme="yellow"
-                onClick={() => {
-                  setGroupName("");
-                  setGroupPsw("");
-                  onClose();
-                }}
-              >
-                Cancel
-              </Button>
-            </Flex>
+                {online ? "Online" : "Offline"}
+              </Text>
+            </Center>
+            <IconButton
+              size="sm"
+              aria-label="create new group"
+              colorScheme="green"
+              icon={<AddIcon />}
+              onClick={onToggle}
+            />
           </Flex>
-        </Collapse>
-        <Stack overflow={"auto"}>
-          {myChannels.map((e, i) => (
-            <ChannelCard
-              key={`ChannelCard-${e.channelId}`}
-              {...e}
-              onClick={() => setActiveChannel(i)}
-              active={i === activeChannel}
+
+          <Collapse endingHeight="42em" startingHeight={0} in={isOpen}>
+            <Flex
+              bg="pongBlue.500"
+              borderRadius={5}
+              flexDir={"column"}
+              p="1.5vh 1vw"
+            >
+              <Heading color="gray.300" as="h6" size="xs">
+                Channel Name:
+              </Heading>
+              <Input
+                size="sm"
+                mt="1"
+                placeholder="Group name"
+                borderRadius="md"
+                value={groupName}
+                onChange={(e) => setGroupName(e.target.value)}
+              />
+              <Heading pt="1vh" color="gray.300" as="h6" size="xs">
+                Password:
+              </Heading>
+              <Input
+                size="sm"
+                mt="1"
+                borderRadius="md"
+                placeholder="Password (optional)"
+                type="password"
+                value={groupPsw}
+                onChange={(e) => setGroupPsw(e.target.value)}
+              />
+              <Flex justify={"space-around"} pb="1vh" pt="1vh">
+                <Button
+                  size="md"
+                  colorScheme="green"
+                  isDisabled={!Boolean(groupName) || loading}
+                  onClick={createNewChannel}
+                >
+                  Confirm
+                </Button>
+                <Button
+                  size="md"
+                  colorScheme="yellow"
+                  onClick={() => {
+                    setGroupName("");
+                    setGroupPsw("");
+                    onClose();
+                  }}
+                >
+                  Cancel
+                </Button>
+              </Flex>
+            </Flex>
+          </Collapse>
+          <Stack overflow={"auto"}>
+            {myChannels.map((e, i) => (
+              <ChannelCard
+                key={`ChannelCard-${e.channelId}`}
+                {...e}
+                onClick={() => setActiveChannel(i)}
+                active={i === activeChannel}
+              />
+            ))}
+          </Stack>
+        </Flex>
+        <Flex flexDir="column" justifyContent="space-between" w="100%">
+          {activeChannel >= 0 ? (
+            <MessageSection
+              {...myChannels[activeChannel]}
+              syncAll={updateChannelCards}
             />
-          ))}
-        </Stack>
+          ) : (
+            <Skeleton
+              isLoaded={false}
+              h="100%"
+              speed={3}
+              startColor="pongBlue.400"
+              endColor="yellow.300"
+            />
+          )}
+        </Flex>
       </Flex>
-      <Flex flexDir="column" justifyContent="space-between" w="100%">
-        {activeChannel >= 0 ? (
-          <MessageSection
-            {...myChannels[activeChannel]}
-            syncAll={updateChannelCards}
-          />
-        ) : (
-          <Skeleton
-            isLoaded={false}
-            h="100%"
-            speed={3}
-            startColor="pongBlue.400"
-            endColor="yellow.300"
-          />
-        )}
-      </Flex>
-    </Flex>
+    </ChatContext.Provider>
   );
 }
 

@@ -1,6 +1,5 @@
 import {
   ChannelData,
-  UpdateChannelSchemma,
   promoteChannelAdmin,
   banFromChannel,
   fetchMessagesFromChannel,
@@ -49,6 +48,11 @@ import {
   Skeleton,
   Stack,
   Switch,
+  Tab,
+  TabList,
+  TabPanel,
+  TabPanels,
+  Tabs,
   Text,
   Tooltip,
   VStack,
@@ -59,6 +63,7 @@ import {
   ChannelComponentProps,
   MessageCardProps,
   MessageCard,
+  ChatContext,
 } from "../../../pages/chat";
 import z, { ZodError } from "zod";
 import { ReturnUserSchema, fetchUsers } from "@/lib/fetchers/users";
@@ -99,6 +104,7 @@ function MemberRow(props: {
   const { membership, channel, owner, admin } = props;
   const user = membership.user;
   const [me] = useContext(MeStateContext);
+  const updateChats = useContext(ChatContext);
 
   const color = user.status === "online" ? "green.300" : "gray.300";
   return (
@@ -147,7 +153,7 @@ function MemberRow(props: {
                 minW={'7em'}
                 onClick={() => {
                   banFromChannel(props.channel.id, props.membership.userId).then(e => {
-                    console.log(e); //TODO replace this by and update membership function
+                    updateChats();
                   }).catch(e => console.error(e))
                 }}
               >
@@ -162,7 +168,7 @@ function MemberRow(props: {
                 aria-label="kick user"
                 onClick={() => {
                   kickFromChannel(props.channel.id, props.membership.userId).then(e => {
-                    console.log(`replace this for some way of updating this channel data`); //TODO replace this by and update membership function
+                    updateChats();
                   }).catch(e => console.error(e))
                 }}
               >
@@ -179,7 +185,7 @@ function MemberRow(props: {
                 aria-label="mute user"
                 onClick={() => {
                   muteInChannel(props.channel.id, props.membership.userId).then(e => {
-                    console.log(e); //TODO replace this by and update membership function
+                    updateChats();
                   }).catch(e => console.error(e))
                 }}
               >
@@ -195,7 +201,7 @@ function MemberRow(props: {
                   aria-label="admin user"
                   onClick={() => {
                     promoteChannelAdmin(props.channel.id, props.membership.userId).then(e => {
-                      console.log(e); //TODO replace this by and update membership function
+                      updateChats();
                     }).catch(e => console.error(e))
                   }}
                 >
@@ -221,6 +227,7 @@ function GroupSettings(props: {
   const [pswTwo, setPswTwo] = useState("");
   const [channelType, setChannelType] = useState(props.channel.type);
   const [channelName, setChannelName] = useState(props.channel.name);
+  const updateChats = useContext(ChatContext);
 
   const [me, setMe] = useContext(MeStateContext);
 
@@ -253,7 +260,8 @@ function GroupSettings(props: {
         protected: pswDone,
       });
       await patchChannel(props.channel.id, updatedChannelConfig);
-      props.syncAll();
+      updateChats();
+      // props.syncAll();
     } catch (e) {
       if (e instanceof ZodError)
         console.warn("Error build patchChannel object");
@@ -366,55 +374,99 @@ function GroupSettings(props: {
                 Save
               </Button>
             </Flex>
-            <Flex
-              mt="3vh"
-              p="1vh 1vw"
-              overflow={"auto"}
-              borderWidth={1}
-              borderColor={"yellow.300"}
-              borderRadius={"md"}
-              flexDir={"column"}
-              maxH="30vh"
-            >
-              <Heading size="md" mb="1vh">
-                Members
-              </Heading>
-              <MemberRow
-                owner={props.membership.administrator}
-                admin={props.membership.owner}
-                key={`ch${props.channel.id}-${me.intra_login}`}
-                membership={{
-                  ...props.membership,
-                  user: {
-                    avatar: me.avatar,
-                    intra_login: me.intra_login,
-                    nickname: me.nickname,
-                    status: "online",
-                  }
-                }}
-                channel={props.channel}
-              />
-              {memberships.map((e) => {
-                let user = e.user
-                return (
-                  <MemberRow
-                    owner={props.membership.administrator}
-                    admin={props.membership.owner}
-                    key={`ch${props.channel.id}-${user.intra_login}`}
-                    membership={{
-                      administrator: e.administrator,
-                      banned: e.banned,
-                      channelId: e.channelId,
-                      muted: e.muted,
-                      owner: e.owner,
-                      userId: e.userId,
-                      user: e.user
-                    }}
-                    channel={props.channel}
-                  />
-                )
-              })}
-            </Flex>
+            <MemberRow
+              owner={props.membership.administrator}
+              admin={props.membership.owner}
+              key={`ch${props.channel.id}-${me.intra_login}`}
+              membership={{
+                ...props.membership,
+                user: {
+                  avatar: me.avatar,
+                  intra_login: me.intra_login,
+                  nickname: me.nickname,
+                  status: "online",
+                }
+              }}
+              channel={props.channel}
+            />
+            <Tabs
+              isLazy={true}
+              variant='solid-rounded'
+              colorScheme="yellow">
+              <TabList>
+                <Tab>Members</Tab>
+                <Tab>Admins</Tab>
+                <Tab>Banned</Tab>
+              </TabList>
+              <TabPanels>
+                <TabPanel>
+                  {memberships.filter(e => !e.administrator && !e.owner && !e.banned).map((e) => {
+                    let user = e.user
+                    return (
+                      <MemberRow
+                        owner={props.membership.administrator}
+                        admin={props.membership.owner}
+                        key={`ch${props.channel.id}-${user.intra_login}`}
+                        membership={{
+                          administrator: e.administrator,
+                          banned: e.banned,
+                          channelId: e.channelId,
+                          muted: e.muted,
+                          owner: e.owner,
+                          userId: e.userId,
+                          user: e.user
+                        }}
+                        channel={props.channel}
+                      />
+                    )
+                  })}
+                </TabPanel>
+                <TabPanel>
+                  {memberships.filter(e => e.administrator || e.owner && !e.banned).map((e) => {
+                    let user = e.user
+                    return (
+                      <MemberRow
+                        owner={props.membership.administrator}
+                        admin={props.membership.owner}
+                        key={`ch${props.channel.id}-${user.intra_login}`}
+                        membership={{
+                          administrator: e.administrator,
+                          banned: e.banned,
+                          channelId: e.channelId,
+                          muted: e.muted,
+                          owner: e.owner,
+                          userId: e.userId,
+                          user: e.user
+                        }}
+                        channel={props.channel}
+                      />
+                    )
+                  })}
+                </TabPanel>
+                <TabPanel>
+                  {memberships.filter(e => e.banned).map((e) => {
+                    let user = e.user
+                    return (
+                      <MemberRow
+                        owner={props.membership.administrator}
+                        admin={props.membership.owner}
+                        key={`ch${props.channel.id}-${user.intra_login}`}
+                        membership={{
+                          administrator: e.administrator,
+                          banned: e.banned,
+                          channelId: e.channelId,
+                          muted: e.muted,
+                          owner: e.owner,
+                          userId: e.userId,
+                          user: e.user
+                        }}
+                        channel={props.channel}
+                      />
+                    )
+                  })}
+                </TabPanel>
+              </TabPanels>
+            </Tabs>
           </DrawerBody>
           <DrawerFooter>
             <HStack>
