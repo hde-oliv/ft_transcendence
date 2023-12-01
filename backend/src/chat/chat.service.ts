@@ -222,12 +222,10 @@ export class ChatService {
     const memberships = await this.chatRepository.getMembershipsbyChannel(
       channel.id,
     );
-    const userId = createMembershipDto.userId;
-    const { issuerMembership, targetMembership } = this.getIssuerTargetMemberships(memberships, token, userId, channel);
 
     this.checkOwner(token.intra_login, memberships);
 
-    this.socketService.emitToUser(targetMembership.userId, 'syncChannel', { channelId: channel.id });
+    this.socketService.emitToUser(createMembershipDto.userId, 'syncChannel', { channelId: channel.id });
     return await this.chatRepository.createMembership(createMembershipDto);
   }
 

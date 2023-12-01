@@ -195,7 +195,7 @@ export default function Chat(props: any) {
       .catch(() => setMyChannels([]));
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
-    socket.on("syncChannel", onSyncChannel);
+    socket.on(" ", onSyncChannel);
 
     return () => {
       socket.off("connect", onConnect);
