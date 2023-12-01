@@ -219,13 +219,15 @@ export class ChatService {
     const channel = await this.chatRepository.getChannel(
       createMembershipDto.channelId,
     );
-
     const memberships = await this.chatRepository.getMembershipsbyChannel(
       channel.id,
     );
+    const userId = createMembershipDto.userId;
+    const { issuerMembership, targetMembership } = this.getIssuerTargetMemberships(memberships, token, userId, channel);
 
     this.checkOwner(token.intra_login, memberships);
 
+    this.socketService.emitToUser(targetMembership.userId, 'syncChannel', { channelId: channel.id });
     return await this.chatRepository.createMembership(createMembershipDto);
   }
 
@@ -265,6 +267,7 @@ export class ChatService {
       throw new ForbiddenException(`Channel owner cannot be banned/unbanned`);
     if (targetMembership.administrator && !issuerMembership.owner)
       throw new ForbiddenException(`Only channel owner can ban/unban administrators`);
+
     return this.chatRepository.updateMembershipById(targetMembership.id, { banned: banned }) //TODO this action should also remove the user from the channel room
   }
 

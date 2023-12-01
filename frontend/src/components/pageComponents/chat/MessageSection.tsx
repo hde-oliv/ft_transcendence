@@ -12,7 +12,6 @@ import {
   unbanFromChannel,
   unmuteInChannel,
   demoteChannelAdmin,
-  fetchSingleChannel,
 } from "@/lib/fetchers/chat";
 import {
   AddIcon,
@@ -70,7 +69,7 @@ import {
   ChatContext,
 } from "../../../pages/chat";
 import z, { ZodError } from "zod";
-import { ReturnUserSchema, fetchUsers } from "@/lib/fetchers/users";
+import { ReturnUserSchema } from "@/lib/fetchers/users";
 import diacriticalNormalize from "@/lib/diacriticalNormalize";
 import { createFriendship, getAllFriends } from "@/lib/fetchers/friends";
 import { MeStateContext, SocketContext } from "@/components/pageLayout/PageLayout";

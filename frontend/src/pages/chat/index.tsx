@@ -5,6 +5,7 @@ import {
   createChannel,
   createChannelParams,
   fetchMyChannels,
+  fetchSingleChannel,
   messageResponseSchema,
 } from "@/lib/fetchers/chat";
 import { AddIcon, RepeatIcon } from "@chakra-ui/icons";
@@ -161,6 +162,32 @@ export default function Chat(props: any) {
       setMyChannels([]);
     }
   }
+  async function onSyncChannel(payload: { channelId: number }) {
+    try {
+      const channelData = await fetchSingleChannel(payload.channelId);
+      updateSingleCard(channelData.channelId, channelData);
+    } catch (e) {
+      console.warn(`Channel with id [${payload.channelId}] could't be syncronized`);
+    }
+  }
+  function updateSingleCard(channelId: number, channelData: ChannelData) {
+    const temp = [...myChannels];
+    let updated = false;
+    let newIndex = activeChannel;
+    temp.forEach((ch, i) => {
+      if (ch.channelId === channelData.channelId) {
+        if (i === activeChannel) {
+          newIndex = -1;
+        }
+        ch = { ...channelData };
+        updated = true
+      }
+    })
+    if (updated) {
+      setActiveChannel(newIndex);
+      setMyChannels(temp);
+    }
+  }
   useEffect(() => {
 
     fetchMyChannels()
@@ -168,10 +195,12 @@ export default function Chat(props: any) {
       .catch(() => setMyChannels([]));
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
+    socket.on("syncChannel", onSyncChannel);
 
     return () => {
       socket.off("connect", onConnect);
       socket.off("disconnect", onDisconnect);
+      socket.on("syncChannel", onSyncChannel);
     };
   }, [socket]);
   useEffect(() => {

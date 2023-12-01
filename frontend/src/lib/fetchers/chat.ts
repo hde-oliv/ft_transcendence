@@ -112,11 +112,13 @@ export const updateChannelSchema = z.object({
   protected: z.boolean().optional(),
 });
 
+export const channelData = myChannelResponse.element;
+
 export type FetchChannelUsers = Array<user>;
 export type myChannelResponse = z.infer<typeof myChannelsResponseSchema>;
 export type channelResponse = z.infer<typeof channelResponseSchema>;
 export type MyChannels = z.infer<typeof myChannelResponse>;
-export type ChannelData = z.infer<typeof myChannelResponse.element>;
+export type ChannelData = z.infer<typeof channelData>;
 export type myChannel = z.infer<typeof myChannelsSchema>;
 export type createChannelParams = z.infer<typeof newChannel>
 export type UpdateChannelSchemma = z.infer<typeof updateChannelSchema>;
@@ -151,13 +153,8 @@ export async function fetchMessagesFromChannel(channelId: number) {
 
 export async function fetchSingleChannel(channelId: number) {
   const fetcher = pongAxios();
-  try {
-    const response = await fetcher.get(`chat/channel/${channelId}`);
-
-    return response.data; //TODO validate with ZOD (same schema as myChannels return)
-  } catch (e) {
-    return {};
-  }
+  const response = await fetcher.get(`chat/channel/${channelId}`);
+  return channelData.parse(response.data);
 }
 
 export async function fetchChannelUsers(
