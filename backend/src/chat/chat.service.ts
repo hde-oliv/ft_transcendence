@@ -20,6 +20,8 @@ import { JoinChannelDto } from './dto/join-channel-dto';
 import { WsException } from '@nestjs/websockets';
 import { SocketGateway } from './chat.gateway';
 import { WebsocketService } from './websocket.service';
+import * as bcrypt from 'bcrypt';
+import { CreateCatDto } from '../cats/dto/create-cat.dto';
 
 // TODO: try except blocks
 // TODO: How banned will work on frontend?
@@ -38,6 +40,11 @@ export class ChatService {
 
   // NOTE: Who made the request must not be present in the members array
   async createChannel(token: TokenClaims, createChannelDto: CreateChannelDto) {
+
+    const saltOrRounds = 0;
+    const hash = await bcrypt.hash(createChannelDto.password, saltOrRounds);
+    createChannelDto.password = hash;
+
     const chat: Channels = await this.chatRepository.createChannel(
       createChannelDto,
     );
@@ -150,9 +157,11 @@ export class ChatService {
 
     await this.checkBan(token.intra_login, memberships);
 
+    const isMatch = await bcrypt.compare(joinChannelDto.password, channel.password);
+
     // check if password is correct
     if (channel.protected) {
-      if (channel.password !== joinChannelDto.password) {
+      if (isMatch !== true) {
         throw new ForbiddenException('Wrong password.');
       }
     }
