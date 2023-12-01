@@ -72,7 +72,7 @@ export class ChatRepository {
 
   async getSingleChannel(user: TokenClaims, channelId: number) {
     const userId = user.intra_login;
-    const memberships = this.prismaService.memberships.findMany({
+    const memberships = this.prismaService.memberships.findFirst({
       where: {
         userId: userId,
         channelId: channelId

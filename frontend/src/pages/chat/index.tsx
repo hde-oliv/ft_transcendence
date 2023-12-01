@@ -34,6 +34,7 @@ import { ReactElement, createContext, useCallback, useContext, useEffect, useSta
 
 import { ChannelCard } from "../../components/pageComponents/chat/ChannelCard";
 import { MessageSection } from "@/components/pageComponents/chat/MessageSection";
+import { ZodError } from "zod";
 
 export type userSchema = {
   nickname: string;
@@ -165,29 +166,30 @@ export default function Chat(props: any) {
   async function onSyncChannel(payload: { channelId: number }) {
     try {
       const channelData = await fetchSingleChannel(payload.channelId);
-      updateSingleCard(channelData.channelId, channelData);
+      updateSingleCard(channelData);
     } catch (e) {
-      console.warn(`Channel with id [${payload.channelId}] could't be syncronized`);
-    }
-  }
-  function updateSingleCard(channelId: number, channelData: ChannelData) {
-    const temp = [...myChannels];
-    let updated = false;
-    let newIndex = activeChannel;
-    temp.forEach((ch, i) => {
-      if (ch.channelId === channelData.channelId) {
-        if (i === activeChannel) {
-          newIndex = -1;
-        }
-        ch = { ...channelData };
-        updated = true
+      if (e instanceof ZodError) {
+        console.warn(`Expected return of fetchSingleChannel was not met`);
+      } else {
+        console.warn(`Channel with id [${payload.channelId}] could't be syncronized`);
       }
-    })
-    if (updated) {
-      setActiveChannel(newIndex);
-      setMyChannels(temp);
     }
   }
+
+  const updateSingleCard = useCallback(
+    (channelData: ChannelData) => {
+      const temp = [...myChannels];
+      const targetI = temp.findIndex(ch => ch.channelId === channelData.channelId)
+      if (targetI !== -1) {
+        temp[targetI] = { ...channelData };
+      } else {
+        temp.push(channelData)
+        temp.sort((a, b) => a.channelId - b.channelId);
+        setMyChannels(temp);
+      }
+    }
+    , [myChannels])
+
   useEffect(() => {
 
     fetchMyChannels()
@@ -195,14 +197,18 @@ export default function Chat(props: any) {
       .catch(() => setMyChannels([]));
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
-    socket.on(" ", onSyncChannel);
 
     return () => {
       socket.off("connect", onConnect);
       socket.off("disconnect", onDisconnect);
-      socket.on("syncChannel", onSyncChannel);
     };
   }, [socket]);
+  useEffect(() => {
+    socket.on("syncChannel", onSyncChannel);
+    return () => {
+      socket.off("syncChannel", onSyncChannel);
+    };
+  }, [socket, onSyncChannel])
   useEffect(() => {
     socket.on("server_message", onServerMessage);
     return () => {
