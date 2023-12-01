@@ -104,30 +104,6 @@ export class SocketGateway
     return message;
   }
 
-  @UseFilters(new ChatFilter())
-  @SubscribeMessage('send_message')
-  async handleNewMessage(
-    @MessageBody() data: SendMessageDto,
-    @ConnectedSocket() socket: Socket,
-  ) {
-    const user: Users = await this.chatService.getUserFromSocket(socket);
-    const channel = await this.chatService.getChannelByName(data.channel_name);
-
-    const members = await this.chatService.getValidMembershipsFromChannel(
-      channel?.id,
-    );
-
-    const message = await this.chatService.registerNewMessage(
-      { channel_id: channel.id, message: data.message },
-      user,
-    );
-
-    const onlineUsers = this.getOnlineSocketsByMemberships(members);
-
-    await this.broadcast(socket, onlineUsers, 'receive_message', message);
-    // this.wss.sockets.emit('receive_message', data);
-  }
-
   async broadcast(
     sender: Socket,
     targets: Socket[],

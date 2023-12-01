@@ -109,7 +109,7 @@ function MemberRow(props: {
   const { membership, channel, owner, admin } = props;
   const user = membership.user;
   const [me] = useContext(MeStateContext);
-  const updateChats = useContext(ChatContext);
+  const { updateChannels: updateChats } = useContext(ChatContext);
 
   const color = user.status === "online" ? "green.300" : "gray.300";
   const Buttons = [];
@@ -150,7 +150,6 @@ function MemberRow(props: {
         ) : (
           <Center>
             <VStack mr="4">
-
               <Button
                 rightIcon={membership.banned ? <UndoIcon boxSize={'1.5em'} /> : <BanIcon boxSize={'1.5em'} />}
                 isDisabled={!(admin || owner)}
@@ -161,11 +160,11 @@ function MemberRow(props: {
                 maxW={'8em'}
                 onClick={() => {
                   if (membership.banned) {
-                    banFromChannel(props.channel.id, props.membership.userId).then(e => {
+                    unbanFromChannel(props.channel.id, props.membership.userId).then(e => {
                       updateChats();
                     }).catch(e => console.error(e))
                   } else {
-                    unbanFromChannel(props.channel.id, props.membership.userId).then(e => {
+                    banFromChannel(props.channel.id, props.membership.userId).then(e => {
                       updateChats();
                     }).catch(e => console.error(e))
                   }
@@ -256,7 +255,7 @@ function GroupSettings(props: {
   const [pswTwo, setPswTwo] = useState("");
   const [channelType, setChannelType] = useState(props.channel.type);
   const [channelName, setChannelName] = useState(props.channel.name);
-  const updateChats = useContext(ChatContext);
+  const { updateChannels: updateChats } = useContext(ChatContext);
 
   const [me, setMe] = useContext(MeStateContext);
 

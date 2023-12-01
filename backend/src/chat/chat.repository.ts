@@ -121,6 +121,9 @@ export class ChatRepository {
                 }
               }
             }
+          },
+          orderBy: {
+            channelId: 'asc'
           }
         }
       }
