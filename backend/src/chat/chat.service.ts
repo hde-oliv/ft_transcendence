@@ -90,6 +90,17 @@ export class ChatService {
     return [];
   }
 
+  async getSingleChannel(user: TokenClaims, channelId: number) {
+    let channel;
+
+    try {
+      channel = await this.chatRepository.getSingleChannel(user, channelId);
+    } catch (e) {
+      throw new NotFoundException('Channel does not exist.');
+    }
+
+    return channel;
+  }
   // throws
   async getChannel(id: number) {
     let channel: Channels;

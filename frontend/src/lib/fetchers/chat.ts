@@ -149,6 +149,17 @@ export async function fetchMessagesFromChannel(channelId: number) {
   }
 }
 
+export async function fetchSingleChannel(channelId: number) {
+  const fetcher = pongAxios();
+  try {
+    const response = await fetcher.get(`chat/channel/${channelId}`);
+
+    return response.data; //TODO validate with ZOD (same schema as myChannels return)
+  } catch (e) {
+    return {};
+  }
+}
+
 export async function fetchChannelUsers(
   id: number
 ): Promise<FetchChannelUsers> {

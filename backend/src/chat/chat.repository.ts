@@ -70,13 +70,116 @@ export class ChatRepository {
     );
   }
 
+  async getSingleChannel(user: TokenClaims, channelId: number) {
+    const userId = user.intra_login;
+    const memberships = this.prismaService.memberships.findMany({
+      where: {
+        userId: userId,
+        channelId: channelId
+      },
+      select: {
+        id: false,
+        channelId: true,
+        userId: true,
+        owner: true,
+        administrator: true,
+        banned: true,
+        muted: true,
+        channel: {
+          select: {
+            id: true,
+            type: true,
+            name: true,
+            password: false,
+            protected: true,
+            user2user: true,
+            Memberships: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    nickname: true,
+                    avatar: true,
+                    intra_login: true,
+                    status: true
+                  }
+                }
+              },
+              where: {
+                NOT: {
+                  userId: userId
+                }
+              },
+              orderBy: {
+                id: 'asc'
+              }
+            }
+          }
+        }
+      }
+    })
+    // const data = this.prismaService.users.findUnique({
+    //   where: {
+    //     id: userId
+    //   },
+    //   include: {
+    //     Memberships: {
+    //       select: {
+    //         id: false,
+    //         channelId: true,
+    //         userId: true,
+    //         owner: true,
+    //         administrator: true,
+    //         banned: true,
+    //         muted: true,
+    //         channel: {
+    //           select: {
+    //             id: true,
+    //             type: true,
+    //             name: true,
+    //             password: false,
+    //             protected: true,
+    //             user2user: true,
+    //             Memberships: {
+    //               include: {
+    //                 user: {
+    //                   select: {
+    //                     id: true,
+    //                     nickname: true,
+    //                     avatar: true,
+    //                     intra_login: true,
+    //                     status: true
+    //                   }
+    //                 }
+    //               },
+    //               where: {
+    //                 NOT: {
+    //                   userId: userId
+    //                 }
+    //               },
+    //               orderBy: {
+    //                 id: 'asc'
+    //               }
+    //             }
+    //           }
+    //         }
+    //       },
+    //       orderBy: {
+    //         channelId: 'asc'
+    //       }
+    //     }
+    //   }
+    // })
+    return memberships;
+  }
+
   async getChannel(id: number): Promise<Channels> {
     return this.prismaService.channels.findUniqueOrThrow({ where: { id } });
   }
 
   async getChannelsByUser(user: TokenClaims) {
     const userId = user.intra_login;
-    const teste = this.prismaService.users.findUnique({
+    const data = this.prismaService.users.findUnique({
       where: {
         id: userId
       },
@@ -128,7 +231,7 @@ export class ChatRepository {
         }
       }
     })
-    return teste
+    return data
   }
 
   async getAllChannels(): Promise<Channels[]> {

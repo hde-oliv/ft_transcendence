@@ -12,6 +12,7 @@ import {
   unbanFromChannel,
   unmuteInChannel,
   demoteChannelAdmin,
+  fetchSingleChannel,
 } from "@/lib/fetchers/chat";
 import {
   AddIcon,
