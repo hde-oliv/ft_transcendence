@@ -122,6 +122,9 @@ export class ChatService {
 
     this.checkOwner(token.intra_login, memberships);
 
+    const saltOrRounds = 0;
+    const hash = await bcrypt.hash(UpdateChannelDto.password, saltOrRounds);
+    UpdateChannelDto.password = hash;
     return await this.chatRepository.updateChannel(
       channel.id,
       UpdateChannelDto,
