@@ -118,58 +118,6 @@ export class ChatRepository {
         }
       }
     })
-    // const data = this.prismaService.users.findUnique({
-    //   where: {
-    //     id: userId
-    //   },
-    //   include: {
-    //     Memberships: {
-    //       select: {
-    //         id: false,
-    //         channelId: true,
-    //         userId: true,
-    //         owner: true,
-    //         administrator: true,
-    //         banned: true,
-    //         muted: true,
-    //         channel: {
-    //           select: {
-    //             id: true,
-    //             type: true,
-    //             name: true,
-    //             password: false,
-    //             protected: true,
-    //             user2user: true,
-    //             Memberships: {
-    //               include: {
-    //                 user: {
-    //                   select: {
-    //                     id: true,
-    //                     nickname: true,
-    //                     avatar: true,
-    //                     intra_login: true,
-    //                     status: true
-    //                   }
-    //                 }
-    //               },
-    //               where: {
-    //                 NOT: {
-    //                   userId: userId
-    //                 }
-    //               },
-    //               orderBy: {
-    //                 id: 'asc'
-    //               }
-    //             }
-    //           }
-    //         }
-    //       },
-    //       orderBy: {
-    //         channelId: 'asc'
-    //       }
-    //     }
-    //   }
-    // })
     return memberships;
   }
 

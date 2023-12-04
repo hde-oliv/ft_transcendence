@@ -163,19 +163,6 @@ export default function Chat(props: any) {
       setMyChannels([]);
     }
   }
-  async function onSyncChannel(payload: { channelId: number }) {
-    try {
-      const channelData = await fetchSingleChannel(payload.channelId);
-      updateSingleCard(channelData);
-    } catch (e) {
-      if (e instanceof ZodError) {
-        console.warn(`Expected return of fetchSingleChannel was not met`);
-      } else {
-        console.warn(`Channel with id [${payload.channelId}] could't be syncronized`);
-      }
-    }
-  }
-
   const updateSingleCard = useCallback(
     (channelData: ChannelData) => {
       const temp = [...myChannels];
@@ -190,25 +177,51 @@ export default function Chat(props: any) {
     }
     , [myChannels])
 
-  useEffect(() => {
+  const onSyncChannel = useCallback(async (payload: { channelId: number }) => {
+    try {
+      const channelData = await fetchSingleChannel(payload.channelId);
+      updateSingleCard(channelData);
+    } catch (e) {
+      if (e instanceof ZodError) {
+        console.warn(`Expected return of fetchSingleChannel was not met`);
+      } else {
+        console.warn(`Channel with id [${payload.channelId}] could't be syncronized`);
+      }
+    }
+  }, [updateSingleCard])
+  const onLeaveChannel = useCallback((payload: { channelId: number }) => {
+    const tmp = myChannels.filter(e => e.channelId !== payload.channelId);
+    setMyChannels([...tmp]);
+  }, [myChannels]);
 
+
+
+  useEffect(() => {
     fetchMyChannels()
       .then((e) => setMyChannels(e))
       .catch(() => setMyChannels([]));
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
-
     return () => {
       socket.off("connect", onConnect);
       socket.off("disconnect", onDisconnect);
     };
   }, [socket]);
+
   useEffect(() => {
     socket.on("syncChannel", onSyncChannel);
     return () => {
       socket.off("syncChannel", onSyncChannel);
     };
-  }, [socket, onSyncChannel])
+  }, [socket, onSyncChannel]);
+
+  useEffect(() => {
+    socket.on('leaveChannel', onLeaveChannel);
+    return () => {
+      socket.off('leaveChannel', onLeaveChannel)
+    };
+  }, [socket, onLeaveChannel]);
+
   useEffect(() => {
     socket.on("server_message", onServerMessage);
     return () => {

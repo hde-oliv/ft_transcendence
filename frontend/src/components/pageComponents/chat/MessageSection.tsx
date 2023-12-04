@@ -266,7 +266,7 @@ function GroupSettings(props: {
     setPswTwo("");
     setChannelType(props.channel.type);
     setChannelName(props.channel.name);
-  }, [props.channel.id]);
+  }, [props.channel.id, props.channel.type, props.channel.name]);
 
   if (props.channel.user2user) return undefined; // NOTE: Holy shit
 
@@ -715,7 +715,7 @@ export function InviteMembers(props: {
     setVisibleUsers(filteredNonMembers);
   }, [text, members, friends]);
 
-  useEffect(visibleUserCallback, [friends, text]);
+  useEffect(visibleUserCallback, [visibleUserCallback]);
 
   return (
     <Center>

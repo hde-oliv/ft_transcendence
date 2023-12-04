@@ -167,7 +167,7 @@ function AddFriendModal(props: {
     }
   }, [text, allUsers, props.friendList]);
 
-  useEffect(visibleUserCallback, [allUsers]);
+  useEffect(visibleUserCallback, [visibleUserCallback]);
   useEffect(() => {
     if (props.isOpen) {
       fetchUsers()

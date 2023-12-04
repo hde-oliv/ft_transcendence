@@ -19,11 +19,10 @@ export class WebsocketService {
   emitToUser(userId: string, event: string, data: { [key: string]: any }) {
     this.clients.filter(e => e.user.intra_login === userId).forEach(client => { client.socket.emit(event, data) })
   }
-  removeUserFromRoom(userId: string, channelId: number) {
+  removeUserFromRoom(userId: string, channelId: string) {
     const socs = this.userSockets(userId);
-    const roomName = channelId.toString();
     socs.forEach(soc => {
-      soc.leave(roomName);
+      soc.leave(channelId);
     });
   }
 }
