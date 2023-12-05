@@ -5,13 +5,15 @@ import { ReturnUserDto, returnUserSchema } from 'src/users/dto/return-user-dto';
 import { ChatService } from 'src/chat/chat.service';
 import { TokenClaims } from 'src/auth/auth.model';
 import { v4 as uuidv4 } from 'uuid';
+import { WebsocketService } from 'src/chat/websocket.service';
 
 @Injectable()
 export class FriendService {
   constructor(
     private friendRepository: FriendRepository,
     private chatService: ChatService,
-  ) {}
+    private socketService: WebsocketService
+  ) { }
   async getAllFriendships(userId: string) {
     const friendships = await this.friendRepository.getAllFriendships(userId);
     const complete: Array<ReturnUserDto> = [];
@@ -45,7 +47,7 @@ export class FriendService {
       another_user = new_friendship.fOne;
     }
 
-    await this.chatService.createChannel(token, {
+    const newChannel = await this.chatService.createChannel(token, {
       type: 'private',
       name: String(uuidv4()),
       password: '',
@@ -53,5 +55,6 @@ export class FriendService {
       user2user: true,
       members: [another_user],
     });
+    this.socketService.emitToUser(another_user, 'addedAsFriend', { name: token.nickname })
   }
 }

@@ -189,8 +189,11 @@ export default function Chat(props: any) {
       }
     }
   }, [updateSingleCard])
+
   const onLeaveChannel = useCallback((payload: { channelId: number }) => {
     const tmp = myChannels.filter(e => e.channelId !== payload.channelId);
+    const index = myChannels.findIndex(e => e.channelId === payload.channelId);
+    setActiveChannel((prev) => prev - 1);
     setMyChannels([...tmp]);
   }, [myChannels]);
 

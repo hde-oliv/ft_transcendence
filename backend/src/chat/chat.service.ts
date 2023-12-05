@@ -22,6 +22,7 @@ import { SocketGateway } from './chat.gateway';
 import { WebsocketService } from './websocket.service';
 import * as bcrypt from 'bcrypt';
 import { CreateCatDto } from '../cats/dto/create-cat.dto';
+import e from 'express';
 
 // TODO: try except blocks
 // TODO: How banned will work on frontend?
@@ -228,8 +229,10 @@ export class ChatService {
 
     this.checkOwner(token.intra_login, memberships);
 
-    this.socketService.emitToUser(createMembershipDto.userId, 'syncChannel', { channelId: channel.id });
-    return await this.chatRepository.createMembership(createMembershipDto);
+    const newMembership = await this.chatRepository.createMembership(createMembershipDto);
+    this.socketService.emitToUser(newMembership.userId, 'syncChannel', { channelId: channel.id });
+    this.socketService.addUserToRoom(newMembership.userId, channel.id.toString())
+    return newMembership;
   }
 
   // NOTE: Administrator can only kick/ban/mute
@@ -275,56 +278,15 @@ export class ChatService {
     const updatedMembership = await this.chatRepository.updateMembershipById(targetMembership.id, { banned: banned }) //TODO this action should also remove the user from the channel room
     if (updatedMembership.banned) {
       this.socketService.emitToUser(userId, 'leaveChannel', { channelId: channelId });
-      this.socketService.emitToUser(targetMembership.userId, 'banned', { name: channel.name });
+      this.socketService.emitToUser(targetMembership.userId, 'banned', { name: channel.name, banned: true });
       this.socketService.removeUserFromRoom(userId, channelId.toString());
+    } else {
+      this.socketService.emitToUser(userId, 'syncChannel', { channelId: channelId });
+      this.socketService.emitToUser(targetMembership.userId, 'banned', { name: channel.name, banned: false });
+      this.socketService.addUserToRoom(userId, channelId.toString());
+
     }
     return updatedMembership;
-  }
-
-
-
-  // throws
-  async banUser(token: TokenClaims, channelId: number, userId: string) {
-    const channel = await this.chatRepository.getChannel(channelId);
-
-    const memberships = await this.chatRepository.getMembershipsbyChannel(
-      channel.id,
-    );
-
-    this.checkSelf(token.intra_login, userId);
-    this.checkAdmin(token.intra_login, memberships);
-
-    // If throws, the another user is not a Owner or Admin (ALL Owners are Admins)
-    try {
-      this.checkAdmin(userId, memberships);
-      throw new ForbiddenException('Cannot kick an Admin/Owner.');
-    } catch (e) {
-      return this.chatRepository.updateMembership(userId, channel.id, {
-        banned: true,
-      });
-    }
-  }
-
-  // throws
-  async unbanUser(token: TokenClaims, channelId: number, userId: string) {
-    const channel = await this.chatRepository.getChannel(channelId);
-
-    const memberships = await this.chatRepository.getMembershipsbyChannel(
-      channel.id,
-    );
-
-    this.checkSelf(token.intra_login, userId);
-    await this.checkAdmin(token.intra_login, memberships);
-
-    // If throws, the another user is not a Owner or Admin (ALL Owners are Admins)
-    try {
-      await this.checkAdmin(userId, memberships);
-      throw new ForbiddenException('Cannot kick an Admin/Owner.');
-    } catch (e) {
-      return await this.chatRepository.updateMembership(userId, channel.id, {
-        banned: false,
-      });
-    }
   }
 
   // throws
@@ -363,7 +325,7 @@ export class ChatService {
     if (targetMembership.owner)
       throw new ForbiddenException('You cannot mute the channel owner');
     const updatedMembership = await this.chatRepository.updateMembership(userId, channel.id, {
-      muted: true,
+      muted: false,
     });
     this.socketService.emitToUser(userId, 'syncChannel', { channelId: channelId });
     return updatedMembership

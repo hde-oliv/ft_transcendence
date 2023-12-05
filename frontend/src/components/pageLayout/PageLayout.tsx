@@ -1,6 +1,6 @@
 'use client'
 import { createContext, ReactElement, useCallback, useEffect, useState } from 'react';
-import { Grid, GridItem, useToast } from '@chakra-ui/react';
+import { Grid, GridItem, useToast, UseToastOptions } from '@chakra-ui/react';
 import React from 'react';
 
 import { ChakraProvider } from "@chakra-ui/react";
@@ -35,21 +35,32 @@ export default function PageLayout({ children }: { children: ReactElement }) {
   };
   const channelKick = useCallback((data: { name: string }) => {
     toast({
-      title: `You were kicked from "${data.name}" channel.`,
-      description: "This is sad",
-      status: 'warning',
+      title: `Kiked`,
+      description: `You were kicked from "${data.name}" channel.`,
+      status: 'info',
       duration: 3000,
       isClosable: true,
     })
   }, [toast])
-  const channelBan = useCallback((data: { name: string }) => {
+  const friendAdd = useCallback((data: { name: string }) => {
     toast({
-      title: `You were banned from "${data.name}" channel.`,
-      description: "This is sad",
-      status: 'warning',
+      title: `New Friend`,
+      description: `You were added as a friend by "${data.name}"`,
+      status: 'info',
       duration: 3000,
       isClosable: true,
     })
+  }, [toast])
+  const channelBan = useCallback((data: { name: string, banned: boolean }) => {
+    const { banned } = data
+    const toastConfig: UseToastOptions = {
+      title: banned ? `Banned` : `Unbanned`,
+      description: `You were ${banned ? 'banned' : 'unbanned'} from "${data.name}" channel.`,
+      status: banned ? 'warning' : 'success',
+      duration: 3000,
+      isClosable: true,
+    }
+    toast(toastConfig)
   }, [toast])
   useEffect(() => {
     if (me.intra_login === '')
@@ -57,14 +68,16 @@ export default function PageLayout({ children }: { children: ReactElement }) {
   }, [me]);
   useEffect(() => {
     applicationSocket.connect();
-    applicationSocket.on('kiked', channelKick);
+    applicationSocket.on('kicked', channelKick);
     applicationSocket.on('banned', channelBan);
+    applicationSocket.on('addedAsFriend', friendAdd);
     return (() => {
       applicationSocket.disconnect();
-      applicationSocket.off('kiked', channelKick);
+      applicationSocket.off('kicked', channelKick);
       applicationSocket.off('banned', channelBan);
+      applicationSocket.off('addedAsFriend', friendAdd);
     })
-  }, [channelKick, channelBan]);
+  }, [channelKick, channelBan, friendAdd]);
   return (
     <ChakraProvider theme={theme}>
       <SocketContext.Provider value={applicationSocket}>

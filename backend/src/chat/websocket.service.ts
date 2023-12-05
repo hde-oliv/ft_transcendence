@@ -25,6 +25,10 @@ export class WebsocketService {
       soc.leave(channelId);
     });
   }
+  addUserToRoom(userId: string, channelId: string) {
+    const socs = this.userSockets(userId);
+    socs.forEach(soc => soc.join(channelId));
+  }
 }
 
 interface ClientSocket {

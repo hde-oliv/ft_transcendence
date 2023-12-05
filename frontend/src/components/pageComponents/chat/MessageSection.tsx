@@ -667,9 +667,8 @@ export function InviteMembers(props: {
 }) {
   const { isOpen, onClose, onOpen } = useDisclosure();
   const [text, setText] = useState("");
-  const [me, setMe] = useContext(MeStateContext);
+  const [me] = useContext(MeStateContext);
 
-  const members = membersFromChannel(props.channel);
   const [friends, setFriends] = useState<Array<ReturnUserSchema>>([]);
 
   const [visibleUsers, setVisibleUsers] = useState<
@@ -684,9 +683,10 @@ export function InviteMembers(props: {
         )
         .catch((e) => console.log(e));
     }
-  }, [isOpen, me, props]);
+  }, [isOpen, me, props.channel.id]);
 
   const visibleUserCallback = useCallback(() => {
+    const members = membersFromChannel(props.channel);
     const notMemberFriends = friends.filter((e) => {
       return !members.some((f) => f.intra_login === e.intra_login);
     });
@@ -713,7 +713,7 @@ export function InviteMembers(props: {
       filteredNonMembers = notMemberFriends;
     }
     setVisibleUsers(filteredNonMembers);
-  }, [text, members, friends]);
+  }, [text, friends, props.channel]);
 
   useEffect(visibleUserCallback, [visibleUserCallback]);
 
