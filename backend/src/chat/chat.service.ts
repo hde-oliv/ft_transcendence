@@ -81,7 +81,7 @@ export class ChatService {
         await this.chatRepository.createMembership(user);
       }
     }
-
+    this.socketService.emitToUser(token.intra_login, 'syncChannel', { channelId: chat.id });
     return chat;
   }
 
