@@ -7,7 +7,7 @@ import { UpdateUserDto } from './dto/update-user-dto';
 
 @Injectable()
 export class UsersRepository {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(private readonly prismaService: PrismaService) { }
 
   async getUserById(id: string): Promise<UserEntity | null> {
     return this.prismaService.users.findUnique({ where: { id: id } });
@@ -51,5 +51,16 @@ export class UsersRepository {
         otp_verified: user.otp_verified,
       },
     });
+  }
+
+  async updateUserOnline(userId: string, online: boolean) {
+    return this.prismaService.users.update({
+      where: {
+        id: userId
+      },
+      data: {
+        online: online
+      }
+    })
   }
 }

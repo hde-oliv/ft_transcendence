@@ -3,6 +3,7 @@ import { UsersRepository } from './users.repository';
 import { CreateUserDto } from './dto/create-user-dto';
 import { UpdateOTPUserDto } from './dto/update-otp-user-dto';
 import { returnUserSchema } from './dto/return-user-dto';
+import { TokenClaims } from 'src/auth/auth.model';
 
 @Injectable()
 export class UsersService {
@@ -28,5 +29,9 @@ export class UsersService {
 
   create(user: CreateUserDto) {
     return this.userRepository.createUser(user);
+  }
+
+  async updateUserOnline(user: TokenClaims, online: boolean) {
+    return this.userRepository.updateUserOnline(user.intra_login, online);
   }
 }

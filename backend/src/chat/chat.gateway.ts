@@ -16,6 +16,7 @@ import { map, without } from 'lodash';
 import { SendMessageDto } from './dto/send-message-dto';
 import { ChatFilter } from './chat.filter';
 import { WebsocketService } from './websocket.service';
+import { UsersService } from 'src/users/users.service';
 
 // NOTE: Chat only works in the /chat page
 // TODO: Create a global websocket to handle user status later
@@ -33,7 +34,8 @@ export class SocketGateway
 
   constructor(
     private chatService: ChatService,
-    private socketService: WebsocketService
+    private socketService: WebsocketService,
+    private userServive: UsersService
   ) { }
 
   private readonly logger = new Logger(SocketGateway.name);
@@ -57,11 +59,13 @@ export class SocketGateway
     this.clients = newClients;
     this.socketService.clients = newClients;
     const rooms = socket.rooms;
+    const updater = this.userServive.updateUserOnline(user, false);
     rooms.forEach((room) => {
       socket.leave(room);
     });
     this.logger.log(`Client Disconnected: ${socket.id}`);
     this.logger.log(`All Clients: ${this.getClientList()} `);
+    await updater;
   }
 
   @UseFilters(new ChatFilter())
@@ -76,9 +80,11 @@ export class SocketGateway
         return e.channelId.toString();
       },
     );
+    const updater = this.userServive.updateUserOnline(user, true);
     for (let channel of channels) {
       socket.join(channel);
     }
+    await updater;
   }
 
   @UseFilters(new ChatFilter())
