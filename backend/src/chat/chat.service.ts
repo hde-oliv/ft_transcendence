@@ -63,6 +63,8 @@ export class ChatService {
 
       await this.chatRepository.createMembership(first);
       await this.chatRepository.createMembership(second);
+      this.socketService.addUserToRoom(first.userId, chat.id.toString());
+      this.socketService.addUserToRoom(second.userId, chat.id.toString());
     } else {
       const owner: CreateMembershipDto = {
         channelId: chat.id,
@@ -81,7 +83,7 @@ export class ChatService {
         await this.chatRepository.createMembership(user);
       }
     }
-    this.socketService.emitToUser(token.intra_login, 'syncChannel', { channelId: chat.id });
+    this.socketService.emitToRoom(chat.id.toString(), 'syncChannel', { channelId: chat.id });
     return chat;
   }
 
@@ -137,10 +139,12 @@ export class ChatService {
     const saltOrRounds = 0;
     const hash = await bcrypt.hash(UpdateChannelDto.password, saltOrRounds);
     UpdateChannelDto.password = hash;
-    return await this.chatRepository.updateChannel(
+    const updatedChannel = await this.chatRepository.updateChannel(
       channel.id,
       UpdateChannelDto,
     );
+    this.socketService.emitToRoom(updatedChannel.id.toString(), 'syncChannel', { channelId: updatedChannel.id })
+    return updatedChannel;
   }
 
   // NOTE: Only the owner can delete channel
@@ -156,8 +160,9 @@ export class ChatService {
 
     // Not checking for throws 'cause I already got the channel
     await this.chatRepository.deleteMembershipsbyChannel(channel.id);
-
-    return await this.chatRepository.deleteChannel(channel.id);
+    const deletedChannel = await this.chatRepository.deleteChannel(channel.id);
+    this.socketService.server.sockets.socketsLeave(channel.id.toString()); //TODO verify if working properly
+    return deletedChannel;
   }
 
   // throws
@@ -185,8 +190,9 @@ export class ChatService {
       channelId: channel.id,
       userId: token.intra_login,
     };
-
-    return await this.chatRepository.createMembership(newMember);
+    const membership = await this.chatRepository.createMembership(newMember);
+    this.socketService.addUserToRoom(membership.userId, membership.channelId.toString());
+    this.socketService.emitToRoom(membership.channelId.toString(), 'syncChannel', { channelId: membership.channelId });
   }
 
   // throws
@@ -198,11 +204,13 @@ export class ChatService {
     );
 
     await this.checkMembership(token.intra_login, memberships);
-
-    return await this.chatRepository.deleteMembership(
+    const deletedMembership = await this.chatRepository.deleteMembership(
       token.intra_login,
       channel.id,
     );
+    this.socketService.removeUserFromRoom(token.intra_login, channelId.toString());
+    this.socketService.emitToRoom(channelId.toString(), 'syncChannel', { channelId: channelId });
+    return deletedMembership;
   }
   private getIssuerTargetMemberships(memberships: Memberships[], token: TokenClaims, userId: string, channel: Channels) {
     if (userId === token.intra_login)
@@ -230,8 +238,8 @@ export class ChatService {
     this.checkOwner(token.intra_login, memberships);
 
     const newMembership = await this.chatRepository.createMembership(createMembershipDto);
-    this.socketService.emitToUser(newMembership.userId, 'syncChannel', { channelId: channel.id });
     this.socketService.addUserToRoom(newMembership.userId, channel.id.toString())
+    this.socketService.emitToRoom(newMembership.channelId.toString(), 'syncChannel', { channelId: channel.id });
     return newMembership;
   }
 
@@ -257,6 +265,7 @@ export class ChatService {
     await this.chatRepository.deleteMembership(userId, channel.id);
     this.socketService.emitToUser(targetMembership.userId, 'leaveChannel', { channelId: channelId });
     this.socketService.emitToUser(targetMembership.userId, 'kicked', { name: channel.name });
+    this.socketService.emitToRoom(channelId.toString(), 'syncChannel', { channelId: channelId });
     this.socketService.removeUserFromRoom(targetMembership.userId, channelId.toString());
     return {}
   }
@@ -281,11 +290,10 @@ export class ChatService {
       this.socketService.emitToUser(targetMembership.userId, 'banned', { name: channel.name, banned: true });
       this.socketService.removeUserFromRoom(userId, channelId.toString());
     } else {
-      this.socketService.emitToUser(userId, 'syncChannel', { channelId: channelId });
       this.socketService.emitToUser(targetMembership.userId, 'banned', { name: channel.name, banned: false });
       this.socketService.addUserToRoom(userId, channelId.toString());
-
     }
+    this.socketService.emitToRoom(channelId.toString(), 'syncChannel', { channelId: channelId });
     return updatedMembership;
   }
 
@@ -306,7 +314,7 @@ export class ChatService {
     const updatedMembership = await this.chatRepository.updateMembership(userId, channel.id, {
       muted: true,
     });
-    this.socketService.emitToUser(userId, 'syncChannel', { channelId: channelId });
+    this.socketService.emitToRoom(channelId.toString(), 'syncChannel', { channelId: channelId });
     return updatedMembership
   }
 
@@ -327,7 +335,7 @@ export class ChatService {
     const updatedMembership = await this.chatRepository.updateMembership(userId, channel.id, {
       muted: false,
     });
-    this.socketService.emitToUser(userId, 'syncChannel', { channelId: channelId });
+    this.socketService.emitToRoom(channelId.toString(), 'syncChannel', { channelId: channelId });
     return updatedMembership
   }
 
@@ -340,7 +348,7 @@ export class ChatService {
     if (!issuerMembership.owner)
       throw new ForbiddenException(`Only channel owner can promote and demote admins`);
     const updatedMembership = await this.chatRepository.updateMembershipById(targetMembership.id, { administrator: isAdmin });
-    this.socketService.emitToUser(targetMembership.userId, 'SyncChannel', { channelId: channelId });
+    this.socketService.emitToRoom(channelId.toString(), 'syncChannel', { channelId: channelId });
     return updatedMembership
   }
 

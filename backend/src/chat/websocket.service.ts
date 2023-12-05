@@ -29,6 +29,9 @@ export class WebsocketService {
     const socs = this.userSockets(userId);
     socs.forEach(soc => soc.join(channelId));
   }
+  emitToRoom(room: string, event: string, data: { [key: string]: any }) {
+    this.server.to(room).emit(event, data);
+  }
 }
 
 interface ClientSocket {
