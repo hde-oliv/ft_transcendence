@@ -86,7 +86,13 @@ export function MessageCard(props: MessageCardProps): JSX.Element {
   );
 }
 
-export const ChatContext = createContext<{ updateChannels: () => void }>({ updateChannels: () => { } });
+export const ChatContext = createContext<{
+  updateChannels: () => void,
+  syncChannel: (payload: { channelId: number }) => Promise<void>
+}>({
+  updateChannels: () => { },
+  syncChannel: async (payload: { channelId: number }) => { }
+});
 
 export default function Chat(props: any) {
   const socket = useContext(SocketContext);
@@ -167,14 +173,17 @@ export default function Chat(props: any) {
   const updateSingleCard = useCallback(
     (channelData: ChannelData) => {
       const temp = _.cloneDeep(myChannels);
+      console.log('new data', channelData.channel.Memberships.filter(e => !e.administrator && !e.owner && !e.banned).map(e => e.userId).join(','));
       const targetI = temp.findIndex(ch => ch.channelId === channelData.channelId)
       if (targetI !== -1) {
+        console.log('old data', myChannels[targetI].channel.Memberships.filter(e => !e.administrator && !e.owner && !e.banned).map(e => e.userId).join(','));
         temp[targetI] = _.cloneDeep(channelData);
+        console.log('corrected old data', temp[targetI].channel.Memberships.filter(e => !e.administrator && !e.owner && !e.banned).map(e => e.userId).join(','));
       } else {
         temp.push(channelData)
         temp.sort((a, b) => a.channelId - b.channelId);
-        setMyChannels(temp);
       }
+      setMyChannels(temp);
     }
     , [myChannels])
 
@@ -230,7 +239,7 @@ export default function Chat(props: any) {
     };
   }, [socket, onServerMessage]);
   return (
-    <ChatContext.Provider value={{ updateChannels: updateChannelCards }}>
+    <ChatContext.Provider value={{ updateChannels: updateChannelCards, syncChannel: onSyncChannel }}>
       <Flex h="100%" alignItems={"stretch"}>
         <Flex
           flexDir={"column"}

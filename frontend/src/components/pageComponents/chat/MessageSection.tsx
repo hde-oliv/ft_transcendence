@@ -109,7 +109,7 @@ function MemberRow(props: {
   const { membership, channel, owner, admin } = props;
   const user = membership.user;
   const [me] = useContext(MeStateContext);
-  const { updateChannels: updateChats } = useContext(ChatContext);
+  const { syncChannel } = useContext(ChatContext);
 
   const color = user.status === "online" ? "green.300" : "gray.300";
   const Buttons = [];
@@ -161,11 +161,11 @@ function MemberRow(props: {
                 onClick={() => {
                   if (membership.banned) {
                     unbanFromChannel(props.channel.id, props.membership.userId).then(e => {
-                      updateChats();
+                      syncChannel({ channelId: props.channel.id });
                     }).catch(e => console.error(e))
                   } else {
                     banFromChannel(props.channel.id, props.membership.userId).then(e => {
-                      updateChats();
+                      syncChannel({ channelId: props.channel.id });
                     }).catch(e => console.error(e))
                   }
                 }}
@@ -182,7 +182,7 @@ function MemberRow(props: {
                 aria-label="kick user"
                 onClick={() => {
                   kickFromChannel(props.channel.id, props.membership.userId).then(e => {
-                    updateChats();
+                    syncChannel({ channelId: props.channel.id });
                   }).catch(e => console.error(e))
                 }}
               >
@@ -201,11 +201,11 @@ function MemberRow(props: {
                 onClick={() => {
                   if (membership.muted) {
                     unmuteInChannel(props.channel.id, props.membership.userId).then(e => {
-                      updateChats();
+                      syncChannel({ channelId: props.channel.id });
                     }).catch(e => console.error(e))
                   } else {
                     muteInChannel(props.channel.id, props.membership.userId).then(e => {
-                      updateChats();
+                      syncChannel({ channelId: props.channel.id });
                     }).catch(e => console.error(e))
                   }
                 }}
@@ -224,11 +224,11 @@ function MemberRow(props: {
                   onClick={() => {
                     if (membership.administrator) {
                       demoteChannelAdmin(props.channel.id, props.membership.userId).then(e => {
-                        updateChats();
+                        syncChannel({ channelId: props.channel.id });
                       }).catch(e => console.error(e))
                     } else {
                       promoteChannelAdmin(props.channel.id, props.membership.userId).then(e => {
-                        updateChats();
+                        syncChannel({ channelId: props.channel.id });
                       }).catch(e => console.error(e))
                     }
                   }}

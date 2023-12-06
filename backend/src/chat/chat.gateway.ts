@@ -91,9 +91,7 @@ export class SocketGateway
             return e.channelId.toString();
           },
         );
-        this.logger.warn(`channels:${channels}`)
         const updater = this.userServive.updateUserOnline(user, true);
-        this.logger.warn(`aked for update`);
         for (let channel of channels) {
           socket.join(channel);
         }
