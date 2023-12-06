@@ -423,7 +423,7 @@ export class ChatService {
       : '';
 
     if (token === '') {
-      throw new ForbiddenException('Invalid credentials.');
+      throw new WsException('Invalid credentials.');
     }
 
     let payload;
@@ -431,10 +431,10 @@ export class ChatService {
     try {
       payload = await this.authService.decodeToken(token);
       if (!payload) {
-        throw new ForbiddenException('Invalid credentials.');
+        throw new WsException('Invalid credentials.');
       }
     } catch (e) {
-      throw new ForbiddenException('Invalid credentials.');
+      throw new WsException('Invalid credentials.');
     }
 
     let user: Users;
@@ -443,7 +443,7 @@ export class ChatService {
         intra_login: payload.intra_login,
       });
     } catch (e) {
-      throw new NotFoundException('User not found.');
+      throw new WsException('User not found.');
     }
 
     return user;

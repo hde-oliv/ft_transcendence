@@ -7,6 +7,7 @@ import {
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
+  WsException,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { ChatService } from './chat.service';
@@ -50,41 +51,66 @@ export class SocketGateway
 
   @UseFilters(new ChatFilter())
   async handleDisconnect(socket: Socket) {
-    const user = await this.chatService.getUserFromSocket(socket);
+    try {
+      const user = await this.chatService.getUserFromSocket(socket);
+      try {
+        const newClients = this.clients.filter(
+          (cl: ClientSocket) => cl.socket.id !== socket.id,
+        );
 
-    const newClients = this.clients.filter(
-      (cl: ClientSocket) => cl.socket.id !== socket.id,
-    );
+        this.clients = newClients;
+        this.socketService.clients = newClients;
+        const rooms = socket.rooms;
+        const updater = this.userServive.updateUserOnline(user, false);
+        rooms.forEach((room) => {
+          socket.leave(room);
+        });
+        this.logger.log(`Client Disconnected: ${socket.id}`);
+        this.logger.log(`All Clients: ${this.getClientList()} `);
+        await updater;
+      } catch (e) {
+        this.logger.warn(`Could't perform operations on sokcet ${socket.id}`);
+      }
+    } catch (e) {
+      this.logger.warn(`Could't get user data from socket ${socket.id} - disconnected`);
+    }
 
-    this.clients = newClients;
-    this.socketService.clients = newClients;
-    const rooms = socket.rooms;
-    const updater = this.userServive.updateUserOnline(user, false);
-    rooms.forEach((room) => {
-      socket.leave(room);
-    });
-    this.logger.log(`Client Disconnected: ${socket.id}`);
-    this.logger.log(`All Clients: ${this.getClientList()} `);
-    await updater;
   }
 
   @UseFilters(new ChatFilter())
   async handleConnection(socket: Socket) { //set user as online!
-    const user = await this.chatService.getUserFromSocket(socket);
-    const clientSocket = { user, socket };
-    this.socketService.clients = [...this.clients, clientSocket];
-    this.clients = [...this.clients, clientSocket];
-    this.logger.log(`Client Connected: ${socket.id}`);
-    const channels = (await this.chatService.getChannelsByUser(user)).map(
-      (e) => {
-        return e.channelId.toString();
-      },
-    );
-    const updater = this.userServive.updateUserOnline(user, true);
-    for (let channel of channels) {
-      socket.join(channel);
+    try {
+      const user = await this.chatService.getUserFromSocket(socket);
+      try {
+        const clientSocket = { user, socket };
+        this.socketService.clients = [...this.clients, clientSocket];
+        this.clients = [...this.clients, clientSocket];
+        this.logger.log(`Client Connected: ${socket.id}`);
+        const channels = (await this.chatService.getChannelsByUser(user)).map(
+          (e) => {
+            return e.channelId.toString();
+          },
+        );
+        this.logger.warn(`channels:${channels}`)
+        const updater = this.userServive.updateUserOnline(user, true);
+        this.logger.warn(`aked for update`);
+        for (let channel of channels) {
+          socket.join(channel);
+        }
+        await updater;
+        this.logger.warn(updater);
+      } catch (e) {
+        socket.rooms.forEach(e => {
+          socket.leave(e);
+        })
+        socket.disconnect();
+        if (e instanceof WsException)
+          this.logger.warn(e.message)
+      }
+    } catch (e) {
+      this.logger.warn(`Could't get user data from socket ${socket.id} - will be disconnected`)
+      socket.disconnect();
     }
-    await updater;
   }
 
   @UseFilters(new ChatFilter())
