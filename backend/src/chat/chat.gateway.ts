@@ -60,13 +60,13 @@ export class SocketGateway
 
         this.clients = newClients;
         this.socketService.clients = newClients;
-        const rooms = socket.rooms;
         const updater = this.userServive.updateUserOnline(user, false);
-        rooms.forEach((room) => {
-          socket.leave(room);
-        });
+        const rooms = await this.chatService.getRoomsByUser(user);
+        socket.to(rooms).emit('updateUser', {
+          intra_login: user.intra_login,
+          status: 'offline'
+        })
         this.logger.log(`Client Disconnected: ${socket.id}`);
-        this.logger.log(`All Clients: ${this.getClientList()} `);
         await updater;
       } catch (e) {
         this.logger.warn(`Could't perform operations on sokcet ${socket.id}`);
@@ -86,17 +86,15 @@ export class SocketGateway
         this.socketService.clients = [...this.clients, clientSocket];
         this.clients = [...this.clients, clientSocket];
         this.logger.log(`Client Connected: ${socket.id}`);
-        const channels = (await this.chatService.getChannelsByUser(user)).map(
-          (e) => {
-            return e.channelId.toString();
-          },
-        );
-        const updater = this.userServive.updateUserOnline(user, true);
-        for (let channel of channels) {
-          socket.join(channel);
-        }
-        await updater;
-        this.logger.warn(updater);
+        const channels = await this.chatService.getRoomsByUser(user);
+        const allPromises: Array<Promise<any | void> | void> = []
+        allPromises.push(this.userServive.updateUserOnline(user, true));
+        socket.to(channels).emit('updateUser', {
+          intra_login: user.intra_login,
+          status: 'online'
+        })
+        allPromises.push(socket.join(channels));
+        await Promise.allSettled(allPromises);
       } catch (e) {
         socket.rooms.forEach(e => {
           socket.leave(e);

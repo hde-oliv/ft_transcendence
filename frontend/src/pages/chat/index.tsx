@@ -41,8 +41,10 @@ export type userSchema = {
   nickname: string;
   avatar: string;
   intra_login: string;
-  status: string;
+  status: 'online' | 'offline';
 };
+
+type updateUserSchema = Partial<userSchema> & { intra_login: string };
 
 export type ChannelComponentProps = ChannelData & {
   onClick?: () => void;
@@ -173,12 +175,9 @@ export default function Chat(props: any) {
   const updateSingleCard = useCallback(
     (channelData: ChannelData) => {
       const temp = _.cloneDeep(myChannels);
-      console.log('new data', channelData.channel.Memberships.filter(e => !e.administrator && !e.owner && !e.banned).map(e => e.userId).join(','));
       const targetI = temp.findIndex(ch => ch.channelId === channelData.channelId)
       if (targetI !== -1) {
-        console.log('old data', myChannels[targetI].channel.Memberships.filter(e => !e.administrator && !e.owner && !e.banned).map(e => e.userId).join(','));
         temp[targetI] = _.cloneDeep(channelData);
-        console.log('corrected old data', temp[targetI].channel.Memberships.filter(e => !e.administrator && !e.owner && !e.banned).map(e => e.userId).join(','));
       } else {
         temp.push(channelData)
         temp.sort((a, b) => a.channelId - b.channelId);
@@ -206,6 +205,27 @@ export default function Chat(props: any) {
     setMyChannels([...tmp]);
   }, [myChannels]);
 
+  const updateUser = useCallback((payload: updateUserSchema) => {
+    const currentChannels = _.cloneDeep(myChannels);
+    currentChannels.forEach(channelCard => {
+      for (let i = 0; i < channelCard.channel.Memberships.length; i++) {
+        if (channelCard.channel.Memberships[i].userId === payload.intra_login) {
+          const localMembership = channelCard.channel.Memberships[i].user;
+          if (payload.avatar) {
+            localMembership.avatar = payload.avatar;
+          }
+          if (payload.nickname) {
+            localMembership.nickname = payload.nickname;
+          }
+          if (payload.status) {
+            localMembership.status = payload.status;
+          }
+        }
+      }
+    })
+    setMyChannels(currentChannels)
+  }, [myChannels]);
+
   useEffect(() => {
     fetchMyChannels()
       .then((e) => setMyChannels(e))
@@ -219,10 +239,12 @@ export default function Chat(props: any) {
   }, [socket]);
 
   useEffect(() => {
+    socket.on('updateUser', updateUser)
+    return () => { socket.off('updateUser', updateUser); }
+  }, [socket, updateUser])
+  useEffect(() => {
     socket.on("syncChannel", onSyncChannel);
-    return () => {
-      socket.off("syncChannel", onSyncChannel);
-    };
+    return () => { socket.off("syncChannel", onSyncChannel); };
   }, [socket, onSyncChannel]);
 
   useEffect(() => {

@@ -417,6 +417,10 @@ export class ChatService {
     }
   }
 
+  async getRoomsByUser(user: TokenClaims) {
+    const channels = await this.getChannelsByUser(user);
+    return channels.map(e => e.channelId.toString());
+  }
   async getUserFromSocket(socket: Socket) {
     const token = socket.handshake.headers.authorization
       ? socket.handshake.headers.authorization
