@@ -1,11 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { WebSocketServer } from '@nestjs/websockets';
 import { Users } from '@prisma/client';
+import { privateDecrypt } from 'crypto';
 import { Server, Socket } from 'socket.io';
 
 @Injectable()
 export class WebsocketService {
+  constructor() { }
   @WebSocketServer() server: Server;
+  private readonly logger = new Logger(WebsocketService.name);
 
   clients: ClientSocket[] = [];
   /**
@@ -31,6 +34,8 @@ export class WebsocketService {
   }
   emitToRoom(room: string, event: string, data: { [key: string]: any }) {
     this.server.to(room).emit(event, data);
+    // const result = this.server.to(room).emit(event, data);
+    // this.logger.log(`Emiting ${event} to room [${room}] result: [${result}]`);
   }
 }
 

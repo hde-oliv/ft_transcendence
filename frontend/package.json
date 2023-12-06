@@ -24,6 +24,7 @@
 		"eslint": "8.46.0",
 		"eslint-config-next": "13.4.12",
 		"framer-motion": "^10.15.0",
+		"lodash": "^4.17.21",
 		"next": "13.4.12",
 		"p5": "^1.8.0",
 		"qrcode": "^1.5.3",

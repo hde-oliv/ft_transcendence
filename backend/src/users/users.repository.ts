@@ -54,12 +54,14 @@ export class UsersRepository {
   }
 
   async updateUserOnline(userId: string, online: boolean) {
+    const status = online ? 'online' : 'offline';
     return this.prismaService.users.update({
       where: {
         id: userId
       },
       data: {
-        online: online
+        online: online,
+        status: status
       }
     })
   }

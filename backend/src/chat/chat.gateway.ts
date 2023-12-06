@@ -44,7 +44,7 @@ export class SocketGateway
 
   @UseFilters(new ChatFilter())
   async afterInit(server: Server) {
-    this.socketService.server = this.server;
+    this.socketService.server = server;
     this.logger.log('WebSocket Gateway Initialized');
   }
 
@@ -93,8 +93,6 @@ export class SocketGateway
     @MessageBody() data: { message: string; channelId: number },
     @ConnectedSocket() socket: Socket,
   ) {
-    console.log(data);
-    this.logger.warn('THIS IS A TEST FOR CHANNEL_MESSAGE');
     const user: Users = await this.chatService.getUserFromSocket(socket); //TODO: messages must be sanitized before included!
     const channel = await this.chatService.getChannel(data.channelId);
     const message = await this.chatService.registerNewMessage(
@@ -106,7 +104,6 @@ export class SocketGateway
     );
     socket.to(channel.id.toString()).emit('server_message', message);
     socket.emit('server_message', message);
-    // socket.to(channel.id.toString()).emit('last_message', message);
     return message;
   }
 

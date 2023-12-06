@@ -1,6 +1,6 @@
 import { ChannelData, fetchChannelUsers } from "@/lib/fetchers/chat";
 import { FetchChannelUsers } from "@/lib/fetchers/chat";
-import { Avatar, Box, Flex, Heading, Skeleton, Text } from "@chakra-ui/react";
+import { Avatar, AvatarBadge, Box, Flex, Heading, Skeleton, Text } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { ChannelComponentProps, userSchema } from "../../../pages/chat";
 
@@ -13,19 +13,20 @@ export function ChannelCard(
   const cardData = dataFromProps();
   function dataFromProps() {
     if (props.channel.user2user) {
+      const isOnline = props.channel.Memberships[0].user.status === 'online';
       if (props.channel.Memberships.length > 0) {
         return {
           avatar: props.channel.Memberships[0].user.avatar,
           intra_login: props.channel.Memberships[0].user.intra_login,
           nickname: props.channel.Memberships[0].user.nickname,
-          status: props.channel.Memberships[0].user.status,
+          statusColor: isOnline ? 'green' : 'gray',
         };
       } else {
         return {
           avatar: "",
           intra_login: "",
           nickname: props.channel.name,
-          status: "online",
+          statusColor: 'gray',
         };
       }
     } else {
@@ -33,7 +34,7 @@ export function ChannelCard(
         avatar: "",
         intra_login: "",
         nickname: props.channel.name,
-        status: "online",
+        statusColor: 'yellow',
       };
     }
   }
@@ -49,7 +50,9 @@ export function ChannelCard(
       maxW="20vw"
       onClick={props.onClick}
     >
-      <Avatar name={cardData.nickname} src={cardData.avatar} maxW="30%" />
+      <Avatar name={cardData.nickname} src={cardData.avatar} maxW="30%">
+        <AvatarBadge bg={cardData.statusColor} boxSize={'1em'} borderWidth={'0.1em'} />
+      </Avatar>
       <Box pr="5%" pl="5%" maxW="70%">
         <Heading
           as="h6"

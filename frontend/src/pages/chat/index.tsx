@@ -35,6 +35,7 @@ import { ReactElement, createContext, useCallback, useContext, useEffect, useSta
 import { ChannelCard } from "../../components/pageComponents/chat/ChannelCard";
 import { MessageSection } from "@/components/pageComponents/chat/MessageSection";
 import { ZodError } from "zod";
+import _ from 'lodash';
 
 export type userSchema = {
   nickname: string;
@@ -165,10 +166,10 @@ export default function Chat(props: any) {
   }
   const updateSingleCard = useCallback(
     (channelData: ChannelData) => {
-      const temp = [...myChannels];
+      const temp = _.cloneDeep(myChannels);
       const targetI = temp.findIndex(ch => ch.channelId === channelData.channelId)
       if (targetI !== -1) {
-        temp[targetI] = { ...channelData };
+        temp[targetI] = _.cloneDeep(channelData);
       } else {
         temp.push(channelData)
         temp.sort((a, b) => a.channelId - b.channelId);
@@ -192,12 +193,9 @@ export default function Chat(props: any) {
 
   const onLeaveChannel = useCallback((payload: { channelId: number }) => {
     const tmp = myChannels.filter(e => e.channelId !== payload.channelId);
-    const index = myChannels.findIndex(e => e.channelId === payload.channelId);
     setActiveChannel((prev) => prev - 1);
     setMyChannels([...tmp]);
   }, [myChannels]);
-
-
 
   useEffect(() => {
     fetchMyChannels()
