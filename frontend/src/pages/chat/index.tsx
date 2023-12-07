@@ -305,7 +305,7 @@ export default function Chat(props: any) {
             />
           </Flex>
 
-          <Collapse endingHeight="42em" startingHeight={0} in={isOpen}>
+          <Box display={isOpen ? 'block' : 'none'}>
             <Flex
               bg="pongBlue.500"
               borderRadius={5}
@@ -357,7 +357,7 @@ export default function Chat(props: any) {
                 </Button>
               </Flex>
             </Flex>
-          </Collapse>
+          </Box>
           <Stack overflow={"auto"}>
             {myChannels.map((e, i) => (
               <ChannelCard

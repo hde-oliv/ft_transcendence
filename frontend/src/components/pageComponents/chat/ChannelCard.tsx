@@ -19,7 +19,7 @@ export function ChannelCard(
           avatar: props.channel.Memberships[0].user.avatar,
           intra_login: props.channel.Memberships[0].user.intra_login,
           nickname: props.channel.Memberships[0].user.nickname,
-          statusColor: isOnline ? 'green' : 'gray',
+          statusColor: isOnline ? 'green.300' : 'gray',
         };
       } else {
         return {
