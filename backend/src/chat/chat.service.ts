@@ -14,15 +14,14 @@ import { Channels, Memberships, Users } from '@prisma/client';
 import { ChatRepository } from './chat.repository';
 import { CreateMembershipDto } from './dto/create-membership-dto';
 import { CreateChannelDto } from './dto/create-channel-dto';
-import { TokenClaims } from 'src/auth/auth.model';
+import { TokenClaims, tokenClaimsSchema } from 'src/auth/auth.model';
 import { UpdateChannelDto } from './dto/update-channel-dto';
 import { JoinChannelDto } from './dto/join-channel-dto';
 import { WsException } from '@nestjs/websockets';
 import { SocketGateway } from './chat.gateway';
 import { WebsocketService } from './websocket.service';
 import * as bcrypt from 'bcrypt';
-import { CreateCatDto } from '../cats/dto/create-cat.dto';
-import e from 'express';
+import _ from 'lodash';
 
 // TODO: try except blocks
 // TODO: How banned will work on frontend?
@@ -38,7 +37,7 @@ export class ChatService {
   ) { }
 
   private readonly logger = new Logger(ChatService.name);
-
+  private muteTimeouts: Array<{ id: string, timeout: NodeJS.Timeout }> = []
   // NOTE: Who made the request must not be present in the members array
   async createChannel(token: TokenClaims, createChannelDto: CreateChannelDto) {
 
@@ -288,10 +287,10 @@ export class ChatService {
     const updatedMembership = await this.chatRepository.updateMembershipById(targetMembership.id, { banned: banned, administrator: false })
     if (updatedMembership.banned) {
       this.socketService.emitToUser(userId, 'leaveChannel', { channelId: channelId });
-      this.socketService.emitToUser(targetMembership.userId, 'banned', { name: channel.name, banned: true });
+      this.socketService.emitToUser(targetMembership.userId, 'banned', { name: channel.name, banned: true, administrator: false });
       this.socketService.removeUserFromRoom(userId, channelId.toString());
     } else {
-      this.socketService.emitToUser(targetMembership.userId, 'banned', { name: channel.name, banned: false });
+      this.socketService.emitToUser(targetMembership.userId, 'banned', { name: channel.name, banned: false, administrator: false });
       this.socketService.addUserToRoom(userId, channelId.toString());
     }
     this.socketService.emitToRoom(channelId.toString(), 'syncChannel', { channelId: channelId });
@@ -299,7 +298,7 @@ export class ChatService {
   }
 
   // throws
-  async muteUser(token: TokenClaims, channelId: number, userId: string) {
+  async muteUser(token: TokenClaims, channelId: number, userId: string, mutedTime: number = (2 * 60 * 1000)) {
     const channel = await this.chatRepository.getChannel(channelId);
 
     const memberships = await this.chatRepository.getMembershipsbyChannel(
@@ -315,11 +314,18 @@ export class ChatService {
     const updatedMembership = await this.chatRepository.updateMembership(userId, channel.id, {
       muted: true,
     });
+
+    this.muteTimeouts.push({
+      id: targetMembership.userId,
+      timeout: setTimeout(() => {
+        this.unmuteUser(token, channelId, userId);
+      }, mutedTime)
+    });
+
     this.socketService.emitToRoom(channelId.toString(), 'syncChannel', { channelId: channelId });
     return updatedMembership
   }
 
-  // throws
   async unmuteUser(token: TokenClaims, channelId: number, userId: string) {
     const channel = await this.chatRepository.getChannel(channelId);
 
@@ -336,6 +342,11 @@ export class ChatService {
     const updatedMembership = await this.chatRepository.updateMembership(userId, channel.id, {
       muted: false,
     });
+    const waitingUnmute = this.muteTimeouts.find(e => e.id === targetMembership.userId);
+    if (waitingUnmute) {
+      clearTimeout(waitingUnmute.timeout);
+      this.muteTimeouts = this.muteTimeouts.filter(e => e.id !== targetMembership.userId);
+    }
     this.socketService.emitToRoom(channelId.toString(), 'syncChannel', { channelId: channelId });
     return updatedMembership
   }
