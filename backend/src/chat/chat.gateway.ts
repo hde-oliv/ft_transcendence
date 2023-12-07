@@ -29,6 +29,7 @@ import { UsersService } from 'src/users/users.service';
   },
   transpors: ['websocket', 'webtransport'],
 })
+@Injectable()
 export class SocketGateway
   implements OnGatewayConnection, OnGatewayInit, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
@@ -124,8 +125,8 @@ export class SocketGateway
       },
       user,
     );
-    socket.to(channel.id.toString()).emit('server_message', message);
-    socket.emit('server_message', message);
+    socket.to(channel.id.toString()).emit('server_message', { ...message, nickname: user.nickname });
+    socket.emit('server_message', { ...message, nickname: user.nickname });
     return message;
   }
 

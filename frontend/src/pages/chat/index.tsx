@@ -57,6 +57,7 @@ type Message = {
   user_id: string;
   message: string;
   time: Date;
+  nickname: string;
 };
 
 export type MessageCardProps = Message & {
@@ -75,14 +76,16 @@ export function MessageCard(props: MessageCardProps): JSX.Element {
         borderRadius={10}
         p="1vh 1vw"
       >
-        <Text color="black" textAlign={thirdPartMsg ? "start" : "end"}>
-          {props.time.toLocaleDateString()}{" "}
+        {thirdPartMsg ?
+          <Text fontWeight={'extrabold'} color="black" textAlign={thirdPartMsg ? "start" : "end"}>
+            {props.nickname}:
+          </Text> : undefined}
+
+        <Text color="black" pl='1em' pt={thirdPartMsg ? '0' : '0.5em'}>{props.message}</Text>
+        <Text fontSize='0.75em' color="black" textAlign={"end"}>
+          {props.time.toLocaleDateString()}&nbsp;&nbsp;&nbsp;
           {props.time.toTimeString().slice(0, 8)}
         </Text>
-        <Text color="black" textAlign={thirdPartMsg ? "start" : "end"}>
-          {props.user_id}:
-        </Text>
-        <Text color="black">{props.message}</Text>
       </Box>
     </Flex>
   );

@@ -26,6 +26,6 @@ import { WebsocketService } from './websocket.service';
   ],
   controllers: [ChatController],
   imports: [UsersModule, AuthModule, JwtModule],
-  exports: [ChatService],
+  exports: [ChatService, SocketGateway, WebsocketService],
 })
 export class ChatModule { }

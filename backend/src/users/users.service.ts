@@ -4,10 +4,13 @@ import { CreateUserDto } from './dto/create-user-dto';
 import { UpdateOTPUserDto } from './dto/update-otp-user-dto';
 import { returnUserSchema } from './dto/return-user-dto';
 import { TokenClaims } from 'src/auth/auth.model';
+import { WebsocketService } from 'src/chat/websocket.service';
 
 @Injectable()
 export class UsersService {
-  constructor(private userRepository: UsersRepository) { }
+  constructor(
+    private userRepository: UsersRepository
+  ) { }
 
   getUser(param: { id: string }) {
     return this.userRepository.getUserById(param.id);

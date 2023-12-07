@@ -276,6 +276,13 @@ export class ChatRepository {
     const messages = await this.prismaService.messages.findMany({
       where: {
         channel_id: channelId
+      },
+      include: {
+        user: {
+          select: {
+            nickname: true
+          }
+        }
       }
     });
     const blockedUsers = (await this.prismaService.blockedUsers.findMany({
@@ -286,7 +293,16 @@ export class ChatRepository {
         issuer_id: user.intra_login
       }
     })).map(e => e.targer_id);
-    const validMessages = messages.filter(e => !blockedUsers.includes(e.user_id));
+    const validMessages = messages.filter(e => !blockedUsers.includes(e.user_id)).map(e => {
+      return {
+        id: e.id,
+        channel_id: e.channel_id,
+        user_id: e.user_id,
+        message: e.message,
+        time: e.time,
+        nickname: e.user.nickname
+      }
+    });
     return validMessages;
   }
 

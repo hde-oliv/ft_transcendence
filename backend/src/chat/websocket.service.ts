@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { WebSocketServer } from '@nestjs/websockets';
 import { Users } from '@prisma/client';
-import { privateDecrypt } from 'crypto';
 import { Server, Socket } from 'socket.io';
+import { SocketGateway } from './chat.gateway';
 
 @Injectable()
 export class WebsocketService {
@@ -34,8 +34,22 @@ export class WebsocketService {
   }
   emitToRoom(room: string, event: string, data: { [key: string]: any }) {
     this.server.to(room).emit(event, data);
-    // const result = this.server.to(room).emit(event, data);
-    // this.logger.log(`Emiting ${event} to room [${room}] result: [${result}]`);
+  }
+  emitToUsersRooms(userId: string, event: string, data: { [key: string]: any }) {
+    try {
+      const socs = this.userSockets(userId);
+      let rooms: Set<string> = new Set();
+      socs.forEach(soc => {
+        soc.rooms.forEach(room => {
+          rooms.add(room);
+        })
+      });
+      const roomArr = Array.from(rooms);
+      this.logger.warn(roomArr);
+      this.server.to(roomArr).emit(event, data);
+    } catch (e) {
+      this.logger.error(e);
+    }
   }
 }
 

@@ -256,12 +256,10 @@ export class ChatService {
     const { issuerMembership, targetMembership } = this.getIssuerTargetMemberships(memberships, token, userId, channel);
 
     this.checkSelf(token.intra_login, userId);
-    if (!issuerMembership.administrator || !issuerMembership.owner)
+    if (!(issuerMembership.administrator || issuerMembership.owner))
       throw new ForbiddenException(`You can't kick other members`);
     if (targetMembership.owner)
       throw new ForbiddenException(`Channel owner cannot be kicked`);
-    if (targetMembership.administrator && !issuerMembership.owner)
-      throw new ForbiddenException(`Only channel owner can kick administrators`);
 
     await this.chatRepository.deleteMembership(userId, channel.id);
     this.socketService.emitToUser(targetMembership.userId, 'leaveChannel', { channelId: channelId });
@@ -278,12 +276,10 @@ export class ChatService {
     );
     const { issuerMembership, targetMembership } = this.getIssuerTargetMemberships(memberships, token, userId, channel);
 
-    if (!issuerMembership.administrator || !issuerMembership.owner)
+    if (!(issuerMembership.administrator || issuerMembership.owner))
       throw new ForbiddenException(`You can't change the ban status of other members`);
     if (targetMembership.owner)
       throw new ForbiddenException(`Channel owner cannot be banned/unbanned`);
-    if (targetMembership.administrator && !issuerMembership.owner)
-      throw new ForbiddenException(`Only channel owner can ban/unban administrators`);
     const updatedMembership = await this.chatRepository.updateMembershipById(targetMembership.id, { banned: banned, administrator: false })
     if (updatedMembership.banned) {
       this.socketService.emitToUser(userId, 'leaveChannel', { channelId: channelId });
@@ -357,8 +353,10 @@ export class ChatService {
       channel.id,
     );
     const { issuerMembership, targetMembership } = this.getIssuerTargetMemberships(memberships, token, userId, channel);
-    if (!issuerMembership.owner)
-      throw new ForbiddenException(`Only channel owner can promote and demote admins`);
+    if (!(issuerMembership.administrator || issuerMembership.owner))
+      throw new ForbiddenException(`Only channel administrators can promote and demote admins`);
+    if (targetMembership.owner)
+      throw new ForbiddenException('You cannot promote or demote the channel owner');
     const updatedMembership = await this.chatRepository.updateMembershipById(targetMembership.id, { administrator: isAdmin });
     this.socketService.emitToRoom(channelId.toString(), 'syncChannel', { channelId: channelId });
     return updatedMembership

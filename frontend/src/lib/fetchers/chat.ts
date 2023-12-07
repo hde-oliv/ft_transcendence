@@ -37,6 +37,7 @@ export const messageResponseSchema = z.array(
     user_id: z.string(),
     message: z.string(),
     time: z.coerce.date(),
+    nickname: z.string()
   })
 );
 
