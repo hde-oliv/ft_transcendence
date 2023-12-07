@@ -300,7 +300,7 @@ export class ChatService {
   }
 
   // throws
-  async muteUser(token: TokenClaims, channelId: number, userId: string) {
+  async muteUser(token: TokenClaims, channelId: number, userId: string, mutedTime: number=360) {
     const channel = await this.chatRepository.getChannel(channelId);
 
     const memberships = await this.chatRepository.getMembershipsbyChannel(
@@ -316,10 +316,20 @@ export class ChatService {
     const updatedMembership = await this.chatRepository.updateMembership(userId, channel.id, {
       muted: true,
     });
+    this.sleep(this.chatRepository.updateMembership(userId, channel.id, {
+      muted: false,
+    }), mutedTime)
     this.socketService.emitToRoom(channelId.toString(), 'syncChannel', { channelId: channelId });
     return updatedMembership
   }
 
+  timeout(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+  async sleep(fn, sleepTime) {
+    await this.timeout(sleepTime);
+    return fn();
+  }
   // throws
   async unmuteUser(token: TokenClaims, channelId: number, userId: string) {
     const channel = await this.chatRepository.getChannel(channelId);
