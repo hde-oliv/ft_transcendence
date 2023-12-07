@@ -284,8 +284,7 @@ export class ChatService {
       throw new ForbiddenException(`Channel owner cannot be banned/unbanned`);
     if (targetMembership.administrator && !issuerMembership.owner)
       throw new ForbiddenException(`Only channel owner can ban/unban administrators`);
-
-    const updatedMembership = await this.chatRepository.updateMembershipById(targetMembership.id, { banned: banned, administrator: false }) //TODO this action should also remove the user from the channel room
+    const updatedMembership = await this.chatRepository.updateMembershipById(targetMembership.id, { banned: banned, administrator: false })
     if (updatedMembership.banned) {
       this.socketService.emitToUser(userId, 'leaveChannel', { channelId: channelId });
       this.socketService.emitToUser(targetMembership.userId, 'banned', { name: channel.name, banned: true, administrator: false });
