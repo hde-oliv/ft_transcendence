@@ -8,6 +8,7 @@ import { ChatModule } from 'src/chat/chat.module';
 import { MeModule } from 'src/me/me.module';
 import { GameModule } from 'src/game/game.module';
 import { FriendModule } from 'src/friend/friend.module';
+import { MatchModule } from 'src/match/match.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { FriendModule } from 'src/friend/friend.module';
     GameModule,
     MeModule,
     FriendModule,
+    MatchModule,
     LoggerModule.forRoot({
       pinoHttp: {
         customProps: (req, res) => ({
@@ -34,4 +36,4 @@ import { FriendModule } from 'src/friend/friend.module';
     ConfigModule.forRoot(),
   ],
 })
-export class AppModule {}
+export class AppModule { }
