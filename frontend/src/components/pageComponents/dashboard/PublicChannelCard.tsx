@@ -53,6 +53,7 @@ function ChannelRow(props: PublicChannelResponse) {
         console.warn("Could not join channel :(");
       }
       setLoading(false);
+      setIsUserInChannel(true);
     }
   }, [props.id, props.protected]);
 
@@ -69,6 +70,7 @@ function ChannelRow(props: PublicChannelResponse) {
     setLoading(false);
     setPassword(''); // clear password
     setShowPasswordModal(false); // close modal
+    setIsUserInChannel(true);
   }, [props.id, password]);
 
   return (
