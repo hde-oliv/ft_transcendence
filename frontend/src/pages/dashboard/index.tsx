@@ -56,6 +56,7 @@ import {
   getFriendsByUser,
 } from "@/lib/fetchers/friends";
 import { FriendCard } from "../../components/pageComponents/dashboard/FriendCard";
+import { ChannelCard } from "../../components/pageComponents/dashboard/PublicChannelCard";
 
 function PlayCard(props: PropsWithChildren) {
   return (
@@ -252,10 +253,10 @@ const Dashboard: NextPageWithLayout = () => {
         <StatsCard />
       </WrapItem>
       <WrapItem borderRadius="30" borderWidth="2px" borderColor="yellow.400">
-        <ConfigsCard />
+        <FriendCard />
       </WrapItem>
       <WrapItem borderRadius="30" borderWidth="2px" borderColor="yellow.400">
-        <FriendCard />
+        <ChannelCard />
       </WrapItem>
     </Wrap>
   );
