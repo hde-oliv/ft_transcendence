@@ -18,6 +18,7 @@ import {
   Text,
 } from "@chakra-ui/react";
 import { useCallback, useEffect, useState } from "react";
+import { userData } from '../../../pages/account/index';
 import { 
     PublicChannelResponse,
     fetchAllPublicChannels,
@@ -46,6 +47,7 @@ function ChannelRow(props: PublicChannelResponse) {
       try {
         await joinPublicChannel({
           channelId: props.id,
+          password: password
         });
       } catch (e) {
         console.warn("Could not join channel :(");
