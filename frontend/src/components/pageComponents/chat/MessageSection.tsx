@@ -337,7 +337,7 @@ function GroupSettings(props: {
         colorScheme="yellow"
       >
         <DrawerOverlay />
-        <DrawerContent bgColor={"pongBlue.200"} zIndex={10}>
+        <DrawerContent bgColor={"pongBlue.200"}>
           <DrawerHeader>
             <HStack>
               <Text>Channel Settings &nbsp; </Text>
@@ -440,9 +440,13 @@ function GroupSettings(props: {
                 }
               }}
               channel={props.channel}
+<<<<<<< HEAD
             />
             onClick={profilePopover(me.intra_login)}
 
+=======
+              />
+>>>>>>> 28a8d34 (fix:user controller feat: profile popover on chat)
             <Tabs
               isLazy={true}
               variant='solid-rounded'
@@ -654,6 +658,7 @@ export function MessageSection(
       <Flex bg="pongBlue.300" p="2vh 1vw" justify={"space-between"}>
         <Flex>
           {props.channel.user2user ? (
+<<<<<<< HEAD
             <Popover>
               <>{/* Profile PopOver */}</>
               <PopoverTrigger>
@@ -732,6 +737,28 @@ export function MessageSection(
                 </PopoverContent>
               </Portal>
             </Popover>
+=======
+              <Popover>
+              <PopoverTrigger>
+                  <Avatar
+                  mr="2vw"
+                  name={channelName}
+                  src={props.channel.Memberships[0].user.avatar}
+                  />
+              </PopoverTrigger>
+              <Portal>
+              <PopoverContent bg='pongBlue.300'>
+                  <PopoverArrow/>
+                  <PopoverHeader>{channelName}</PopoverHeader>
+                  <PopoverCloseButton />
+                  <PopoverBody>
+                  <Button colorScheme='blue'>Invite to game</Button>
+                  </PopoverBody>
+                  <PopoverFooter>Stats goes here</PopoverFooter>
+              </PopoverContent>
+              </Portal>
+          </Popover>
+>>>>>>> 28a8d34 (fix:user controller feat: profile popover on chat)
           ) : (
             <Avatar mr="2vw" name={channelName} bg="yellow.300" />
           )}
