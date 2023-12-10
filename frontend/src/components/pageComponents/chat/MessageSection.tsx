@@ -24,6 +24,18 @@ import {
   UnlockIcon,
 } from "@chakra-ui/icons";
 import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  PopoverHeader,
+  PopoverBody,
+  PopoverFooter,
+  PopoverArrow,
+  PopoverCloseButton,
+  PopoverAnchor,
+  Portal,
+} from '@chakra-ui/react'
+import {
   Avatar,
   AvatarBadge,
   Box,
@@ -315,7 +327,7 @@ function GroupSettings(props: {
         colorScheme="yellow"
       >
         <DrawerOverlay />
-        <DrawerContent bgColor={"pongBlue.200"} zIndex={10}>
+        <DrawerContent bgColor={"pongBlue.200"}>
           <DrawerHeader>
             <HStack>
               <Text>Channel Settings &nbsp; </Text>
@@ -419,8 +431,6 @@ function GroupSettings(props: {
               }}
               channel={props.channel}
               />
-                onClick={profilePopover(me.intra_login)}
-              
             <Tabs
               isLazy={true}
               variant='solid-rounded'
@@ -595,11 +605,26 @@ export function MessageSection(
       <Flex bg="pongBlue.300" p="2vh 1vw" justify={"space-between"}>
         <Flex>
           {props.channel.user2user ? (
-            <Avatar
-              mr="2vw"
-              name={channelName}
-              src={props.channel.Memberships[0].user.avatar}
-            />
+              <Popover>
+              <PopoverTrigger>
+                  <Avatar
+                  mr="2vw"
+                  name={channelName}
+                  src={props.channel.Memberships[0].user.avatar}
+                  />
+              </PopoverTrigger>
+              <Portal>
+              <PopoverContent bg='pongBlue.300'>
+                  <PopoverArrow/>
+                  <PopoverHeader>{channelName}</PopoverHeader>
+                  <PopoverCloseButton />
+                  <PopoverBody>
+                  <Button colorScheme='blue'>Invite to game</Button>
+                  </PopoverBody>
+                  <PopoverFooter>Stats goes here</PopoverFooter>
+              </PopoverContent>
+              </Portal>
+          </Popover>
           ) : (
             <Avatar mr="2vw" name={channelName} bg="yellow.300" />
           )}
