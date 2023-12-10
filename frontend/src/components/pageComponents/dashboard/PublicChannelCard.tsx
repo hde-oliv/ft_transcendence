@@ -30,6 +30,7 @@ function ChannelRow(props: PublicChannelResponse) {
   const [isUserInChannel, setIsUserInChannel] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [password, setPassword] = useState('');
+  const [passwordError, setPasswordError] = useState(false);
 
   useEffect(() => {
     const fetchUserStatus = async () => {
@@ -49,11 +50,11 @@ function ChannelRow(props: PublicChannelResponse) {
           channelId: props.id,
           password: password
         });
+        setIsUserInChannel(true);
       } catch (e) {
         console.warn("Could not join channel :(");
       }
       setLoading(false);
-      setIsUserInChannel(true);
     }
   }, [props.id, props.protected]);
 
@@ -64,13 +65,16 @@ function ChannelRow(props: PublicChannelResponse) {
         channelId: props.id,
         password: password,
       });
+      setPasswordError(false);
+      setIsUserInChannel(true);
+      setShowPasswordModal(false);
     } catch (e) {
       console.warn("Could not join channel :(");
+      setPasswordError(true);
+      setShowPasswordModal(true);
     }
     setLoading(false);
-    setPassword(''); // clear password
-    setShowPasswordModal(false); // close modal
-    setIsUserInChannel(true);
+    setPassword('');
   }, [props.id, password]);
 
   return (
@@ -116,6 +120,7 @@ function ChannelRow(props: PublicChannelResponse) {
               bg="pongBlue.300"
               placeholder="channel password"
             />
+            {passwordError && <Text color="red">Invalid password. Please try again.</Text>}
         </ModalBody>
         <ModalFooter>
         <Center>
