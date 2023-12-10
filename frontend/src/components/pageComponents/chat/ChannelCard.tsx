@@ -3,6 +3,7 @@ import { FetchChannelUsers } from "@/lib/fetchers/chat";
 import { Avatar, AvatarBadge, Box, Flex, Heading, Skeleton, Text } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { ChannelComponentProps, userSchema } from "../../../pages/chat";
+import profilePopover from "../../user/Profile";
 
 export function ChannelCard(
   props: ChannelComponentProps & { active: boolean },
@@ -50,7 +51,7 @@ export function ChannelCard(
       maxW="20vw"
       onClick={props.onClick}
     >
-      <Avatar name={cardData.nickname} src={cardData.avatar} maxW="30%">
+      <Avatar name={cardData.nickname} src={cardData.avatar} maxW="30%" >
         <AvatarBadge bg={cardData.statusColor} boxSize={'1em'} borderWidth={'0.1em'} />
       </Avatar>
       <Box pr="5%" pl="5%" maxW="70%">

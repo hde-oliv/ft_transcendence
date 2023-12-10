@@ -60,6 +60,7 @@ import {
   Tooltip,
   VStack,
   useDisclosure,
+  ChakraProvider
 } from "@chakra-ui/react";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import {
@@ -79,6 +80,7 @@ import BanIcon from "@/components/icons/BanIcon";
 import CrownIcon from "@/components/icons/CrownIcon";
 import UndoIcon from "@/components/icons/UndoIcon";
 import DowngradeIcon from "@/components/icons/DowngradeIcon";
+import profilePopover from "../../user/Profile";
 
 function membersFromChannel(
   channel: ChannelData["channel"]
@@ -313,7 +315,7 @@ function GroupSettings(props: {
         colorScheme="yellow"
       >
         <DrawerOverlay />
-        <DrawerContent bgColor={"pongBlue.200"}>
+        <DrawerContent bgColor={"pongBlue.200"} zIndex={10}>
           <DrawerHeader>
             <HStack>
               <Text>Channel Settings &nbsp; </Text>
@@ -416,7 +418,9 @@ function GroupSettings(props: {
                 }
               }}
               channel={props.channel}
-            />
+              />
+                onClick={profilePopover(me.intra_login)}
+              
             <Tabs
               isLazy={true}
               variant='solid-rounded'
@@ -635,8 +639,8 @@ export function MessageSection(
       <Box flexGrow={1} bg="pongBlue" overflowY="auto" ref={messagesRef}>
         <Stack p="1vh 2vw">
           {messages.map((m) => (
-            <MessageCard {...m} key={`${m.id}`} />
-          ))}
+            <MessageCard {...m }  key={`${m.id}`} />
+          ))} 
         </Stack>
       </Box>
       <Box flexGrow={0} bg="pongBlue.300" pl="2vw" pr="2vw" pt="1vh" pb="1vh">
