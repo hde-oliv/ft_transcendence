@@ -72,7 +72,12 @@ import {
   Tooltip,
   VStack,
   useDisclosure,
-  ChakraProvider
+  Stat,
+  StatLabel,
+  StatNumber,
+  StatHelpText,
+  StatArrow,
+  Wrap,
 } from "@chakra-ui/react";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import {
@@ -637,6 +642,7 @@ export function MessageSection(
         <Flex>
           {props.channel.user2user ? (
               <Popover>
+                 <>{/* Profile PopOver */}</>
               <PopoverTrigger>
                   <Avatar
                   mr="2vw"
@@ -645,8 +651,8 @@ export function MessageSection(
                   />
               </PopoverTrigger>
               <Portal>
-              <PopoverContent bg='pongBlue.300'>
-                  <PopoverArrow/>
+              <PopoverContent bg='pongBlue.500'>
+                  <PopoverArrow bg='pongBlue.500' />
                   <HStack>
                     <Avatar
                       mr="2vw"
@@ -655,7 +661,7 @@ export function MessageSection(
                       <AvatarBadge bg={cardData.statusColor} boxSize={'1em'} borderWidth={'0.1em'} />
                     </Avatar>
                     <PopoverHeader>
-                      <Heading fontWeight="medium" size="md" pl="1vw">
+                      <Heading textAlign="center" fontWeight="medium" size="md" pl="1vw">
                       {channelName}
                       </Heading>
                     </PopoverHeader>
@@ -663,12 +669,52 @@ export function MessageSection(
                   <PopoverCloseButton />
                   <PopoverBody>
                     <Button 
+                    alignItems="center"
                     colorScheme='green'
                     isDisabled={props.channel.Memberships[0].user.status === 'offline'}
                     >{props.channel.Memberships[0].user.status === 'offline' ? "Wait to invite" : "Invite to play"}
                     </Button>
                   </PopoverBody>
-                  <PopoverFooter>Stats goes here</PopoverFooter>
+                  <PopoverFooter>
+                  <Center flexDir="column" h="20%" w="100%">
+                    <Heading textAlign="center" fontWeight="medium" size="md" pl="1vw" > Stats of {channelName}</Heading>
+                    <Wrap spacing="1vw">
+                      <Stat
+                        borderWidth="2px"
+                        borderRadius="md"
+                        p="1vw 1vw"
+                        borderColor="yellow.200"
+                      >
+                        <StatLabel>Games</StatLabel>
+                        <StatNumber textAlign="center" color="yellow.300">
+                          20
+                        </StatNumber>
+                      </Stat>
+                      <Stat
+                        borderWidth="2px"
+                        borderRadius="md"
+                        p="1vw 1vw"
+                        borderColor="yellow.200"
+                      >
+                        <StatLabel>Victories</StatLabel>
+                        <StatNumber textAlign="center" color="green.400">
+                          10
+                        </StatNumber>
+                      </Stat>
+                      <Stat
+                        borderWidth="2px"
+                        borderRadius="md"
+                        p="1vw 1vw"
+                        borderColor="yellow.200"
+                      >
+                        <StatLabel>Loses</StatLabel>
+                        <StatNumber textAlign="center" color="red.400">
+                          10
+                        </StatNumber>
+                      </Stat>
+                    </Wrap>
+                  </Center>
+                </PopoverFooter>
               </PopoverContent>
               </Portal>
           </Popover>
