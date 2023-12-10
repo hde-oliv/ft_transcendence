@@ -93,6 +93,9 @@ import CrownIcon from "@/components/icons/CrownIcon";
 import UndoIcon from "@/components/icons/UndoIcon";
 import DowngradeIcon from "@/components/icons/DowngradeIcon";
 import profilePopover from "../../user/Profile";
+import { Badge } from '@chakra-ui/react';
+import StatusBadge from '../../user/StatusBadge';
+import { Props } from 'next/script';
 
 function membersFromChannel(
   channel: ChannelData["channel"]
@@ -599,6 +602,34 @@ export function MessageSection(
       });
     }
   }, [messages]);
+  const cardData = dataFromProps();
+  function dataFromProps() {
+    if (props.channel.user2user) {
+      const isOnline = props.channel.Memberships[0].user.status === 'online';
+      if (props.channel.Memberships.length > 0) {
+        return {
+          avatar: props.channel.Memberships[0].user.avatar,
+          intra_login: props.channel.Memberships[0].user.intra_login,
+          nickname: props.channel.Memberships[0].user.nickname,
+          statusColor: isOnline ? 'green.300' : 'gray',
+        };
+      } else {
+        return {
+          avatar: "",
+          intra_login: "",
+          nickname: props.channel.name,
+          statusColor: 'gray',
+        };
+      }
+    } else {
+      return {
+        avatar: "",
+        intra_login: "",
+        nickname: props.channel.name,
+        statusColor: 'yellow',
+      };
+    }
+  }
 
   return (
     <>
@@ -616,10 +647,26 @@ export function MessageSection(
               <Portal>
               <PopoverContent bg='pongBlue.300'>
                   <PopoverArrow/>
-                  <PopoverHeader>{channelName}</PopoverHeader>
+                  <HStack>
+                    <Avatar
+                      mr="2vw"
+                      name={channelName}
+                      src={props.channel.Memberships[0].user.avatar}>
+                      <AvatarBadge bg={cardData.statusColor} boxSize={'1em'} borderWidth={'0.1em'} />
+                    </Avatar>
+                    <PopoverHeader>
+                      <Heading fontWeight="medium" size="md" pl="1vw">
+                      {channelName}
+                      </Heading>
+                    </PopoverHeader>
+                  </HStack>
                   <PopoverCloseButton />
                   <PopoverBody>
-                  <Button colorScheme='blue'>Invite to game</Button>
+                    <Button 
+                    colorScheme='green'
+                    isDisabled={props.channel.Memberships[0].user.status === 'offline'}
+                    >{props.channel.Memberships[0].user.status === 'offline' ? "Wait to invite" : "Invite to play"}
+                    </Button>
                   </PopoverBody>
                   <PopoverFooter>Stats goes here</PopoverFooter>
               </PopoverContent>
