@@ -7,7 +7,7 @@ import {
   } from "react";
 
 import { 
-    fetchUserByIntraLogin } from "@/lib/fetchers/users";
+    fetchUserById } from "@/lib/fetchers/users";
 import {
     Popover,
     PopoverTrigger,
@@ -27,7 +27,7 @@ import { useRouter } from "next/router";
 
     useEffect(() => {
         const fetchUserStatus = async () => {
-          const userStats = await fetchUserByIntraLogin(intraLogin) ;
+          const userStats = await fetchUserById(intraLogin) ;
         };
         fetchUserStatus();
       }, [intraLogin]);
@@ -35,13 +35,12 @@ import { useRouter } from "next/router";
 
   
     return(
-        <ChakraProvider portalZIndex={100}>
             <Popover>
             <PopoverTrigger>
             <Button>Trigger</Button>
             </PopoverTrigger>
             <Portal>
-            <PopoverContent zIndex={100}>
+            <PopoverContent>
                 <PopoverArrow />
                 <PopoverHeader>Header</PopoverHeader>
                 <PopoverCloseButton />
@@ -53,7 +52,6 @@ import { useRouter } from "next/router";
             </PopoverContent>
             </Portal>
         </Popover>
-      </ChakraProvider>
     )
   }
 
