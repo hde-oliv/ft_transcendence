@@ -29,7 +29,7 @@ export class UsersController {
   // }
 
   @UseGuards(JwtAuthGuard)
-  @Get('/:intra')
+  @Get('/:intra_login')
   getUserByIntra(@Param() param: { intra_login: string }) {
     return this.usersService.getUserByIntra(param);
   }

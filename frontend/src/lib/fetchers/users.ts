@@ -25,9 +25,3 @@ export async function fetchUserById(id: string) {
 	return response.data;
 }
 
-export async function fetchUserByIntraLogin(intra_login: string) {
-	const fetcher = pongAxios();
-	const response = (await fetcher.get(`user`));
-	const user = parse(response.data, "", intra_login)
-	return user
-}
