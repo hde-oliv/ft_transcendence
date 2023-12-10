@@ -749,10 +749,26 @@ export function MessageSection(
               <Portal>
               <PopoverContent bg='pongBlue.300'>
                   <PopoverArrow/>
-                  <PopoverHeader>{channelName}</PopoverHeader>
+                  <HStack>
+                    <Avatar
+                      mr="2vw"
+                      name={channelName}
+                      src={props.channel.Memberships[0].user.avatar}>
+                      <AvatarBadge bg={cardData.statusColor} boxSize={'1em'} borderWidth={'0.1em'} />
+                    </Avatar>
+                    <PopoverHeader>
+                      <Heading fontWeight="medium" size="md" pl="1vw">
+                      {channelName}
+                      </Heading>
+                    </PopoverHeader>
+                  </HStack>
                   <PopoverCloseButton />
                   <PopoverBody>
-                  <Button colorScheme='blue'>Invite to game</Button>
+                    <Button
+                    colorScheme='green'
+                    isDisabled={props.channel.Memberships[0].user.status === 'offline'}
+                    >{props.channel.Memberships[0].user.status === 'offline' ? "Wait to invite" : "Invite to play"}
+                    </Button>
                   </PopoverBody>
                   <PopoverFooter>Stats goes here</PopoverFooter>
               </PopoverContent>
