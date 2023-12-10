@@ -78,6 +78,7 @@ import {
   StatHelpText,
   StatArrow,
   Wrap,
+  ChakraProvider
 } from "@chakra-ui/react";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import {
@@ -336,7 +337,7 @@ function GroupSettings(props: {
         colorScheme="yellow"
       >
         <DrawerOverlay />
-        <DrawerContent bgColor={"pongBlue.200"}>
+        <DrawerContent bgColor={"pongBlue.200"} zIndex={10}>
           <DrawerHeader>
             <HStack>
               <Text>Channel Settings &nbsp; </Text>
@@ -439,7 +440,9 @@ function GroupSettings(props: {
                 }
               }}
               channel={props.channel}
-              />
+            />
+            onClick={profilePopover(me.intra_login)}
+
             <Tabs
               isLazy={true}
               variant='solid-rounded'
@@ -564,7 +567,7 @@ export function MessageSection(
       console.log(e);
     }
   }, [props.channel.Memberships[0].user.intra_login]);
-  
+
   async function send() {
     if (text === "") return;
     const message = {
@@ -651,17 +654,17 @@ export function MessageSection(
       <Flex bg="pongBlue.300" p="2vh 1vw" justify={"space-between"}>
         <Flex>
           {props.channel.user2user ? (
-              <Popover>
-                 <>{/* Profile PopOver */}</>
+            <Popover>
+              <>{/* Profile PopOver */}</>
               <PopoverTrigger>
-                  <Avatar
+                <Avatar
                   mr="2vw"
                   name={channelName}
                   src={props.channel.Memberships[0].user.avatar}
-                  />
+                />
               </PopoverTrigger>
               <Portal>
-              <PopoverContent bg='pongBlue.500'>
+                <PopoverContent bg='pongBlue.500'>
                   <PopoverArrow bg='pongBlue.500' />
                   <HStack>
                     <Avatar
@@ -672,63 +675,63 @@ export function MessageSection(
                     </Avatar>
                     <PopoverHeader>
                       <Heading textAlign="center" fontWeight="medium" size="md" pl="1vw">
-                      {channelName}
+                        {channelName}
                       </Heading>
                     </PopoverHeader>
                   </HStack>
                   <PopoverCloseButton />
                   <PopoverBody>
-                    <Button 
-                    alignItems="center"
-                    colorScheme='green'
-                    onClick={inviteUserToPlay}
-                    isDisabled={props.channel.Memberships[0].user.status === 'offline'}
+                    <Button
+                      alignItems="center"
+                      colorScheme='green'
+                      onClick={inviteUserToPlay}
+                      isDisabled={props.channel.Memberships[0].user.status === 'offline'}
                     >{props.channel.Memberships[0].user.status === 'offline' ? "Wait to invite" : "Invite to play"}
                     </Button>
                   </PopoverBody>
                   <PopoverFooter>
-                  <Center flexDir="column" h="20%" w="100%">
-                    <Heading textAlign="center" fontWeight="medium" size="md" pl="1vw" > Stats of {channelName}</Heading>
-                    <Wrap spacing="1vw">
-                      <Stat
-                        borderWidth="2px"
-                        borderRadius="md"
-                        p="1vw 1vw"
-                        borderColor="yellow.200"
-                      >
-                        <StatLabel>Games</StatLabel>
-                        <StatNumber textAlign="center" color="yellow.300">
-                          20
-                        </StatNumber>
-                      </Stat>
-                      <Stat
-                        borderWidth="2px"
-                        borderRadius="md"
-                        p="1vw 1vw"
-                        borderColor="yellow.200"
-                      >
-                        <StatLabel>Victories</StatLabel>
-                        <StatNumber textAlign="center" color="green.400">
-                          10
-                        </StatNumber>
-                      </Stat>
-                      <Stat
-                        borderWidth="2px"
-                        borderRadius="md"
-                        p="1vw 1vw"
-                        borderColor="yellow.200"
-                      >
-                        <StatLabel>Loses</StatLabel>
-                        <StatNumber textAlign="center" color="red.400">
-                          10
-                        </StatNumber>
-                      </Stat>
-                    </Wrap>
-                  </Center>
-                </PopoverFooter>
-              </PopoverContent>
+                    <Center flexDir="column" h="20%" w="100%">
+                      <Heading textAlign="center" fontWeight="medium" size="md" pl="1vw" > Stats of {channelName}</Heading>
+                      <Wrap spacing="1vw">
+                        <Stat
+                          borderWidth="2px"
+                          borderRadius="md"
+                          p="1vw 1vw"
+                          borderColor="yellow.200"
+                        >
+                          <StatLabel>Games</StatLabel>
+                          <StatNumber textAlign="center" color="yellow.300">
+                            20
+                          </StatNumber>
+                        </Stat>
+                        <Stat
+                          borderWidth="2px"
+                          borderRadius="md"
+                          p="1vw 1vw"
+                          borderColor="yellow.200"
+                        >
+                          <StatLabel>Victories</StatLabel>
+                          <StatNumber textAlign="center" color="green.400">
+                            10
+                          </StatNumber>
+                        </Stat>
+                        <Stat
+                          borderWidth="2px"
+                          borderRadius="md"
+                          p="1vw 1vw"
+                          borderColor="yellow.200"
+                        >
+                          <StatLabel>Loses</StatLabel>
+                          <StatNumber textAlign="center" color="red.400">
+                            10
+                          </StatNumber>
+                        </Stat>
+                      </Wrap>
+                    </Center>
+                  </PopoverFooter>
+                </PopoverContent>
               </Portal>
-          </Popover>
+            </Popover>
           ) : (
             <Avatar mr="2vw" name={channelName} bg="yellow.300" />
           )}
@@ -768,8 +771,8 @@ export function MessageSection(
       <Box flexGrow={1} bg="pongBlue" overflowY="auto" ref={messagesRef}>
         <Stack p="1vh 2vw">
           {messages.map((m) => (
-            <MessageCard {...m }  key={`${m.id}`} />
-          ))} 
+            <MessageCard {...m} key={`${m.id}`} />
+          ))}
         </Stack>
       </Box>
       <Box flexGrow={0} bg="pongBlue.300" pl="2vw" pr="2vw" pt="1vh" pb="1vh">
