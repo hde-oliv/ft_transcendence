@@ -10,20 +10,22 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { Logger } from '@nestjs/common';
+import { WebsocketService } from 'src/chat/websocket.service';
 
-@WebSocketGateway(9090, {
+@WebSocketGateway({
+  namespace: 'game',
   cors: {
     origin: '*',
   },
-  transpors: ['websocket', 'webtransport'],
+  transports: ['websocket'],
 })
 export class GameGateway
   implements OnGatewayConnection, OnGatewayInit, OnGatewayDisconnect
 {
   @WebSocketServer()
-  wss: Server;
+  server: Server;
 
-  // constructor(private chatService: ChatService) {}
+  constructor(private socketService: WebsocketService) {}
 
   private readonly logger = new Logger(GameGateway.name);
 
@@ -41,16 +43,14 @@ export class GameGateway
     this.logger.log(`Client Connected: ${socket.id}`);
   }
 
-  @SubscribeMessage('start')
-  async handleNewMessage(
-    @MessageBody() data: any,
+  @SubscribeMessage('move_left_paddle')
+  async handleMoveLeftPaddle(
+    @MessageBody() data: number,
     @ConnectedSocket() socket: Socket,
   ) {
-    this.logger.log(`Client trying to start is: ${JSON.stringify(data)}`);
-    this.wss.sockets.emit('receive_message', data);
+    this.logger.log(
+      `Client trying to move left paddle to: ${JSON.stringify(data)}`,
+    );
+    this.server.emit('move_left_paddle', data);
   }
-}
-
-export interface ClientSocket {
-  socket: Socket;
 }

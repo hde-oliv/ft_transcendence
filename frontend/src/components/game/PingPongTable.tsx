@@ -3,13 +3,34 @@ import Score from "./Score";
 import Paddle from "./Paddle";
 import DashedLineSeparator from "./DashedLineSeparator";
 import Ball from "./Ball";
-import { SetStateAction, useCallback, useState } from "react";
+import { SetStateAction, useCallback, useEffect, useState } from "react";
+import { io } from "socket.io-client";
+import { getToken } from "@/lib/TokenMagagment";
 
 export default function PingPongTable() {
 	const [scoreLeft, setScoreLeft] = useState(0);
 	const [scoreRight, setScoreRight] = useState(0);
 	const [paddlePositionLeft, setPaddlePositionLeft] = useState(50);
 	const [paddlePositionRight, setPaddlePositionRight] = useState(50);
+  // const socket = useContext(SocketContext);
+  // const websocketUrl = wsBaseUrl.replace('3000', '3030');
+  const websocketUrl = 'http://localhost:3000/game';
+  const socket = io(websocketUrl, {
+    autoConnect: false,
+    extraHeaders: {
+      Authorization: getToken(),
+    },
+    // timeout: 10000,
+    transports: ["websocket"],
+  });
+
+  useEffect(() => {
+    socket.connect();
+    socket.on('move_left_paddle', setPaddlePositionLeft);
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
 
 	const scorePointForLeftPlayer = useCallback(() => {
 		setScoreLeft(scoreLeft + 1);
@@ -19,8 +40,23 @@ export default function PingPongTable() {
 		setScoreRight(scoreRight + 1);
 	}, [scoreRight]);
 
-	const movePaddleLeft = useCallback((newPosition: SetStateAction<number>) => {
-		setPaddlePositionLeft(newPosition);
+	const movePaddleLeft = useCallback(async (newPosition: SetStateAction<number>) => {
+    if (socket) {
+      if (socket.connected) {
+        try {
+          const response = await socket.emitWithAck(
+            "move_left_paddle",
+            newPosition,
+          );
+          // setPaddlePositionLeft(newPosition);
+        } catch (e) {
+          console.log(e); //TODO: make some king of popUp
+        }
+      } else console.log("Socket offline");
+    }
+    // socket.emit("start", newPosition);
+    // setPaddlePositionLeft(newPosition);
+
 	}, []);
 
 	const movePaddleRight = useCallback((newPosition: SetStateAction<number>) => {
