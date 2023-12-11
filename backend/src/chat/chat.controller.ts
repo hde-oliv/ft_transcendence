@@ -59,6 +59,20 @@ export class ChatController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get('/channel/public')
+  async getAllPublicChannels() {
+    return this.chatService.getAllPublicChannels();
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/channel/user/:id')
+  async getUserCheckInChannel(
+    @Request() req,
+    @Param('id', ParseIntPipe) id: number) {
+    return this.chatService.getUserCheckInChannel(req.user, id);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get('/channel/:id')
   async getChannel(
     @Request() req,

@@ -1,3 +1,4 @@
+import { AnyMxRecord } from "dns";
 import { getToken } from "../TokenMagagment";
 import { pongAxios } from "./pongAxios";
 import z, { ZodError, boolean } from "zod";
@@ -10,6 +11,25 @@ const channelResponseSchema = z.object({
   protected: z.boolean(),
   user2user: z.boolean(),
 });
+
+const publicChannelResponseSchema = z.object({
+  id: z.number(),
+  type: z.enum(["private", "public"]),
+  name: z.string(),
+  protected: z.boolean(),
+  user2user: z.boolean(),
+});
+
+const joinPublicChannelResponseSchema = z.object({
+  channelId: z.number(),
+  password: z.string().optional(),
+});
+
+const userCheckInChannelResponseSchema = z.boolean();
+
+export type PublicChannelResponse = z.infer<typeof publicChannelResponseSchema>;
+export type JoinPublicChannelResponse = z.infer<typeof joinPublicChannelResponseSchema>;
+export type UserCheckInChannelResponse = z.infer<typeof userCheckInChannelResponseSchema>;
 
 const myChannelsResponseSchema = z.object({
   id: z.number().int(),
@@ -125,6 +145,7 @@ export type createChannelParams = z.infer<typeof newChannel>
 export type UpdateChannelSchemma = z.infer<typeof updateChannelSchema>;
 type CreateMembershipSchema = z.infer<typeof createMembershipSchema>;
 
+
 export async function createChannel(channelData: createChannelParams) {
   const fetcher = pongAxios();
   const response = await fetcher.post("chat/channel", {
@@ -182,6 +203,30 @@ export async function fetchMyChannels(): Promise<MyChannels> {
   }
 }
 
+
+export async function fetchAllPublicChannels() {
+  const fetcher = pongAxios();
+  try {
+    const response = await fetcher.get(`chat/channel/public`);
+
+    return z.array(publicChannelResponseSchema).parse(response.data);
+  } catch (e) {
+    return [];
+  }
+}
+
+export async function joinPublicChannel(data: JoinPublicChannelResponse) {
+  const fetcher = pongAxios();
+  return fetcher.post(`/chat/channel/user/join`, data);
+}
+
+export async function fetchUserCheckInChannel(channelId: number) {
+  const fetcher = pongAxios();
+  const response = await fetcher.get(`chat/channel/user/${channelId}`);
+  return userCheckInChannelResponseSchema.parse(response.data);
+}
+
+
 export async function inviteUserToChannel(data: CreateMembershipSchema) {
   const fetcher = pongAxios();
   return fetcher.post('/chat/channel/user/invite', data);
@@ -218,4 +263,3 @@ export async function demoteChannelAdmin(channelId: number, userId: string) {
   const fetcher = pongAxios();
   return fetcher.post(`/chat/channel/user/unadmin`, { channelId: channelId, userId: userId })
 }
-

@@ -122,6 +122,14 @@ export class ChatService {
     return await this.chatRepository.getAllChannels();
   }
 
+  async getAllPublicChannels() {
+    return await this.chatRepository.getAllPublicChannels();
+  }
+  
+  async getUserCheckInChannel(user: TokenClaims, channelId: number)  {
+    return await this.chatRepository.getUserCheckInChannel(user, channelId);
+  }
+
   // NOTE: Only the owner can update channel
   // throws
   async updateChannel(

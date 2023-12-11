@@ -182,6 +182,38 @@ export class ChatRepository {
     return data
   }
 
+  async getAllPublicChannels(): Promise<Omit<Channels, "password">[]> {
+    const data = this.prismaService.channels.findMany({
+      where: {
+        type: 'public',
+      },
+      select: {
+        id: true,
+        type: true,
+        name: true,
+        protected: true,
+        user2user: true,
+      },
+    });
+    return data;
+  }
+
+  async getUserCheckInChannel(user: TokenClaims, channelId: number): Promise<boolean>{
+    const userId = user.intra_login;
+    const channel = await this.prismaService.channels.findFirst({
+      where: {
+        id: channelId,
+        Memberships: {
+          some: {
+            userId: userId,
+          },
+        },
+      },
+    });
+  
+    return Boolean(channel);
+  }
+
   async getAllChannels(): Promise<Channels[]> {
     return this.prismaService.channels.findMany();
   }
