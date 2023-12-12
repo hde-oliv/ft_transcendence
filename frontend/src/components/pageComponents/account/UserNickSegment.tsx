@@ -25,6 +25,7 @@ export function UserNickSegment(props: UserNickSegmentProps): JSX.Element {
     try {
       if (await updateMe(params)) {
         props.updateNickName(newNick);
+        setLoading(false)
         onClose();
         syncMe();
       } else {

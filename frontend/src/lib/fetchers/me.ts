@@ -26,7 +26,6 @@ export async function updateMe(params: UpdateUserDto) {
   const fetcher = pongAxios();
   const response = await fetcher.post("me", params);
   if (response.status !== 201) {
-    console.log(response);
     return false;
   } else {
     return true;
