@@ -37,7 +37,13 @@ export class FriendService {
     token: TokenClaims,
     new_friendship: CreateFriendshipDto,
   ) {
-    await this.friendRepository.createFriendship(new_friendship);
+    const logins: string[] = [new_friendship.fOne, new_friendship.fTwo];
+    const ordered = logins.sort();
+    let orderedFriendShip: CreateFriendshipDto = {
+      fOne: ordered[0],
+      fTwo: ordered[1]
+    }
+    await this.friendRepository.createFriendship(orderedFriendShip);
 
     let another_user: string;
 

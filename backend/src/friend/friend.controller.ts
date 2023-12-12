@@ -14,7 +14,7 @@ import userFromReq from 'utils/userFromReq';
 
 @Controller('friend')
 export class FriendController {
-  constructor(private friendService: FriendService) {}
+  constructor(private friendService: FriendService) { }
 
   @UseGuards(JwtAuthGuard)
   @Get()
@@ -41,6 +41,6 @@ export class FriendController {
     @Request() req,
     @Body() new_friendship: CreateFriendshipDto,
   ) {
-    return await this.friendService.createFriendship(req.user, new_friendship);
+    return await this.friendService.createFriendship(req.user, new_friendship); //TODO review function,
   }
 }
