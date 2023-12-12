@@ -101,6 +101,7 @@ import profilePopover from "../../user/Profile";
 import { Badge } from '@chakra-ui/react';
 import StatusBadge from '../../user/StatusBadge';
 import { Props } from 'next/script';
+import { inviteToPlay } from "@/lib/fetchers/invite";
 
 function membersFromChannel(
   channel: ChannelData["channel"]
@@ -555,6 +556,15 @@ export function MessageSection(
     ? props.channel.Memberships[0].user.nickname
     : props.channel.name;
 
+
+  const inviteUserToPlay = useCallback(async () => {
+    try {
+      await inviteToPlay(props.channel.Memberships[0].user.intra_login);
+    } catch (e) {
+      console.log(e);
+    }
+  }, [props.channel.Memberships[0].user.intra_login]);
+  
   async function send() {
     if (text === "") return;
     const message = {
@@ -671,6 +681,7 @@ export function MessageSection(
                     <Button 
                     alignItems="center"
                     colorScheme='green'
+                    onClick={inviteUserToPlay}
                     isDisabled={props.channel.Memberships[0].user.status === 'offline'}
                     >{props.channel.Memberships[0].user.status === 'offline' ? "Wait to invite" : "Invite to play"}
                     </Button>
