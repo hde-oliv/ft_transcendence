@@ -45,7 +45,6 @@ export class WebsocketService {
         })
       });
       const roomArr = Array.from(rooms);
-      this.logger.warn(roomArr);
       this.server.to(roomArr).emit(event, data);
     } catch (e) {
       this.logger.error(e);

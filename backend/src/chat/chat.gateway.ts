@@ -11,7 +11,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { ChatService } from './chat.service';
-import { Injectable, Logger, UseFilters } from '@nestjs/common';
+import { Injectable, Logger, Scope, UseFilters } from '@nestjs/common';
 import { Channels, Memberships, Users } from '@prisma/client';
 import { map, without } from 'lodash';
 import { SendMessageDto } from './dto/send-message-dto';
@@ -29,7 +29,7 @@ import { UsersService } from 'src/users/users.service';
   },
   transpors: ['websocket', 'webtransport'],
 })
-@Injectable()
+@Injectable({ scope: Scope.DEFAULT })
 export class SocketGateway
   implements OnGatewayConnection, OnGatewayInit, OnGatewayDisconnect {
   @WebSocketServer() server: Server;

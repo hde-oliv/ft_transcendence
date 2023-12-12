@@ -12,9 +12,6 @@ import { MatchController } from './match.controller';
 
 @Module({
   providers: [
-    WebsocketService,
-    SocketGateway,
-    UsersRepository,
     UsersService],
   controllers: [MatchController],
   imports: [PrismaModule, UsersModule, AuthModule, ChatModule],

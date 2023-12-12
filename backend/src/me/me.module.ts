@@ -13,8 +13,8 @@ import { UsersService } from 'src/users/users.service';
 @Module({
   providers: [
     MeService,
-    WebsocketService,
-    SocketGateway,
+
+
     UsersRepository,
     UsersService],
   controllers: [MeController],
