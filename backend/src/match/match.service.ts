@@ -1,13 +1,17 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { UsersRepository } from 'src/users/users.repository';
+import { MatchRepository } from './match.repository';
 import { ForbiddenException } from '@nestjs/common';
 import { UpdateUserDto } from 'src/users/dto/update-user-dto';
 import { WebsocketService } from 'src/chat/websocket.service';
 import _ from 'lodash'
+import { CreateInviteDto } from './dto/create-invite-dto';
 
 @Injectable()
 export class MatchService {
   constructor(
+    private matchRepository: MatchRepository,
+    private userRepository: UsersRepository,
     private websocketService: WebsocketService
   ) {
 
@@ -15,6 +19,17 @@ export class MatchService {
   destructor() {
 
   }
+
+  async createInvite(userId: string, targetId: string) {
+    const createInviteDto: CreateInviteDto = {
+      user_id: userId,
+      target_id: targetId
+    }
+    const responseNewInvite = await this.matchRepository.createInvite(createInviteDto);
+    this.websocketService.emitToUser(createInviteDto.target_id,'newInvite', responseNewInvite);
+    return responseNewInvite;
+  }
+
   private queuedPlayers: Map<string, { joined: Date, elo: number }>
   private pendingInvites: Map<string, boolean>;
   // TODO: there might the need to implement more then one queue variable to prevent multiple functions
