@@ -1,6 +1,7 @@
 'use client'
+import { GameContext } from "@/contexts/GameContext";
 import { Box } from "@chakra-ui/react";
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 
 enum RacketDirection {
 	DEFAULT = 1,
@@ -25,6 +26,7 @@ export default function Ball({ scorePointForLeftPlayer, scorePointForRightPlayer
 	const yAxisSpeed = 1.5;
 	const directCrossedBall = useRef(false);
 	const yAxisDir = useRef(0);
+  const gameContext = useContext(GameContext);
 	const [ballPosition, setBallPosition] = useState({ x: 50, y: 50 });
 	const [ballDirection, setBallDirection] = useState({
 		x: Math.random() < 0.5 ? + xAxisSpeed : - xAxisSpeed,
@@ -33,6 +35,11 @@ export default function Ball({ scorePointForLeftPlayer, scorePointForRightPlayer
 
 	useEffect(() => {
 		const timer = setInterval(() => {
+
+      if (gameContext.gameOver) {
+        clearInterval(timer);
+        return;
+      }
 
 			// Move the ball
 			setBallPosition((prevPosition) => {
@@ -52,11 +59,9 @@ export default function Ball({ scorePointForLeftPlayer, scorePointForRightPlayer
 			if (ballPosition.x <= 0 || ballPosition.x >= 100) {
 				if (ballPosition.x <= 0) {
 					scorePointForRightPlayer();
-					// setScoreRight(scoreRight + 1);
 				}
 				else {
 					scorePointForLeftPlayer();
-					// setScoreLeft(scoreLeft + 1);
 				}
 				setBallPosition({ x: 50, y: 50 });
 				setBallDirection({

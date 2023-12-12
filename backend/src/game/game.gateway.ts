@@ -29,8 +29,6 @@ export class GameGateway
 
   private readonly logger = new Logger(GameGateway.name);
 
-  private clients: ClientSocket[] = [];
-
   async afterInit(server: Server) {
     this.logger.log('WebSocket Gateway Initialized');
   }
@@ -52,5 +50,16 @@ export class GameGateway
       `Client trying to move left paddle to: ${JSON.stringify(data)}`,
     );
     this.server.emit('move_left_paddle', data);
+  }
+
+  @SubscribeMessage('move_right_paddle')
+  async handleMoveRightPaddle(
+    @MessageBody() data: number,
+    @ConnectedSocket() socket: Socket,
+  ) {
+    this.logger.log(
+      `Client trying to move right paddle to: ${JSON.stringify(data)}`,
+    );
+    this.server.emit('move_right_paddle', data);
   }
 }

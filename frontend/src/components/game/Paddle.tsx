@@ -29,10 +29,10 @@ export default function Paddle({ position, movePaddle, player, side, color }: Re
 
 		const handleKeyUp = (event: KeyboardEvent) => {
 			switch (event.key) {
-			  case 'ArrowUp':
+			  case 'o':
 				movePaddle(Math.max(paddlePosition - 5, 9));
 				break;
-			  case 'ArrowDown':
+			  case 'l':
 				movePaddle(Math.min(paddlePosition + 5, 91));
 				break;
 			  default:
