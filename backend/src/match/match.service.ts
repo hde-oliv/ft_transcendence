@@ -19,10 +19,9 @@ export class MatchService {
     private readonly queueService: QueueService,
     private matchRepository: MatchRepository,
     private userRepository: UsersRepository,
-  ) {
-    this.startQueue();
-  }
-  private readonly logger = new Logger(MatchService.name);
+    private websocketService: WebsocketService
+  ) { }
+
   async createInvite(userId: string, targetId: string) {
     const createInviteDto: CreateInviteDto = {
       user_id: userId,
@@ -32,6 +31,7 @@ export class MatchService {
     this.websocketService.emitToUser(createInviteDto.target_id, 'newInvite', responseNewInvite);
     return responseNewInvite;
   }
+
   private queuedPlayers: Map<string, { joined: Date, elo: number }>
   private pendingInvites: Map<string, boolean>;
   // TODO: there might the need to implement more then one queue variable to prevent multiple functions

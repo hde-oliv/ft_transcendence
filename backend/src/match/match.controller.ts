@@ -21,7 +21,8 @@ import { CreateInviteDto, createInviteSchema } from './dto/create-invite-dto';
 export class MatchController {
   constructor(
     private readonly matchService: MatchService
-  ) { }
+  ) {
+  }
 
   @UseGuards(JwtAuthGuard)
   @Get()

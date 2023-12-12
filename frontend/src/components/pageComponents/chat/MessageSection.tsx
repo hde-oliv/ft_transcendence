@@ -102,6 +102,7 @@ import { Badge } from '@chakra-ui/react';
 import StatusBadge from '../../user/StatusBadge';
 import { Props } from 'next/script';
 import { inviteToPlay } from "@/lib/fetchers/invite";
+import { inviteToPlay } from "@/lib/fetchers/invite";
 
 function membersFromChannel(
   channel: ChannelData["channel"]
