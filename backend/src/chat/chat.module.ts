@@ -1,6 +1,6 @@
 import { UsersModule } from 'src/users/users.module';
 import { SocketGateway } from './chat.gateway';
-import { Global, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { AuthModule } from 'src/auth/auth.module';
 import { ChatService } from './chat.service';
 import { AuthService } from 'src/auth/auth.service';

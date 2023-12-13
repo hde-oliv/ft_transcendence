@@ -10,7 +10,7 @@ export class WebsocketService {
   @WebSocketServer() server: Server;
   private readonly logger = new Logger(WebsocketService.name);
 
-  clients: ClientSocket[] = [];
+  clients: Array<ClientSocket> = [];
   /**
    * @param userId
    * @returns An array containing all user active conections to this application
@@ -52,7 +52,7 @@ export class WebsocketService {
   }
 }
 
-interface ClientSocket {
+type ClientSocket = {
   user: Users;
   socket: Socket;
 }

@@ -9,11 +9,16 @@ import { SocketGateway } from 'src/chat/chat.gateway';
 import { UsersRepository } from 'src/users/users.repository';
 import { UsersService } from 'src/users/users.service';
 import { MatchController } from './match.controller';
+import { MatchService } from './match.service';
+import { QueueModule } from 'src/queue/queue.module';
 
 @Module({
   providers: [
-    UsersService],
+    UsersService,
+    MatchService,
+  ],
   controllers: [MatchController],
-  imports: [PrismaModule, UsersModule, AuthModule, ChatModule],
+  imports: [PrismaModule, UsersModule, AuthModule, ChatModule, QueueModule],
+  exports: []
 })
 export class MatchModule { }

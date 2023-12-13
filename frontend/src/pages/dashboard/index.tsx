@@ -11,7 +11,6 @@ import {
   Avatar,
   AvatarBadge,
   Box,
-  Button,
   Card,
   CardBody,
   CardFooter,
@@ -57,35 +56,8 @@ import {
 } from "@/lib/fetchers/friends";
 import { FriendCard } from "../../components/pageComponents/dashboard/FriendCard";
 import { ChannelCard } from "../../components/pageComponents/dashboard/PublicChannelCard";
+import PlayCard from "../../components/pageComponents/dashboard/PlayCard";
 
-function PlayCard(props: PropsWithChildren) {
-  return (
-    <Center
-      flexDir="column"
-      alignItems="stretch"
-      h="370px"
-      w="370px"
-      justifyContent="space-between"
-    >
-      <Button
-        borderRadius="45"
-        h="45%"
-        backgroundColor="yellow.300"
-        color="pongBlue.400"
-      >
-        Play now
-      </Button>
-      <Button
-        borderRadius="45"
-        h="45%"
-        backgroundColor="yellow.300"
-        color="pongBlue.400"
-      >
-        Challenge a friend
-      </Button>
-    </Center>
-  );
-}
 function RankCard(props: PropsWithChildren) {
   const [loading, setLoading] = useState(true);
 

@@ -35,9 +35,9 @@ export class SocketGateway
   @WebSocketServer() server: Server;
 
   constructor(
-    private chatService: ChatService,
-    private socketService: WebsocketService,
-    private userServive: UsersService
+    private readonly chatService: ChatService,
+    private readonly socketService: WebsocketService,
+    private readonly userServive: UsersService
   ) { }
 
   private readonly logger = new Logger(SocketGateway.name);

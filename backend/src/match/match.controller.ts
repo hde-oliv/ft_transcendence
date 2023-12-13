@@ -10,10 +10,13 @@ import {
 import { JwtAuthGuard } from 'src/auth/jwt.guard';
 import { ZodValidationPipe } from 'src/zodPipe';
 import { UpdateUserDto, updateUserSchema } from 'src/users/dto/update-user-dto';
+import { MatchService } from './match.service';
 
 @Controller('match')
 export class MatchController {
-  constructor() { }
+  constructor(
+    private readonly matchService: MatchService
+  ) { }
 
   @UseGuards(JwtAuthGuard)
   @Get()
@@ -22,7 +25,8 @@ export class MatchController {
 
   @UseGuards(JwtAuthGuard)
   @UsePipes(new ZodValidationPipe(updateUserSchema))
-  @Post()
-  updateMe(@Request() req, @Body() updateMeDto: UpdateUserDto) {
+  @Post('/joinQueue')
+  joinQueue(@Request() req) {
+    return this.matchService.joinQueue(req.user);
   }
 }
