@@ -40,8 +40,8 @@ export class MatchService {
             this.queueService.removeFromQueue(p_two);
             this.queueService.addInvite(p_one);
             this.queueService.addInvite(p_two);
-            this.websocketService.emitToUser(p_one, 'matched', { to: { intra_login: p_two, nickname: nickname_one }, expiresAt });
-            this.websocketService.emitToUser(p_two, 'matched', { to: { intra_login: p_one, nickname: nickname_two }, expiresAt });
+            this.websocketService.emitToUser(p_one, 'matched', { to: { intra_login: p_two, nickname: nickname_two }, expiresAt });
+            this.websocketService.emitToUser(p_two, 'matched', { to: { intra_login: p_one, nickname: nickname_one }, expiresAt });
             setTimeout(() => {
               const pOneStatus = this.queueService.inviteStatus(p_one);
               const pTwoStatus = this.queueService.inviteStatus(p_two);
@@ -58,15 +58,19 @@ export class MatchService {
                   this.websocketService.emitToUser(p_one, 'reQueued', {});
                   if (pOneQueueRec)
                     this.queueService.reAddToQueue(p_one, pOneQueueRec)
+                } else {
+                  this.websocketService.emitToUser(p_one, 'deQueued', {})
                 }
                 if (pTwoStatus) {
                   this.websocketService.emitToUser(p_two, 'reQueued', {});
                   if (pTwoQueueRec)
                     this.queueService.reAddToQueue(p_two, pTwoQueueRec)
+                } else {
+                  this.websocketService.emitToUser(p_two, 'deQueued', {})
                 }
                 this.logger.log(`Could not create game for ${p_one} and ${p_two}`)
               }
-            }, inviteDuration + 1000);
+            }, inviteDuration + 300);
             //      if they dont confirm within time (on confirmation, this timeout must be cleared!)
           }
         })
@@ -102,5 +106,14 @@ export class MatchService {
     } catch (e) {
       throw e;
     }
+  }
+  async leaveQueue(user: TokenClaims) {
+    const userData = await this.userService.getUser({ id: user.intra_login });
+    if (userData === null)
+      throw new NotFoundException();
+    this.queueService.removeFromQueue(userData.intra_login);
+  }
+  acceptInvite(user: TokenClaims) {
+    this.queueService.acceptInvite(user.intra_login);
   }
 }

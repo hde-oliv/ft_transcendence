@@ -1,7 +1,9 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  Patch,
   Post,
   Request,
   UseGuards,
@@ -28,5 +30,20 @@ export class MatchController {
   @Post('/joinQueue')
   joinQueue(@Request() req) {
     return this.matchService.joinQueue(req.user);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @UsePipes(new ZodValidationPipe(updateUserSchema))
+  @Delete('/leaveQueue')
+  leaveQueue(@Request() req) {
+    return this.matchService.leaveQueue(req.user);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @UsePipes(new ZodValidationPipe(updateUserSchema))
+  @Patch('/accept')
+  acceptMatch(@Request() req) {
+    this.matchService.acceptInvite(req.user);
+    return {};
   }
 }

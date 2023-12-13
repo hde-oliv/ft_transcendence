@@ -1,9 +1,8 @@
 import { DividerProps, createIcon } from "@chakra-ui/react"
 import { ReactElement, createElement } from "react"
+import PathElement from "./PathElement";
 
-const PathElement = (props: { fill: string, d: string }) => {
-  return createElement('path', { d: props.d, color: props.fill })
-}
+
 
 const DowngradeIcon = createIcon({
   displayName: "DowngradeIcon",

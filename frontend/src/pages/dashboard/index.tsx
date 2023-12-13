@@ -212,7 +212,7 @@ const Dashboard: NextPageWithLayout = () => {
   const router = useRouter();
   return (
     <Wrap p="5vh 5vw" spacing="30px" justify="center">
-      <WrapItem>
+      <WrapItem borderRadius="30" borderWidth="2px" borderColor="yellow.400">
         <PlayCard />
       </WrapItem>
       <WrapItem borderRadius="30" borderWidth="2px" borderColor="yellow.400">

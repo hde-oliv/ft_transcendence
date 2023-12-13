@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 
 @Injectable()
 export default class QueueService {
@@ -42,8 +42,10 @@ export default class QueueService {
     this.invites.set(intra_login, false);
   }
   acceptInvite(intra_login: string) {
-    if (this.invites.get(intra_login))
+    if (this.invites.get(intra_login) !== undefined)
       this.invites.set(intra_login, true);
+    else
+      throw new NotFoundException('Invite not found');
   }
   removeInvite(intra_login: string) {
     this.invites.delete(intra_login);
