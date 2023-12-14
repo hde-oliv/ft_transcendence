@@ -12,18 +12,22 @@ export class MatchService {
   constructor(
     private matchRepository: MatchRepository,
     private userRepository: UsersRepository,
-    private websocketService: WebsocketService
+    private websocketService: WebsocketService,
   ) {
 
   }
   destructor() {
 
   }
-
   async createInvite(userId: string, targetId: string) {
     const createInviteDto: CreateInviteDto = {
       user_id: userId,
       target_id: targetId
+    }
+    //console.log(targetId);
+    const targetUser = await this.userRepository.getUserById(targetId);
+    if (!targetUser || targetUser.status === 'offline') {
+      throw new ForbiddenException(`User with id ${targetId} is not online`);
     }
     const responseNewInvite = await this.matchRepository.createInvite(createInviteDto);
     this.websocketService.emitToUser(createInviteDto.target_id,'newInvite', responseNewInvite);

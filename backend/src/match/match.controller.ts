@@ -12,7 +12,7 @@ import { JwtAuthGuard } from 'src/auth/jwt.guard';
 import { ZodValidationPipe } from 'src/zodPipe';
 import { UpdateUserDto, updateUserSchema } from 'src/users/dto/update-user-dto';
 import { MatchService } from './match.service';
-import { CreateInviteDto, createInviteSchema } from './dto/create-invite-dto';
+import { createInviteSchema } from './dto/create-invite-dto';
 
 
 @Controller('match')
