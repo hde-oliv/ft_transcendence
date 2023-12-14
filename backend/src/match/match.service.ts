@@ -27,6 +27,11 @@ export class MatchService {
       user_id: userId,
       target_id: targetId
     }
+    //console.log(targetId);
+    const targetUser = await this.userRepository.getUserById(targetId);
+    if (!targetUser || targetUser.status === 'offline') {
+      throw new ForbiddenException(`User with id ${targetId} is not online`);
+    }
     const responseNewInvite = await this.matchRepository.createInvite(createInviteDto);
     this.websocketService.emitToUser(createInviteDto.target_id, 'newInvite', responseNewInvite);
     return responseNewInvite;
