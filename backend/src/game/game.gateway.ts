@@ -11,6 +11,7 @@ import {
 import { Server, Socket } from 'socket.io';
 import { Logger } from '@nestjs/common';
 import { WebsocketService } from 'src/chat/websocket.service';
+import { Game } from './game';
 
 @WebSocketGateway({
   namespace: 'game',
@@ -24,6 +25,7 @@ export class GameGateway
 {
   @WebSocketServer()
   server: Server;
+  private game: Game;
 
   constructor(private socketService: WebsocketService) {}
 
@@ -31,6 +33,11 @@ export class GameGateway
 
   async afterInit(server: Server) {
     this.logger.log('WebSocket Gateway Initialized');
+    this.game = new Game();
+    const timer = setInterval(() => {
+      this.game.moveBall();
+      this.server.emit('move_ball', this.game.getBallPosition());
+    }, 50);
   }
 
   async handleDisconnect(socket: Socket) {
@@ -49,6 +56,7 @@ export class GameGateway
     this.logger.log(
       `Client trying to move left paddle to: ${JSON.stringify(data)}`,
     );
+    this.game.setLeftPaddlePosition(data);
     this.server.emit('move_left_paddle', data);
   }
 
@@ -60,6 +68,7 @@ export class GameGateway
     this.logger.log(
       `Client trying to move right paddle to: ${JSON.stringify(data)}`,
     );
+    this.game.setRightPaddlePosition(data);
     this.server.emit('move_right_paddle', data);
   }
 }

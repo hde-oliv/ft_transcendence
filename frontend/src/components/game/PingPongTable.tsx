@@ -8,12 +8,13 @@ import { io } from "socket.io-client";
 import { getToken } from "@/lib/TokenMagagment";
 import { wsBaseUrl } from "@/lib/fetchers/pongAxios";
 import { GameContext } from "@/contexts/GameContext";
+import { set } from "lodash";
 
 export default function PingPongTable() {
-  const [scoreLeft, setScoreLeft] = useState(0);
-	const [scoreRight, setScoreRight] = useState(0);
-	const [paddlePositionLeft, setPaddlePositionLeft] = useState(50);
-	const [paddlePositionRight, setPaddlePositionRight] = useState(50);
+  const [leftScore, setLeftScore] = useState(0);
+	const [rightScore, setRightScore] = useState(0);
+	const [leftPaddlePosition, setLeftPaddlePosition] = useState(50);
+	const [rightPaddlePosition, setRightPaddlePosition] = useState(50);
   const [winner, setWinner] = useState('');
   const [gameOver, setGameOver] = useState(false);
   const websocketUrl = wsBaseUrl.concat('/game');
@@ -27,32 +28,36 @@ export default function PingPongTable() {
 
   useEffect(() => {
     socket.connect();
-    socket.on('move_left_paddle', setPaddlePositionLeft);
-    socket.on('move_right_paddle', setPaddlePositionRight);
+    socket.on('move_left_paddle', setLeftPaddlePosition);
+    socket.on('move_right_paddle', setRightPaddlePosition);
+    socket.on('left_scored', () => setLeftScore);
+    socket.on('right_scored', () => setRightScore);
     return () => {
-      socket.off('move_left_paddle', setPaddlePositionLeft);
-      socket.off('move_right_paddle', setPaddlePositionRight);
+      socket.off('move_left_paddle', setLeftPaddlePosition);
+      socket.off('move_right_paddle', setRightPaddlePosition);
+      socket.off('left_scored', () => setLeftScore);
+      socket.off('right_scored', () => setRightScore);
       socket.disconnect();
     };
   }, []);
 
   useEffect(() => {
-    if (scoreLeft === 5 || scoreRight === 5) {
+    if (leftScore === 5 || rightScore === 5) {
       setGameOver(true);
-      if (scoreLeft === 10)
+      if (leftScore === 10)
         setWinner('Left player');
       else
         setWinner('Right player');
     }
-  }, [scoreLeft, scoreRight])
+  }, [leftScore, rightScore])
 
 	const scorePointForLeftPlayer = useCallback(() => {
-		setScoreLeft(scoreLeft + 1);
-	}, [scoreLeft]);
+		setLeftScore(leftScore + 1);
+	}, [leftScore]);
 
 	const scorePointForRightPlayer = useCallback(() => {
-		setScoreRight(scoreRight + 1);
-	}, [scoreRight]);
+		setRightScore(rightScore + 1);
+	}, [rightScore]);
 
 	const movePaddleLeft = useCallback(async (newPosition: SetStateAction<number>) => {
     if (socket) {
@@ -96,11 +101,11 @@ export default function PingPongTable() {
 			borderLeft={'0px'}
 			borderRight={'0px'}
 		>
-			<Score side={{ left: '30%', }} counter={scoreLeft} />
-			<Score side={{ right: '30%', }} counter={scoreRight} />
+			<Score side={{ left: '30%', }} counter={leftScore} />
+			<Score side={{ right: '30%', }} counter={rightScore} />
 
 			<Paddle
-				position={paddlePositionLeft}
+				position={leftPaddlePosition}
 				player='left'
 				movePaddle={movePaddleLeft}
 				side={{ left: '1.6%', }}
@@ -112,12 +117,12 @@ export default function PingPongTable() {
 			<Ball
 				scorePointForLeftPlayer={scorePointForLeftPlayer}
 				scorePointForRightPlayer={scorePointForRightPlayer}
-				paddlePositionLeft={paddlePositionLeft}
-				paddlePositionRight={paddlePositionRight}
+				paddlePositionLeft={leftPaddlePosition}
+				paddlePositionRight={rightPaddlePosition}
 			/>
 
 			<Paddle
-				position={paddlePositionRight}
+				position={rightPaddlePosition}
 				player='right'
 				movePaddle={movePaddleRight}
 				side={{ right: '1.6%', }}
