@@ -30,13 +30,13 @@ export default function PingPongTable() {
     socket.connect();
     socket.on('move_left_paddle', setLeftPaddlePosition);
     socket.on('move_right_paddle', setRightPaddlePosition);
-    socket.on('left_scored', () => setLeftScore);
-    socket.on('right_scored', () => setRightScore);
+    socket.on('left_score', setLeftScore);
+    socket.on('right_score', setRightScore);
     return () => {
       socket.off('move_left_paddle', setLeftPaddlePosition);
       socket.off('move_right_paddle', setRightPaddlePosition);
-      socket.off('left_scored', () => setLeftScore);
-      socket.off('right_scored', () => setRightScore);
+      socket.off('left_scored', setLeftScore);
+      socket.off('right_scored', setRightScore);
       socket.disconnect();
     };
   }, []);

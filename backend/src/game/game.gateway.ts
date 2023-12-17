@@ -37,6 +37,8 @@ export class GameGateway
     const timer = setInterval(() => {
       this.game.moveBall();
       this.server.emit('move_ball', this.game.getBallPosition());
+      this.server.emit('left_score', this.game.getLeftScore());
+      this.server.emit('right_score', this.game.getRightScore());
     }, 50);
   }
 

@@ -1,4 +1,5 @@
 
+
 enum RacketDirection {
   DEFAULT = 1,
   INVERTED = 2,
@@ -11,10 +12,13 @@ enum YAxisDirection {
 }
 
 export class Game {
-  private xAxisSpeed = 0.5;
-  private yAxisSpeed = 0;
+  private xAxisSpeed = 1.5;
+  private yAxisSpeed = 1.5;
   private ballPosition = { x: 50, y: 50 };
-  private ballDirection = { x: -this.xAxisSpeed, y: this.yAxisSpeed };
+  private ballDirection = {
+    x: Math.random() < 0.5 ? +this.xAxisSpeed : -this.xAxisSpeed,
+    y: Math.random() < 0.5 ? +this.yAxisSpeed : -this.yAxisSpeed,
+  };
   private yAxisDir = YAxisDirection.UP;
   private directCrossedBall = false;
 
@@ -28,16 +32,35 @@ export class Game {
   // }
 
   moveBall() {
-    if (this.ballPosition.x < 0 || this.ballPosition.x > 100) {
+    // Check if the ball hits the vertical walls
+    if (this.ballPosition.x <= 0 || this.ballPosition.x >= 100) {
+      if (this.ballPosition.x <= 0) {
+        this.rightScore++;
+      } else {
+        this.leftScore++;
+      }
       this.ballPosition = { x: 50, y: 50 };
+      this.ballDirection = {
+        x: Math.random() < 0.5 ? +this.xAxisSpeed : -this.xAxisSpeed,
+        y: Math.random() < 0.5 ? +this.yAxisSpeed : -this.yAxisSpeed,
+      };
       return;
     }
+
+
+    // Check if the ball hits the horizontal walls
     if (this.ballPosition.y <= 3.5) {
       this.ballDirection = { ...this.ballDirection, y: +this.yAxisSpeed };
+      this.yAxisDir = YAxisDirection.DOWN;
+      this.directCrossedBall = false;
     }
+
     if (this.ballPosition.y >= 96.5) {
       this.ballDirection = { ...this.ballDirection, y: -this.yAxisSpeed };
+      this.yAxisDir = YAxisDirection.UP;
+      this.directCrossedBall = false;
     }
+
 
     // Check if the ball hits the left paddle
     let biggerPos =
@@ -52,17 +75,17 @@ export class Game {
       if (this.ballPosition.x <= 2.5) {
         this.ballDirection = {
           x: -this.xAxisSpeed,
-          y: 50,
-            // this.yAxisDir == YAxisDirection.UP
-            //   ? +this.ballPosition.y
-            //   : -this.ballPosition.y,
+          y:
+            this.yAxisDir == YAxisDirection.UP
+              ? +this.ballPosition.y
+              : -this.ballPosition.y,
         };
         this.ballPosition = {
           x: this.ballPosition.x - this.xAxisSpeed,
-          y: 50,
-            // this.yAxisDir == YAxisDirection.UP
-            //   ? +this.ballPosition.y
-            //   : -this.ballPosition.y,
+          y:
+            this.yAxisDir == YAxisDirection.UP
+              ? +this.ballPosition.y
+              : -this.ballPosition.y,
         };
         this.ballPosition = {
           x: this.ballPosition.x + this.ballDirection.x,
@@ -74,8 +97,8 @@ export class Game {
         };
         return;
       }
-      // const racketDir: RacketDirection = Math.floor(Math.random() * 3) + 1;
-      const racketDir: RacketDirection = RacketDirection.DEFAULT;
+      const racketDir: RacketDirection = Math.floor(Math.random() * 3) + 1;
+      // const racketDir: RacketDirection = RacketDirection.DEFAULT;
       if (racketDir == RacketDirection.DEFAULT) {
         this.ballDirection = { ...this.ballDirection, x: +this.xAxisSpeed };
         this.ballPosition = {
@@ -122,17 +145,17 @@ export class Game {
       if (this.ballPosition.x >= 97.5) {
         this.ballDirection = {
           x: +this.xAxisSpeed,
-          y: 50,
-            // this.yAxisDir == YAxisDirection.UP
-            //   ? +this.ballPosition.y
-            //   : -this.ballPosition.y,
+          y:
+            this.yAxisDir == YAxisDirection.UP
+              ? +this.ballPosition.y
+              : -this.ballPosition.y,
         };
         this.ballPosition = {
           x: this.ballPosition.x + this.xAxisSpeed,
-          y: 50,
-            // this.yAxisDir == YAxisDirection.UP
-            //   ? +this.ballPosition.y
-            //   : -this.ballPosition.y,
+          y:
+            this.yAxisDir == YAxisDirection.UP
+              ? +this.ballPosition.y
+              : -this.ballPosition.y,
         };
         this.ballPosition = {
           x: this.ballPosition.x + this.ballDirection.x,
@@ -142,14 +165,10 @@ export class Game {
           x: this.ballPosition.x + this.ballDirection.x,
           y: this.ballPosition.y + this.ballDirection.y,
         };
-        // this.ballPosition = {
-        //   x: this.ballPosition.x + this.ballDirection.x,
-        //   y: this.ballPosition.y + this.ballDirection.y,
-        // };
         return;
       }
-      // const racketDir: RacketDirection = Math.floor(Math.random() * 3) + 1;
-      const racketDir: RacketDirection = RacketDirection.DEFAULT;
+      const racketDir: RacketDirection = Math.floor(Math.random() * 3) + 1;
+      // const racketDir: RacketDirection = RacketDirection.DEFAULT;
       if (racketDir == RacketDirection.DEFAULT) {
         this.ballDirection = { ...this.ballDirection, x: -this.xAxisSpeed };
         this.ballPosition = {
@@ -186,14 +205,20 @@ export class Game {
   }
 
   public updatePosition() {
-    // return {
-    //   ...this.position,
-    //   x: this.position.x + this.direction.x,
-    // };
+    if (this.directCrossedBall) {
+      return {
+        ...this.ballPosition,
+        x: this.ballPosition.x + this.ballDirection.x,
+      };
+    }
     return {
       x: this.ballPosition.x + this.ballDirection.x,
       y: this.ballPosition.y + this.ballDirection.y,
     };
+  }
+
+  public getBallPosition() {
+    return this.ballPosition;
   }
 
   public setLeftPaddlePosition(position: number) {
@@ -204,7 +229,11 @@ export class Game {
     this.rightPaddlePosition = position;
   }
 
-  public getBallPosition() {
-    return this.ballPosition;
+  public getLeftScore() {
+    return this.leftScore;
+  }
+
+  public getRightScore() {
+    return this.rightScore;
   }
 }
