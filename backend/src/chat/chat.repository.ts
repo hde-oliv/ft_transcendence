@@ -4,12 +4,14 @@ import {
   Channels,
   Memberships,
   Messages as MessageEntity,
+  BlockedUsers,
 } from '@prisma/client';
 import { NewMessageDto } from './dto/new-message-dto';
 import { CreateChannelDto } from './dto/create-channel-dto';
 import { CreateMembershipDto } from './dto/create-membership-dto';
 import { UpdateChannelDto } from './dto/update-channel-dto';
 import { UpdateMembershipDto } from './dto/update-membership-dto';
+import { BlockUserStatusDto } from './dto/block-user-status-dto';
 import { TokenClaims } from 'src/auth/auth.model';
 import { channel } from 'diagnostics_channel';
 
@@ -353,4 +355,58 @@ export class ChatRepository {
       }
     })
   }
+
+  async createBlock(
+    token: TokenClaims, 
+    blockUserStatusDto : BlockUserStatusDto)
+    : Promise<BlockedUsers> {
+    return this.prismaService.blockedUsers.create({
+      data: {
+        issuer_id: token.intra_login,
+        targer_id: blockUserStatusDto.targetId,
+      }
+    })
+  }
+
+  // async getBlockUserStatus(token: TokenClaims, targetId: string) {
+  //   const issuerId = token.intra_login;
+  //   const data = await this.prismaService.blockedUsers.findFirst({
+  //     where: {
+  //       issuer_id: issuerId,
+  //       targer_id: targetId
+  //     }
+  //   })
+  //   return data;
+  // }
+  
+  async getAllBlockedUsers(token: TokenClaims) {
+    const issuerId = token.intra_login;
+    const data = await this.prismaService.blockedUsers.findMany({
+      where: {
+        issuer_id: issuerId,
+      },
+      include: {
+        target_user: {
+          select: {
+            nickname: true,
+            avatar: true,
+            intra_login: true,
+            status: true,
+            elo: true,
+          }
+        }
+      }
+    })
+    return data;
+  }
+  // async deleteBlock(
+  //   token: TokenClaims, 
+  //   blockUserStatusDto : BlockUserStatusDto)
+  //   : Promise<BlockedUsers> {
+  //   return this.prismaService.blockedUsers.delete({
+  //     data: {
+  //       issuer_id: token.intra_login,
+  //       targer_id: blockUserStatusDto.targetId,
+  //     }
+  //   })
 }

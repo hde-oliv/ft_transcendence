@@ -17,6 +17,7 @@ import { CreateChannelDto } from './dto/create-channel-dto';
 import { TokenClaims, tokenClaimsSchema } from 'src/auth/auth.model';
 import { UpdateChannelDto } from './dto/update-channel-dto';
 import { JoinChannelDto } from './dto/join-channel-dto';
+import { BlockUserStatusDto } from './dto/block-user-status-dto';
 import { WsException } from '@nestjs/websockets';
 import { SocketGateway } from './chat.gateway';
 import { WebsocketService } from './websocket.service';
@@ -502,5 +503,39 @@ export class ChatService {
       throw new BadRequestException();
     }
     return this.chatRepository.getUsersByChannel(channelId);
+  }
+
+  async createBlock(token: TokenClaims, blockUserStatusDto : BlockUserStatusDto) {
+    const result = await this.chatRepository.createBlock(token, blockUserStatusDto);
+
+    if (result) {
+      return {
+        message: 'User has been successfully blocked',
+        blockedUser: blockUserStatusDto.targetId,
+        issuer: blockUserStatusDto.issuerId
+      };
+    } else {
+      throw new BadRequestException('Failed to block user');
+    }
+  }
+
+  // async getBlockUserStatus(token: TokenClaims, targetId: string) {
+  //   const result = await this.chatRepository.getBlockUserStatus(token, targetId);
+
+  //   if (result) {
+  //     return result;
+  //   } else {
+  //     throw new BadRequestException('Failed to get THE block user status');
+  //   }
+  // }
+
+  async getAllBlockedUsers(token: TokenClaims) {
+    const result = await this.chatRepository.getAllBlockedUsers(token);
+
+    if (result) {
+      return result;
+    } else {
+      throw new BadRequestException('Failed to get ALL blocked users');
+    }
   }
 }

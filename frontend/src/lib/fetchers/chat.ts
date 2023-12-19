@@ -25,9 +25,35 @@ const joinPublicChannelResponseSchema = z.object({
 
 const userCheckInChannelResponseSchema = z.boolean();
 
+const blockUserResponseSchema = z.object({
+  issuerId: z.string(),
+  targetId: z.string(),
+});
+
+const blockUserStatusResponseSchema = z.string();
+
+const blockedTargetSchema = z.object({
+  nickname: z.string(),
+	avatar: z.string(),
+	intra_login: z.string(),
+	status: z.string(),
+	elo: z.number(),
+});
+
+const returnAllBlockedUsersSchema = z.object({
+  id: z.string(),
+  issuer_id: z.string(),
+  target_id: z.string(),
+  target_user: blockedTargetSchema,
+});
+
+
 export type PublicChannelResponse = z.infer<typeof publicChannelResponseSchema>;
 export type JoinPublicChannelResponse = z.infer<typeof joinPublicChannelResponseSchema>;
 export type UserCheckInChannelResponse = z.infer<typeof userCheckInChannelResponseSchema>;
+export type BlockUserResponse = z.infer<typeof blockUserResponseSchema>;
+export type BlockUserStatusResponse = z.infer<typeof blockUserStatusResponseSchema>;
+export type ReturnAllBlockedUsersResponse = z.infer<typeof returnAllBlockedUsersSchema>;
 
 const myChannelsResponseSchema = z.object({
   id: z.number().int(),
@@ -260,4 +286,33 @@ export async function promoteChannelAdmin(channelId: number, userId: string) {
 export async function demoteChannelAdmin(channelId: number, userId: string) {
   const fetcher = pongAxios();
   return fetcher.post(`/chat/channel/user/unadmin`, { channelId: channelId, userId: userId })
+}
+
+export async function blockUser(data: BlockUserResponse) {
+  const fetcher = pongAxios();
+  return fetcher.post(`/chat/block`, data);
+}
+
+export async function unblockUser(data: { issuer_id: string, target_id: string }) {
+  const fetcher = pongAxios();
+  return fetcher.delete(`/chat/unblock`, {data} );
+}
+
+// export async function fetchblockUserStatus(targetId: string) {
+//   const fetcher = pongAxios();
+//   const response = await fetcher.get(`chat/block/${targetId}`);
+//   const blockStatus = blockUserStatusResponseSchema.safeParse(response.data);
+
+//   if (blockStatus.success) {
+//     return false;
+//   } else {
+//     return true;
+//   }
+// }
+
+export async function fetchAllBlockedUsers() {
+  const fetcher = pongAxios();
+  const response = await fetcher.get(`chat/block/all`);
+
+  return z.array(returnAllBlockedUsersSchema).parse(response.data);
 }

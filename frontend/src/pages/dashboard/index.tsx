@@ -23,6 +23,11 @@ import {
   Text,
   Wrap,
   WrapItem,
+  Tabs, 
+  TabList, 
+  TabPanels, 
+  Tab, 
+  TabPanel,
 } from "@chakra-ui/react";
 import {
   Stat,
@@ -56,6 +61,7 @@ import {
 } from "@/lib/fetchers/friends";
 import { FriendCard } from "../../components/pageComponents/dashboard/FriendCard";
 import { ChannelCard } from "../../components/pageComponents/dashboard/PublicChannelCard";
+import {BlockUserCard} from "../../components/pageComponents/dashboard/BlockUserCard";
 import PlayCard from "../../components/pageComponents/dashboard/PlayCard";
 
 function RankCard(props: PropsWithChildren) {
@@ -225,7 +231,20 @@ const Dashboard: NextPageWithLayout = () => {
         <StatsCard />
       </WrapItem>
       <WrapItem borderRadius="30" borderWidth="2px" borderColor="yellow.400">
-        <FriendCard />
+        <Tabs isFitted variant="soft-rounded" >
+          <TabList mb='1em'>
+            <Tab>Friendship</Tab>
+            <Tab>Blocked</Tab>
+          </TabList>
+          <TabPanels>
+            <TabPanel>
+              <FriendCard />
+            </TabPanel>
+            <TabPanel>
+              <BlockUserCard />
+            </TabPanel>
+          </TabPanels>
+        </Tabs>
       </WrapItem>
       <WrapItem borderRadius="30" borderWidth="2px" borderColor="yellow.400">
         <ChannelCard />
