@@ -16,6 +16,9 @@ import { UpdateUserDto, updateUserSchema } from 'src/users/dto/update-user-dto';
 import { MatchService } from './match.service';
 import { createInviteSchema } from './dto/create-invite-dto';
 
+import { MatchService } from './match.service';
+import { createInviteSchema } from './dto/create-invite-dto';
+
 
 @Controller('match')
 export class MatchController {

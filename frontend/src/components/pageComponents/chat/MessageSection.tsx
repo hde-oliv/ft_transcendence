@@ -36,6 +36,18 @@ import {
   Portal,
 } from '@chakra-ui/react'
 import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  PopoverHeader,
+  PopoverBody,
+  PopoverFooter,
+  PopoverArrow,
+  PopoverCloseButton,
+  PopoverAnchor,
+  Portal,
+} from '@chakra-ui/react'
+import {
   Avatar,
   AvatarBadge,
   Box,
@@ -72,6 +84,12 @@ import {
   Tooltip,
   VStack,
   useDisclosure,
+  Stat,
+  StatLabel,
+  StatNumber,
+  StatHelpText,
+  StatArrow,
+  Wrap,
   Stat,
   StatLabel,
   StatNumber,
@@ -615,6 +633,34 @@ export function MessageSection(
       });
     }
   }, [messages]);
+  const cardData = dataFromProps();
+  function dataFromProps() {
+    if (props.channel.user2user) {
+      const isOnline = props.channel.Memberships[0].user.status === 'online';
+      if (props.channel.Memberships.length > 0) {
+        return {
+          avatar: props.channel.Memberships[0].user.avatar,
+          intra_login: props.channel.Memberships[0].user.intra_login,
+          nickname: props.channel.Memberships[0].user.nickname,
+          statusColor: isOnline ? 'green.300' : 'gray',
+        };
+      } else {
+        return {
+          avatar: "",
+          intra_login: "",
+          nickname: props.channel.name,
+          statusColor: 'gray',
+        };
+      }
+    } else {
+      return {
+        avatar: "",
+        intra_login: "",
+        nickname: props.channel.name,
+        statusColor: 'yellow',
+      };
+    }
+  }
   const cardData = dataFromProps();
   function dataFromProps() {
     if (props.channel.user2user) {

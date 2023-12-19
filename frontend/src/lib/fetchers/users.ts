@@ -31,3 +31,4 @@ export async function fetchUserByIntraLogin(intra_login: string) {
   const user = parse(response.data, "", intra_login)
   return user
 }
+
