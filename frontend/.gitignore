@@ -18,7 +18,7 @@
 # vscode
 /.vscode
 /*/.vscode
-backend/.vscode/launch.json
+/backend/.vscode/launch.json
 
 # misc
 .DS_Store
