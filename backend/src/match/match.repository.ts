@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/co
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma, Invites } from '@prisma/client';
 import { CreateInviteDto } from './dto/create-invite-dto';
+import { throws } from 'assert';
 
 
 @Injectable()
@@ -16,26 +17,37 @@ export class MatchRepository {
     if (!targetUser) {
       throw new NotFoundException(`User with id ${newInviteForIntra.target_id} not found`);
     }
-  
+
+    let existingInvite: Invites | null;
 
     try {
-      return this.prismaService.invites.create({
-        data: {
+      existingInvite = await this.prismaService.invites.findFirst({
+        where: {
           user_id: newInviteForIntra.user_id,
           target_id: newInviteForIntra.target_id,
         },
-      }); 
+      });
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        if (error.code === 'P2002') {
-          const {user_id, target_id} = newInviteForIntra;
-          return this.prismaService.invites.findUniqueOrThrow({
+      existingInvite = null;
+    }
 
-            where: {
-              user_id_target_id:{user_id, target_id} 
-            }
-          });
-        }
+    if (existingInvite) {
+      return {
+        id: existingInvite.id,
+        user_id: existingInvite.user_id,
+        target_id: existingInvite.target_id,
+        fulfilled: existingInvite.fulfilled,
+      };
+    } else {
+      try {
+        return await this.prismaService.invites.create({
+          data: {
+            user_id: newInviteForIntra.user_id,
+            target_id: newInviteForIntra.target_id,
+          },
+        });
+      } catch (error) {
+
       }
     }
     throw new NotFoundException(`User with id ${newInviteForIntra.target_id} not found`);
