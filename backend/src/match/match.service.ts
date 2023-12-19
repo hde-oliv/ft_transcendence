@@ -19,9 +19,8 @@ export class MatchService {
     private readonly queueService: QueueService,
     private matchRepository: MatchRepository,
     private userRepository: UsersRepository,
-    private websocketService: WebsocketService
   ) { }
-
+  private readonly logger = new Logger(MatchService.name);
   async createInvite(userId: string, targetId: string) {
     const createInviteDto: CreateInviteDto = {
       user_id: userId,
