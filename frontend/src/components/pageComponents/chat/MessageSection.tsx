@@ -98,11 +98,8 @@ import CrownIcon from "@/components/icons/CrownIcon";
 import UndoIcon from "@/components/icons/UndoIcon";
 import DowngradeIcon from "@/components/icons/DowngradeIcon";
 import profilePopover from "../../user/Profile";
-import { Badge } from '@chakra-ui/react';
-import StatusBadge from '../../user/StatusBadge';
-import { Props } from 'next/script';
 import { inviteToPlay } from "@/lib/fetchers/invite";
-import { inviteToPlay } from "@/lib/fetchers/invite";
+
 
 function membersFromChannel(
   channel: ChannelData["channel"]
@@ -440,13 +437,7 @@ function GroupSettings(props: {
                 }
               }}
               channel={props.channel}
-<<<<<<< HEAD
             />
-            onClick={profilePopover(me.intra_login)}
-
-=======
-              />
->>>>>>> 28a8d34 (fix:user controller feat: profile popover on chat)
             <Tabs
               isLazy={true}
               variant='solid-rounded'
@@ -736,84 +727,6 @@ export function MessageSection(
                 </PopoverContent>
               </Portal>
             </Popover>
-=======
-              <Popover>
-                 <>{/* Profile PopOver */}</>
-              <PopoverTrigger>
-                  <Avatar
-                  mr="2vw"
-                  name={channelName}
-                  src={props.channel.Memberships[0].user.avatar}
-                  />
-              </PopoverTrigger>
-              <Portal>
-              <PopoverContent bg='pongBlue.500'>
-                  <PopoverArrow bg='pongBlue.500' />
-                  <HStack>
-                    <Avatar
-                      mr="2vw"
-                      name={channelName}
-                      src={props.channel.Memberships[0].user.avatar}>
-                      <AvatarBadge bg={cardData.statusColor} boxSize={'1em'} borderWidth={'0.1em'} />
-                    </Avatar>
-                    <PopoverHeader>
-                      <Heading textAlign="center" fontWeight="medium" size="md" pl="1vw">
-                      {channelName}
-                      </Heading>
-                    </PopoverHeader>
-                  </HStack>
-                  <PopoverCloseButton />
-                  <PopoverBody>
-                    <Button
-                    colorScheme='green'
-                    isDisabled={props.channel.Memberships[0].user.status === 'offline'}
-                    >{props.channel.Memberships[0].user.status === 'offline' ? "Wait to invite" : "Invite to play"}
-                    </Button>
-                  </PopoverBody>
-                  <PopoverFooter>
-                  <Center flexDir="column" h="20%" w="100%">
-                    <Heading textAlign="center" fontWeight="medium" size="md" pl="1vw" > Stats of {channelName}</Heading>
-                    <Wrap spacing="1vw">
-                      <Stat
-                        borderWidth="2px"
-                        borderRadius="md"
-                        p="1vw 1vw"
-                        borderColor="yellow.200"
-                      >
-                        <StatLabel>Games</StatLabel>
-                        <StatNumber textAlign="center" color="yellow.300">
-                          20
-                        </StatNumber>
-                      </Stat>
-                      <Stat
-                        borderWidth="2px"
-                        borderRadius="md"
-                        p="1vw 1vw"
-                        borderColor="yellow.200"
-                      >
-                        <StatLabel>Victories</StatLabel>
-                        <StatNumber textAlign="center" color="green.400">
-                          10
-                        </StatNumber>
-                      </Stat>
-                      <Stat
-                        borderWidth="2px"
-                        borderRadius="md"
-                        p="1vw 1vw"
-                        borderColor="yellow.200"
-                      >
-                        <StatLabel>Loses</StatLabel>
-                        <StatNumber textAlign="center" color="red.400">
-                          10
-                        </StatNumber>
-                      </Stat>
-                    </Wrap>
-                  </Center>
-                </PopoverFooter>
-              </PopoverContent>
-              </Portal>
-          </Popover>
->>>>>>> 28a8d34 (fix:user controller feat: profile popover on chat)
           ) : (
             <Avatar mr="2vw" name={channelName} bg="yellow.300" />
           )}
@@ -1055,3 +968,82 @@ function InviteUserCard(props: {
     </Flex>
   );
 }
+/*
+         <Popover>
+                 <>{ Profile PopOver }</>
+                 <PopoverTrigger>
+                 <Avatar
+                 mr="2vw"
+                 name={channelName}
+                 src={props.channel.Memberships[0].user.avatar}
+                 />
+             </PopoverTrigger>
+             <Portal>
+             <PopoverContent bg='pongBlue.500'>
+                 <PopoverArrow bg='pongBlue.500' />
+                 <HStack>
+                   <Avatar
+                     mr="2vw"
+                     name={channelName}
+                     src={props.channel.Memberships[0].user.avatar}>
+                     <AvatarBadge bg={cardData.statusColor} boxSize={'1em'} borderWidth={'0.1em'} />
+                   </Avatar>
+                   <PopoverHeader>
+                     <Heading textAlign="center" fontWeight="medium" size="md" pl="1vw">
+                     {channelName}
+                     </Heading>
+                   </PopoverHeader>
+                 </HStack>
+                 <PopoverCloseButton />
+                 <PopoverBody>
+                   <Button
+                   colorScheme='green'
+                   isDisabled={props.channel.Memberships[0].user.status === 'offline'}
+                   >{props.channel.Memberships[0].user.status === 'offline' ? "Wait to invite" : "Invite to play"}
+                   </Button>
+                 </PopoverBody>
+                 <PopoverFooter>
+                 <Center flexDir="column" h="20%" w="100%">
+                   <Heading textAlign="center" fontWeight="medium" size="md" pl="1vw" > Stats of {channelName}</Heading>
+                   <Wrap spacing="1vw">
+                     <Stat
+                       borderWidth="2px"
+                       borderRadius="md"
+                       p="1vw 1vw"
+                       borderColor="yellow.200"
+                     >
+                       <StatLabel>Games</StatLabel>
+                       <StatNumber textAlign="center" color="yellow.300">
+                         20
+                       </StatNumber>
+                     </Stat>
+                     <Stat
+                       borderWidth="2px"
+                       borderRadius="md"
+                       p="1vw 1vw"
+                       borderColor="yellow.200"
+                     >
+                       <StatLabel>Victories</StatLabel>
+                       <StatNumber textAlign="center" color="green.400">
+                         10
+                       </StatNumber>
+                     </Stat>
+                     <Stat
+                       borderWidth="2px"
+                       borderRadius="md"
+                       p="1vw 1vw"
+                       borderColor="yellow.200"
+                     >
+                       <StatLabel>Loses</StatLabel>
+                       <StatNumber textAlign="center" color="red.400">
+                         10
+                       </StatNumber>
+                     </Stat>
+                   </Wrap>
+                 </Center>
+               </PopoverFooter>
+             </PopoverContent>
+             </Portal>
+         </Popover>
+
+*/
