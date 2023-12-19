@@ -1,3 +1,4 @@
+import { gameState } from "./game.gateway";
 
 
 enum RacketDirection {
@@ -12,6 +13,7 @@ enum YAxisDirection {
 }
 
 export class Game {
+  private paddleIncrement = 5;
   private xAxisSpeed = 1.5;
   private yAxisSpeed = 1.5;
   private ballPosition = { x: 50, y: 50 };
@@ -22,22 +24,23 @@ export class Game {
   private yAxisDir = YAxisDirection.UP;
   private directCrossedBall = false;
 
-  private leftPaddlePosition = 50;
-  private rightPaddlePosition = 50;
+  private pOnePaddleY = 50;
+  private pTwoPaddleY = 50;
 
-  private leftScore = 0;
-  private rightScore = 0;
+  private score = {
+    pOne: 0,
+    pTwo: 0
+  }
+  private pOne = 0;
+  private pTwo = 0;
 
-  // public constructor() {
-  // }
-
-  moveBall() {
+  gameTick() {
     // Check if the ball hits the vertical walls
     if (this.ballPosition.x <= 0 || this.ballPosition.x >= 100) {
       if (this.ballPosition.x <= 0) {
-        this.rightScore++;
+        this.score.pTwo++;
       } else {
-        this.leftScore++;
+        this.score.pOne++;
       }
       this.ballPosition = { x: 50, y: 50 };
       this.ballDirection = {
@@ -64,13 +67,13 @@ export class Game {
 
     // Check if the ball hits the left paddle
     let biggerPos =
-      this.ballPosition.y > this.leftPaddlePosition
+      this.ballPosition.y > this.pOnePaddleY
         ? this.ballPosition.y
-        : this.leftPaddlePosition;
+        : this.pOnePaddleY;
     let smallerPos =
-      this.ballPosition.y < this.leftPaddlePosition
+      this.ballPosition.y < this.pOnePaddleY
         ? this.ballPosition.y
-        : this.leftPaddlePosition;
+        : this.pOnePaddleY;
     if (this.ballPosition.x <= 5 && biggerPos - smallerPos < 10) {
       if (this.ballPosition.x <= 2.5) {
         this.ballDirection = {
@@ -134,13 +137,13 @@ export class Game {
 
     // Check if the ball hits the right paddle
     biggerPos =
-      this.ballPosition.y > this.rightPaddlePosition
+      this.ballPosition.y > this.pTwoPaddleY
         ? this.ballPosition.y
-        : this.rightPaddlePosition;
+        : this.pTwoPaddleY;
     smallerPos =
-      this.ballPosition.y < this.rightPaddlePosition
+      this.ballPosition.y < this.pTwoPaddleY
         ? this.ballPosition.y
-        : this.rightPaddlePosition;
+        : this.pTwoPaddleY;
     if (this.ballPosition.x >= 95 && biggerPos - smallerPos < 10) {
       if (this.ballPosition.x >= 97.5) {
         this.ballDirection = {
@@ -217,23 +220,39 @@ export class Game {
     };
   }
 
+  public getGameData(): gameState {
+    return {
+      ballData: this.ballPosition,
+      paddles: {
+        pOne: this.pOnePaddleY,
+        pTwo: this.pTwoPaddleY
+      },
+      score: this.score
+    }
+  }
+
   public getBallPosition() {
     return this.ballPosition;
   }
-
   public setLeftPaddlePosition(position: number) {
-    this.leftPaddlePosition = position;
+    if (position > 0)
+      this.pOnePaddleY += this.paddleIncrement;
+    else
+      this.pOnePaddleY -= this.paddleIncrement;
   }
 
   public setRightPaddlePosition(position: number) {
-    this.rightPaddlePosition = position;
+    if (position > 0)
+      this.pTwoPaddleY += this.paddleIncrement;
+    else
+      this.pTwoPaddleY -= this.paddleIncrement;
   }
 
   public getLeftScore() {
-    return this.leftScore;
+    return this.pOne;
   }
 
   public getRightScore() {
-    return this.rightScore;
+    return this.pTwo;
   }
 }

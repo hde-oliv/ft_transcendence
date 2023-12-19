@@ -12,6 +12,28 @@ import { Server, Socket } from 'socket.io';
 import { Logger } from '@nestjs/common';
 import { WebsocketService } from 'src/chat/websocket.service';
 import { Game } from './game';
+import z from 'zod';
+
+const ballData = z.object({
+  x: z.number(),
+  y: z.number()
+})
+const score = z.object({
+  pOne: z.number().int(),
+  pTwo: z.number().int()
+})
+const paddles = z.object({
+  pOne: z.number(),
+  pTwo: z.number()
+})
+
+const gameData = z.object({
+  ballData: ballData,
+  score: score,
+  paddles: paddles
+})
+
+export type gameState = z.infer<typeof gameData>;
 
 @WebSocketGateway({
   namespace: 'game',
@@ -21,13 +43,12 @@ import { Game } from './game';
   transports: ['websocket'],
 })
 export class GameGateway
-  implements OnGatewayConnection, OnGatewayInit, OnGatewayDisconnect
-{
+  implements OnGatewayConnection, OnGatewayInit, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
   private game: Game;
 
-  constructor(private socketService: WebsocketService) {}
+  constructor(private socketService: WebsocketService) { }
 
   private readonly logger = new Logger(GameGateway.name);
 
@@ -35,10 +56,8 @@ export class GameGateway
     this.logger.log('WebSocket Gateway Initialized');
     this.game = new Game();
     const timer = setInterval(() => {
-      this.game.moveBall();
-      this.server.emit('move_ball', this.game.getBallPosition());
-      this.server.emit('left_score', this.game.getLeftScore());
-      this.server.emit('right_score', this.game.getRightScore());
+      this.game.gameTick();
+      this.server.emit('game_data', this.game.getGameData())
     }, 50);
   }
 
@@ -52,25 +71,23 @@ export class GameGateway
 
   @SubscribeMessage('move_left_paddle')
   async handleMoveLeftPaddle(
-    @MessageBody() data: number,
+    @MessageBody() dir: number,
     @ConnectedSocket() socket: Socket,
   ) {
     this.logger.log(
-      `Client trying to move left paddle to: ${JSON.stringify(data)}`,
+      `Client trying to move left paddle to: ${JSON.stringify(dir)}`,
     );
-    this.game.setLeftPaddlePosition(data);
-    this.server.emit('move_left_paddle', data);
+    this.game.setLeftPaddlePosition(dir);
   }
 
   @SubscribeMessage('move_right_paddle')
   async handleMoveRightPaddle(
-    @MessageBody() data: number,
+    @MessageBody() dir: number,
     @ConnectedSocket() socket: Socket,
   ) {
     this.logger.log(
-      `Client trying to move right paddle to: ${JSON.stringify(data)}`,
+      `Client trying to move right paddle to: ${JSON.stringify(dir)}`,
     );
-    this.game.setRightPaddlePosition(data);
-    this.server.emit('move_right_paddle', data);
+    this.game.setRightPaddlePosition(dir);
   }
 }

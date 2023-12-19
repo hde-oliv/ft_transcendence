@@ -3,18 +3,42 @@ import Score from "./Score";
 import Paddle from "./Paddle";
 import DashedLineSeparator from "./DashedLineSeparator";
 import Ball from "./Ball";
-import { SetStateAction, useCallback, useEffect, useMemo, useState } from "react";
+import { GameContext } from "@/contexts/GameContext";
+import { SetStateAction, useCallback, useEffect, useState } from 'react'
+
+import z from 'zod';
+import { wsBaseUrl } from "@/lib/fetchers/pongAxios";
 import { io } from "socket.io-client";
 import { getToken } from "@/lib/TokenMagagment";
-import { wsBaseUrl } from "@/lib/fetchers/pongAxios";
-import { GameContext } from "@/contexts/GameContext";
-import { set } from "lodash";
+import { cloneDeep } from "lodash";
+
+const ballData = z.object({
+  x: z.number(),
+  y: z.number()
+})
+const score = z.object({
+  pOne: z.number().int(),
+  pTwo: z.number().int()
+})
+const paddles = z.object({
+  pOne: z.number(),
+  pTwo: z.number()
+})
+
+const gameData = z.object({
+  ballData: ballData,
+  score: score,
+  paddles: paddles
+})
+
+type gameState = z.infer<typeof gameData>;
 
 export default function PingPongTable() {
-  const [leftScore, setLeftScore] = useState(0);
-	const [rightScore, setRightScore] = useState(0);
-	const [leftPaddlePosition, setLeftPaddlePosition] = useState(50);
-	const [rightPaddlePosition, setRightPaddlePosition] = useState(50);
+  const [gameData, setGameData] = useState<gameState>({
+    ballData: { x: 50, y: 50 },
+    paddles: { pOne: 50, pTwo: 50 },
+    score: { pOne: 0, pTwo: 0 }
+  })
   const [winner, setWinner] = useState('');
   const [gameOver, setGameOver] = useState(false);
   const websocketUrl = wsBaseUrl.concat('/game');
@@ -25,111 +49,89 @@ export default function PingPongTable() {
     },
     transports: ["websocket"],
   });
-
+  function onGameData(payload: gameState) {
+    setGameData(cloneDeep(payload));
+  }
   useEffect(() => {
     socket.connect();
-    socket.on('move_left_paddle', setLeftPaddlePosition);
-    socket.on('move_right_paddle', setRightPaddlePosition);
-    socket.on('left_score', setLeftScore);
-    socket.on('right_score', setRightScore);
+    socket.on('game_data', onGameData);
     return () => {
-      socket.off('move_left_paddle', setLeftPaddlePosition);
-      socket.off('move_right_paddle', setRightPaddlePosition);
-      socket.off('left_scored', setLeftScore);
-      socket.off('right_scored', setRightScore);
+      socket.off('game_data', onGameData);
       socket.disconnect();
     };
   }, []);
 
   useEffect(() => {
-    if (leftScore === 5 || rightScore === 5) {
+    if (gameData.score.pOne === 5 || gameData.score.pTwo === 5) {
       setGameOver(true);
-      if (leftScore === 10)
+      if (gameData.score.pOne === 10)
         setWinner('Left player');
       else
         setWinner('Right player');
     }
-  }, [leftScore, rightScore])
+  }, [gameData.score.pOne, gameData.score.pTwo])
 
-	const scorePointForLeftPlayer = useCallback(() => {
-		setLeftScore(leftScore + 1);
-	}, [leftScore]);
-
-	const scorePointForRightPlayer = useCallback(() => {
-		setRightScore(rightScore + 1);
-	}, [rightScore]);
-
-	const movePaddleLeft = useCallback(async (newPosition: SetStateAction<number>) => {
-    if (socket) {
-      if (socket.connected) {
-        try {
-          await socket.emitWithAck(
-            "move_left_paddle",
-            newPosition,
-          );
-        } catch (e) {
-          console.log(e); //TODO: make some king of popUp
-        }
-      } else console.log("Socket offline");
+  const movePonePaddle = (dir: number) => {
+    socket.emit('move_left_paddle', dir)
+  }
+  const movePtwoPaddle = (dir: number) => {
+    socket.emit('move_right_paddle', dir)
+  }
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      switch (event.key) {
+        case 'w':
+          movePonePaddle(-1);
+          break;
+        case 's':
+          movePonePaddle(1);
+          break;
+        case 'o':
+          movePtwoPaddle(-1);
+          break;
+        case 'l':
+          movePtwoPaddle(1);
+          break;
+      }
     }
-	}, []);
+    document.addEventListener('keydown', handleKeyDown)
+    return () => { document.removeEventListener('keydown', handleKeyDown) }
+  }, [])
+  return (
+    <GameContext.Provider value={{ gameOver: gameOver }}>
+      <Box
+        position={'relative'}
+        w={'47%'}
+        h={'56%'}
+        border={'2px solid white'}
+        borderTop={'2px solid white'}
+        borderBottom={'2px solid white'}
+        borderLeft={'0px'}
+        borderRight={'0px'}
+      >
+        <Score side={{ left: '30%', }} counter={gameData.score.pOne} />
+        <Score side={{ right: '30%', }} counter={gameData.score.pTwo} />
 
-	const movePaddleRight = useCallback(async (newPosition: SetStateAction<number>) => {
-		if (socket) {
-      if (socket.connected) {
-        try {
-          await socket.emitWithAck(
-            "move_right_paddle",
-            newPosition,
-          );
-        } catch (e) {
-          console.log(e); //TODO: make some king of popUp
-        }
-      } else console.log("Socket offline");
-    }
-	}, []);
+        <Paddle
+          position={gameData.paddles.pOne}
+          side={{ left: '1.6%', }}
+          color='blue'
+        />
 
-	return (
-    <GameContext.Provider value={{gameOver: gameOver}}>
-		<Box
-			position={'relative'}
-			w={'47%'}
-			h={'56%'}
-			border={'2px solid white'}
-			borderTop={'2px solid white'}
-			borderBottom={'2px solid white'}
-			borderLeft={'0px'}
-			borderRight={'0px'}
-		>
-			<Score side={{ left: '30%', }} counter={leftScore} />
-			<Score side={{ right: '30%', }} counter={rightScore} />
+        <DashedLineSeparator />
 
-			<Paddle
-				position={leftPaddlePosition}
-				player='left'
-				movePaddle={movePaddleLeft}
-				side={{ left: '1.6%', }}
-				color='blue'
-			/>
+        <Ball
+          x={gameData.ballData.x}
+          y={gameData.ballData.y}
+        />
 
-			<DashedLineSeparator />
-
-			<Ball
-				scorePointForLeftPlayer={scorePointForLeftPlayer}
-				scorePointForRightPlayer={scorePointForRightPlayer}
-				paddlePositionLeft={leftPaddlePosition}
-				paddlePositionRight={rightPaddlePosition}
-			/>
-
-			<Paddle
-				position={rightPaddlePosition}
-				player='right'
-				movePaddle={movePaddleRight}
-				side={{ right: '1.6%', }}
-				color='red'
-			/>
-			{/* {gameOver && <h2>{winner} is the winner!</h2>} */}
-		</Box>
+        <Paddle
+          position={gameData.paddles.pTwo}
+          side={{ right: '1.6%', }}
+          color='red'
+        />
+        {/* {gameOver && <h2>{winner} is the winner!</h2>} */}
+      </Box>
     </GameContext.Provider>
-	);
+  );
 }
