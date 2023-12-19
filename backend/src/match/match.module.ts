@@ -17,13 +17,6 @@ import { QueueModule } from 'src/queue/queue.module';
   providers: [
     MatchService,
     MatchRepository,
-    WebsocketService,
-    SocketGateway,
-    UsersRepository,
-    MatchService,
-    MatchRepository,
-    WebsocketService,
-    SocketGateway,
     UsersRepository,
     UsersService],
   controllers: [MatchController],
