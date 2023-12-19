@@ -19,7 +19,6 @@ import {
   DeleteIcon,
   EmailIcon,
   LockIcon,
-  PlusSquareIcon,
   SettingsIcon,
   UnlockIcon,
 } from "@chakra-ui/icons";
@@ -34,19 +33,12 @@ import {
   PopoverCloseButton,
   PopoverAnchor,
   Portal,
+  Wrap,
+  Stat,
+  StatLabel,
+  StatNumber,
 } from '@chakra-ui/react'
-import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-  PopoverHeader,
-  PopoverBody,
-  PopoverFooter,
-  PopoverArrow,
-  PopoverCloseButton,
-  PopoverAnchor,
-  Portal,
-} from '@chakra-ui/react'
+
 import {
   Avatar,
   AvatarBadge,
@@ -63,7 +55,6 @@ import {
   DrawerHeader,
   DrawerOverlay,
   Flex,
-  FormControl,
   FormLabel,
   HStack,
   Heading,
@@ -72,9 +63,7 @@ import {
   InputGroup,
   InputRightAddon,
   Select,
-  Skeleton,
   Stack,
-  Switch,
   Tab,
   TabList,
   TabPanel,
@@ -83,19 +72,7 @@ import {
   Text,
   Tooltip,
   VStack,
-  useDisclosure,
-  Stat,
-  StatLabel,
-  StatNumber,
-  StatHelpText,
-  StatArrow,
-  Wrap,
-  Stat,
-  StatLabel,
-  StatNumber,
-  StatHelpText,
-  StatArrow,
-  Wrap,
+  useDisclosure
 } from "@chakra-ui/react";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import {
@@ -633,34 +610,6 @@ export function MessageSection(
       });
     }
   }, [messages]);
-  const cardData = dataFromProps();
-  function dataFromProps() {
-    if (props.channel.user2user) {
-      const isOnline = props.channel.Memberships[0].user.status === 'online';
-      if (props.channel.Memberships.length > 0) {
-        return {
-          avatar: props.channel.Memberships[0].user.avatar,
-          intra_login: props.channel.Memberships[0].user.intra_login,
-          nickname: props.channel.Memberships[0].user.nickname,
-          statusColor: isOnline ? 'green.300' : 'gray',
-        };
-      } else {
-        return {
-          avatar: "",
-          intra_login: "",
-          nickname: props.channel.name,
-          statusColor: 'gray',
-        };
-      }
-    } else {
-      return {
-        avatar: "",
-        intra_login: "",
-        nickname: props.channel.name,
-        statusColor: 'yellow',
-      };
-    }
-  }
   const cardData = dataFromProps();
   function dataFromProps() {
     if (props.channel.user2user) {
