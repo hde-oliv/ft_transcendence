@@ -11,6 +11,7 @@ import { UsersService } from 'src/users/users.service';
 import { MatchController } from './match.controller';
 import { MatchService } from './match.service';
 import { QueueModule } from 'src/queue/queue.module';
+import { MatchRepository } from './match.repository';
 
 @Module({
   providers: [
@@ -19,6 +20,6 @@ import { QueueModule } from 'src/queue/queue.module';
   ],
   controllers: [MatchController],
   imports: [PrismaModule, UsersModule, AuthModule, ChatModule, QueueModule],
-  exports: []
+  exports: [MatchRepository]
 })
 export class MatchModule { }
