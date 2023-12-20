@@ -122,13 +122,13 @@ model Messages {
 }
 
 model Matches {
-  id          String   @id @unique @default(uuid())
+  id          String    @id @unique @default(uuid())
   p_one       String
   p_two       String
   p_one_score Int
   p_two_score Int
-  start       DateTime @default(now())
-  end         DateTime
+  start       DateTime  @default(now())
+  end         DateTime?
 
   player_one Users @relation("matches_one", fields: [p_one], references: [id])
   player_two Users @relation("matches_two", fields: [p_two], references: [id])

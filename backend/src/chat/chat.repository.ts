@@ -198,7 +198,7 @@ export class ChatRepository {
     return data;
   }
 
-  async getUserCheckInChannel(user: TokenClaims, channelId: number): Promise<boolean>{
+  async getUserCheckInChannel(user: TokenClaims, channelId: number): Promise<boolean> {
     const userId = user.intra_login;
     const channel = await this.prismaService.channels.findFirst({
       where: {
@@ -210,7 +210,7 @@ export class ChatRepository {
         },
       },
     });
-  
+
     return Boolean(channel);
   }
 
@@ -319,12 +319,12 @@ export class ChatRepository {
     });
     const blockedUsers = (await this.prismaService.blockedUsers.findMany({
       select: {
-        targer_id: true
+        target_id: true
       },
       where: {
         issuer_id: user.intra_login
       }
-    })).map(e => e.targer_id);
+    })).map(e => e.target_id);
     const validMessages = messages.filter(e => !blockedUsers.includes(e.user_id)).map(e => {
       return {
         id: e.id,
