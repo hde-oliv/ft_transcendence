@@ -86,12 +86,12 @@ model Channels {
 model BlockedUsers {
   id        String @id @default(uuid())
   issuer_id String
-  targer_id String
+  target_id String @map("target_id")
 
   issuer_user Users @relation("block_issuer", fields: [issuer_id], references: [id])
-  target_user Users @relation("block_target", fields: [targer_id], references: [id])
+  target_user Users @relation("block_target", fields: [target_id], references: [id])
 
-  @@unique([issuer_id, targer_id])
+  @@unique([issuer_id, target_id])
   @@map("blocked_users")
 }
 
