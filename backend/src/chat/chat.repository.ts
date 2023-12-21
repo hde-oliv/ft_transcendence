@@ -321,12 +321,12 @@ export class ChatRepository {
     });
     const blockedUsers = (await this.prismaService.blockedUsers.findMany({
       select: {
-        targer_id: true
+        target_id: true
       },
       where: {
         issuer_id: user.intra_login
       }
-    })).map(e => e.targer_id);
+    })).map(e => e.target_id);
     const validMessages = messages.filter(e => !blockedUsers.includes(e.user_id)).map(e => {
       return {
         id: e.id,
@@ -363,7 +363,7 @@ export class ChatRepository {
     return this.prismaService.blockedUsers.create({
       data: {
         issuer_id: token.intra_login,
-        targer_id: blockUserStatusDto.targetId,
+        target_id: blockUserStatusDto.targetId,
       }
     })
   }
@@ -373,7 +373,7 @@ export class ChatRepository {
   //   const data = await this.prismaService.blockedUsers.findFirst({
   //     where: {
   //       issuer_id: issuerId,
-  //       targer_id: targetId
+  //       target_id: targetId
   //     }
   //   })
   //   return data;
@@ -399,14 +399,16 @@ export class ChatRepository {
     })
     return data;
   }
-  // async deleteBlock(
-  //   token: TokenClaims, 
-  //   blockUserStatusDto : BlockUserStatusDto)
-  //   : Promise<BlockedUsers> {
-  //   return this.prismaService.blockedUsers.delete({
-  //     data: {
-  //       issuer_id: token.intra_login,
-  //       targer_id: blockUserStatusDto.targetId,
-  //     }
-  //   })
+  
+  async deleteBlock(
+    issuer_id: string, target_id: string) {
+    return this.prismaService.blockedUsers.delete({
+      where: {
+        issuer_id_target_id: {
+          issuer_id,
+          target_id,
+        },
+      }
+    })
+  }
 }

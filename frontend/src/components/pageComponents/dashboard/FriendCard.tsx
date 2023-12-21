@@ -70,6 +70,7 @@ function UserCard(props: {
   const [loading2, setLoading2] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
 
+
   async function addFriend() {
     setLoading1(true);
     try {
@@ -141,12 +142,12 @@ function UserCard(props: {
           {props.userData.friend ? "Friend" : "Add"}
         </Button>
         <Button
-          // isDisabled={isBlocked}
-          colorScheme="red"
-          isLoading={loading2}
-          onClick={blockUserRequest}
-          >
-          Block
+        // isDisabled={isBlocked}
+        colorScheme="red"
+        isLoading={loading2}
+        onClick={blockUserRequest}
+        >
+        Block
         </Button>
       </HStack>
     </Flex>

@@ -215,7 +215,7 @@ export class ChatController {
   }
 
   // @UseGuards(JwtAuthGuard)
-  // @Get('/block/:id')
+  // @Get('/block/user/:id')
   // async getBlockUserStatus(
   //   @Request() req,
   //   @Param('id') id: string) {
@@ -229,9 +229,9 @@ export class ChatController {
     return this.chatService.getAllBlockedUsers(req.user);
   }
 
-  // @UseGuards(JwtAuthGuard)
-  // @Post('/unblock')
-  // async unblockUser(@Request() req, @Body() body: UpdateMembershipDto) {
-  //   return this.chatService.deleteBlock(req.user, body);
-  // }
+  @UseGuards(JwtAuthGuard)
+  @Post('/unblock')
+  async unblockUser(@Request() req, @Body() body: {issuer_id: string, target_id: string}) {
+    return this.chatService.deleteBlock(body.issuer_id, body.target_id);
+  }
 }

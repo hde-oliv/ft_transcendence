@@ -293,14 +293,14 @@ export async function blockUser(data: BlockUserResponse) {
   return fetcher.post(`/chat/block`, data);
 }
 
-export async function unblockUser(data: { issuer_id: string, target_id: string }) {
+export async function unblockUser(issuer_id: string, target_id: string) {
   const fetcher = pongAxios();
-  return fetcher.delete(`/chat/unblock`, {data} );
+  return fetcher.post(`/chat/unblock`, { issuer_id, target_id });
 }
 
 // export async function fetchblockUserStatus(targetId: string) {
 //   const fetcher = pongAxios();
-//   const response = await fetcher.get(`chat/block/${targetId}`);
+//   const response = await fetcher.get(`chat/block/user/${targetId}`);
 //   const blockStatus = blockUserStatusResponseSchema.safeParse(response.data);
 
 //   if (blockStatus.success) {

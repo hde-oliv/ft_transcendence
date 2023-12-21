@@ -525,7 +525,7 @@ export class ChatService {
   //   if (result) {
   //     return result;
   //   } else {
-  //     throw new BadRequestException('Failed to get THE block user status');
+  //     throw new BadRequestException('Failed to get the user blocked status');
   //   }
   // }
 
@@ -535,7 +535,16 @@ export class ChatService {
     if (result) {
       return result;
     } else {
-      throw new BadRequestException('Failed to get ALL blocked users');
+      throw new BadRequestException('Failed to get all blocked users');
+    }
+  }
+
+  async deleteBlock(issuer_id: string, target_id: string) {
+    try {
+      const result = await this.chatRepository.deleteBlock(issuer_id, target_id);
+      return {};
+    } catch (e) {
+      throw new BadRequestException('Failed to delete block');
     }
   }
 }
