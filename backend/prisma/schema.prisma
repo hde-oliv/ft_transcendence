@@ -86,12 +86,12 @@ model Channels {
 model BlockedUsers {
   id        String @id @default(uuid())
   issuer_id String
-  targer_id String
+  target_id String @map("target_id")
 
   issuer_user Users @relation("block_issuer", fields: [issuer_id], references: [id])
-  target_user Users @relation("block_target", fields: [targer_id], references: [id])
+  target_user Users @relation("block_target", fields: [target_id], references: [id])
 
-  @@unique([issuer_id, targer_id])
+  @@unique([issuer_id, target_id])
   @@map("blocked_users")
 }
 
@@ -122,13 +122,13 @@ model Messages {
 }
 
 model Matches {
-  id          String   @id @unique @default(uuid())
+  id          String    @id @unique @default(uuid())
   p_one       String
   p_two       String
   p_one_score Int
   p_two_score Int
-  start       DateTime @default(now())
-  end         DateTime
+  start       DateTime  @default(now())
+  end         DateTime?
 
   player_one Users @relation("matches_one", fields: [p_one], references: [id])
   player_two Users @relation("matches_two", fields: [p_two], references: [id])
