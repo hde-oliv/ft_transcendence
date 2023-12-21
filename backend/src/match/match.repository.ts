@@ -83,8 +83,8 @@ export class MatchRepository {
       where: {
         AND: [
           {
-            end: {
-              not: null
+            NOT: {
+              end: null
             }
           },
           {
@@ -124,8 +124,8 @@ export class MatchRepository {
       where: {
         AND: [
           {
-            end: {
-              not: null
+            NOT: {
+              end: null
             }
           },
           {
@@ -165,8 +165,8 @@ export class MatchRepository {
       where: {
         AND: [
           {
-            end: {
-              not: null
+            NOT: {
+              end: null
             }
           },
           {
@@ -261,8 +261,8 @@ export class MatchRepository {
   async deleteHungMatches() {
     return this.prismaService.matches.deleteMany({
       where: {
-        end: {
-          equals: null
+        NOT: {
+          end: null
         }
       }
     })
