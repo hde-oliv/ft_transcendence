@@ -47,7 +47,7 @@ export class MatchController {
   @UsePipes(new ZodValidationPipe(updateUserSchema))
   @Patch('/accept')
   acceptMatch(@Request() req) {
-    this.matchService.acceptInvite(req.user);
+    this.matchService.acceptQueueInvite(req.user);
     return {};
   }
 

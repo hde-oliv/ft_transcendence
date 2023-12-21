@@ -41,7 +41,7 @@ export default class QueueService {
   addInvite(intra_login: string) {
     this.invites.set(intra_login, false);
   }
-  acceptInvite(intra_login: string) {
+  acceptQueueInvite(intra_login: string) {
     if (this.invites.get(intra_login) !== undefined)
       this.invites.set(intra_login, true);
     else
