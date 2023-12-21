@@ -1,8 +1,9 @@
 import {
   BadRequestException,
   ForbiddenException,
+  HttpException,
+  HttpStatus,
   Injectable,
-  InternalServerErrorException,
   Logger,
   NotFoundException,
 } from '@nestjs/common';
@@ -19,14 +20,19 @@ import { UpdateChannelDto } from './dto/update-channel-dto';
 import { JoinChannelDto } from './dto/join-channel-dto';
 import { BlockUserStatusDto } from './dto/block-user-status-dto';
 import { WsException } from '@nestjs/websockets';
-import { SocketGateway } from './chat.gateway';
 import { WebsocketService } from './websocket.service';
 import * as bcrypt from 'bcrypt';
 import _ from 'lodash';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 // TODO: try except blocks
 // TODO: How banned will work on frontend?
 // TODO: Check if everything works on yourself | NO, does not work, specially the create Channel function because it tries to create the membership twice
+class AlreadyExistsException extends HttpException {
+  constructor() {
+    super('Resource already exists', HttpStatus.OK)
+  }
+}
 
 @Injectable()
 export class ChatService {
@@ -126,8 +132,8 @@ export class ChatService {
   async getAllPublicChannels() {
     return await this.chatRepository.getAllPublicChannels();
   }
-  
-  async getUserCheckInChannel(user: TokenClaims, channelId: number)  {
+
+  async getUserCheckInChannel(user: TokenClaims, channelId: number) {
     return await this.chatRepository.getUserCheckInChannel(user, channelId);
   }
 
@@ -505,29 +511,24 @@ export class ChatService {
     return this.chatRepository.getUsersByChannel(channelId);
   }
 
-  async createBlock(token: TokenClaims, blockUserStatusDto : BlockUserStatusDto) {
-    const result = await this.chatRepository.createBlock(token, blockUserStatusDto);
-
-    if (result) {
+  async createBlock(token: TokenClaims, blockUserStatusDto: BlockUserStatusDto) {
+    let result;
+    try {
+      result = await this.chatRepository.createBlock(token, blockUserStatusDto);
       return {
         message: 'User has been successfully blocked',
         blockedUser: blockUserStatusDto.targetId,
-        issuer: blockUserStatusDto.issuerId
+        issuer: blockUserStatusDto.issuerId,
       };
-    } else {
-      throw new BadRequestException('Failed to block user');
+    } catch (e) {
+      if (e instanceof PrismaClientKnownRequestError) {
+        this.logger.warn(e.message);
+        this.logger.warn(e.code);
+        return true
+      }
+      throw new BadRequestException();
     }
   }
-
-  // async getBlockUserStatus(token: TokenClaims, targetId: string) {
-  //   const result = await this.chatRepository.getBlockUserStatus(token, targetId);
-
-  //   if (result) {
-  //     return result;
-  //   } else {
-  //     throw new BadRequestException('Failed to get the user blocked status');
-  //   }
-  // }
 
   async getAllBlockedUsers(token: TokenClaims) {
     const result = await this.chatRepository.getAllBlockedUsers(token);

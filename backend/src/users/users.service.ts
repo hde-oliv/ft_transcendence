@@ -37,4 +37,5 @@ export class UsersService {
   async updateUserOnline(user: TokenClaims, online: boolean) {
     return this.userRepository.updateUserOnline(user.intra_login, online);
   }
+
 }

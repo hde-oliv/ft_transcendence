@@ -34,10 +34,10 @@ const blockUserStatusResponseSchema = z.string();
 
 const blockedTargetSchema = z.object({
   nickname: z.string(),
-	avatar: z.string(),
-	intra_login: z.string(),
-	status: z.string(),
-	elo: z.number(),
+  avatar: z.string(),
+  intra_login: z.string(),
+  status: z.string(),
+  elo: z.number(),
 });
 
 const returnAllBlockedUsersSchema = z.object({
@@ -293,9 +293,9 @@ export async function blockUser(data: BlockUserResponse) {
   return fetcher.post(`/chat/block`, data);
 }
 
-export async function unblockUser(issuer_id: string, target_id: string) {
+export async function unblockUser(target_id: string) {
   const fetcher = pongAxios();
-  return fetcher.post(`/chat/unblock`, { issuer_id, target_id });
+  return fetcher.post(`/chat/unblock`, { target_id });
 }
 
 // export async function fetchblockUserStatus(targetId: string) {

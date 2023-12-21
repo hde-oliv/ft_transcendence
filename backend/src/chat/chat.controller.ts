@@ -10,6 +10,7 @@ import {
   ParseIntPipe,
   UseGuards,
   Request,
+  Res,
 } from '@nestjs/common';
 import { ZodValidationPipe } from 'src/zodPipe';
 import { ChatService } from './chat.service';
@@ -30,6 +31,7 @@ import { JoinChannelDto, joinChannelSchema } from './dto/join-channel-dto';
 import { MembershipDto, membershipSchema } from './dto/membership-dto';
 import { BlockUserStatusDto } from './dto/block-user-status-dto';
 import { TokenClaims } from 'src/auth/auth.model';
+import { Response } from 'express';
 
 // TODO: Block user logic
 
@@ -210,8 +212,16 @@ export class ChatController {
 
   @UseGuards(JwtAuthGuard)
   @Post('/block')
-  async blockUser(@Request() req, @Body() body: BlockUserStatusDto) {
-    return this.chatService.createBlock(req.user, body);
+  async blockUser(@Request() req, @Body() body: BlockUserStatusDto, @Res() res: Response) {
+    let result = await this.chatService.createBlock(req.user, body);
+    if (result === true) {
+      return res.status(200).json({
+        message: 'User was already blocked',
+        blockedUser: body.targetId,
+        issuer: (req.user as TokenClaims).intra_login,
+      })
+    }
+    return res.status(201).json(result);
   }
 
   // @UseGuards(JwtAuthGuard)
@@ -231,7 +241,7 @@ export class ChatController {
 
   @UseGuards(JwtAuthGuard)
   @Post('/unblock')
-  async unblockUser(@Request() req, @Body() body: {issuer_id: string, target_id: string}) {
-    return this.chatService.deleteBlock(body.issuer_id, body.target_id);
+  async unblockUser(@Request() req, @Body() body: { target_id: string }) {
+    return this.chatService.deleteBlock(req.user.intra_login, body.target_id);
   }
 }

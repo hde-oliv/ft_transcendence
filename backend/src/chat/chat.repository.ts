@@ -357,8 +357,8 @@ export class ChatRepository {
   }
 
   async createBlock(
-    token: TokenClaims, 
-    blockUserStatusDto : BlockUserStatusDto)
+    token: TokenClaims,
+    blockUserStatusDto: BlockUserStatusDto)
     : Promise<BlockedUsers> {
     return this.prismaService.blockedUsers.create({
       data: {
@@ -378,7 +378,7 @@ export class ChatRepository {
   //   })
   //   return data;
   // }
-  
+
   async getAllBlockedUsers(token: TokenClaims) {
     const issuerId = token.intra_login;
     const data = await this.prismaService.blockedUsers.findMany({
@@ -399,7 +399,7 @@ export class ChatRepository {
     })
     return data;
   }
-  
+
   async deleteBlock(
     issuer_id: string, target_id: string) {
     return this.prismaService.blockedUsers.delete({

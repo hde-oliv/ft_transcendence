@@ -1,6 +1,5 @@
 import { pongAxios } from "./pongAxios";
 import z from "zod";
-import * as BodyParser from 'body-parser';
 import { parse } from "querystring";
 
 export const returnUserSchema = z.object({
@@ -30,5 +29,11 @@ export async function fetchUserByIntraLogin(intra_login: string) {
   const response = (await fetcher.get(`user`));
   const user = parse(response.data, "", intra_login)
   return user
+}
+
+export async function fetchAllUsersWithRelations() {
+  const fetcher = pongAxios();
+  const response = (await fetcher.get(`user/relations`));
+  return false
 }
 
