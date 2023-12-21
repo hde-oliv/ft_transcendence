@@ -132,7 +132,7 @@ export class MatchService {
       throw new NotFoundException();
     this.queueService.removeFromQueue(userData.intra_login);
   }
-  acceptInvite(user: TokenClaims) {
-    this.queueService.acceptInvite(user.intra_login);
+  acceptQueueInvite(user: TokenClaims) {
+    this.queueService.acceptQueueInvite(user.intra_login);
   }
 }

@@ -65,4 +65,40 @@ export class UsersRepository {
       }
     })
   }
+  async getBlockedUsers(issuerId: string) {
+    return this.prismaService.users.findMany({
+      select: {
+        id: true,
+        nickname: true,
+        avatar: true,
+        intra_login: true,
+        status: true,
+        elo: true,
+        online: true,
+        blockedTarget: {
+          where: {
+            issuer_id: issuerId
+          }
+        }
+      }
+    })
+  }
+  async getWhoBlocks(targetId: string) {
+    return this.prismaService.users.findMany({
+      select: {
+        id: true,
+        nickname: true,
+        avatar: true,
+        intra_login: true,
+        status: true,
+        elo: true,
+        online: true,
+        blockedIssuer: {
+          where: {
+            target_id: targetId
+          }
+        }
+      }
+    })
+  }
 }
