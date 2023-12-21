@@ -31,6 +31,7 @@ export class MatchService {
     }
     const responseNewInvite = await this.matchRepository.createInvite(createInviteDto);
     this.websocketService.emitToUser(createInviteDto.target_id, 'newInvite', responseNewInvite);
+    setTimeout(()=>this.matchRepository.deleteInvite(responseNewInvite.id), 10000);
     return responseNewInvite;
   }
 

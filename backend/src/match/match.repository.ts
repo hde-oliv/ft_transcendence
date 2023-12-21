@@ -11,7 +11,7 @@ export class MatchRepository {
     const targetUser = await this.prismaService.users.findUnique({
       where: { id: newInviteForIntra.target_id },
     });
-
+  
     if (!targetUser) {
       throw new NotFoundException(`User with id ${newInviteForIntra.target_id} not found`);
     }
@@ -50,6 +50,15 @@ export class MatchRepository {
     }
     throw new NotFoundException(`User with id ${newInviteForIntra.target_id} not found`);
   }
+
+  async deleteInvite(id: string) {
+    return this.prismaService.invites.delete({
+      where: {
+        id: id
+      }
+    })
+  }
+
   async createMatch(pOneId: string, ptwoId: string) {
     return this.prismaService.matches.create({
       data: {
@@ -313,3 +322,4 @@ export class MatchRepository {
     })
   }
 }
+
