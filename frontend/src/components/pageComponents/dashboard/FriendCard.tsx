@@ -30,6 +30,7 @@ import { useCallback, useEffect, useState } from "react";
 import diacriticalNormalize from "@/lib/diacriticalNormalize";
 import { createFriendship, getAllFriends } from "@/lib/fetchers/friends";
 import { MeResponseData, getMe } from "@/lib/fetchers/me";
+import { fetchblockUserStatus, BlockUserResponse, blockUser } from "@/lib/fetchers/chat";
 
 function ContactRow(props: ReturnUserSchema) {
   const color = props.status === "online" ? "green.300" : "gray.300";
@@ -65,10 +66,13 @@ function UserCard(props: {
   me: string;
   sync: () => void;
 }) {
-  const [loading, setLoading] = useState(false);
+  const [loading1, setLoading1] = useState(false);
+  const [loading2, setLoading2] = useState(false);
+  const [isBlocked, setIsBlocked] = useState(false);
+
 
   async function addFriend() {
-    setLoading(true);
+    setLoading1(true);
     try {
       await createFriendship({
         fOne: props.me,
@@ -78,8 +82,29 @@ function UserCard(props: {
     } catch (e) {
       console.warn("Could not add friend");
     }
-    setLoading(false);
+    setLoading1(false);
   }
+
+  async function blockUserRequest() {
+    setLoading2(true);
+    try {
+      await blockUser({
+        issuerId: props.me,
+        targetId: props.userData.intra_login,
+      });
+    } catch (e) {
+      console.warn("Could not block user");
+    }
+    setLoading2(false);
+  }
+
+  // useEffect(() => {
+  //   async function fetchBlockStatus() {
+  //     const blocked = await fetchblockUserStatus(props.userData.intra_login );
+  //     setIsBlocked(blocked);
+  //   }
+  //   fetchBlockStatus();
+  // }, [props.userData.intra_login]);
 
   return (
     <Flex
@@ -107,16 +132,24 @@ function UserCard(props: {
         <Heading size="sm">Elo</Heading>
         <Text>{props.userData.elo}</Text>
       </Box>
-      <Center>
+      <HStack>
         <Button
           isDisabled={props.userData.friend}
-          isLoading={loading}
+          isLoading={loading1}
           colorScheme="green"
           onClick={addFriend}
         >
           {props.userData.friend ? "Friend" : "Add"}
         </Button>
-      </Center>
+        <Button
+        // isDisabled={isBlocked}
+        colorScheme="red"
+        isLoading={loading2}
+        onClick={blockUserRequest}
+        >
+        Block
+        </Button>
+      </HStack>
     </Flex>
   );
 }
@@ -258,7 +291,7 @@ export function FriendCard() {
         pr="1vw"
       >
         <Heading textAlign="center" pt="1vh">
-          Friends
+          My Friends
         </Heading>
         <Button
           onClick={onOpen}

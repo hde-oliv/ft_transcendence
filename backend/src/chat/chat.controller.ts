@@ -28,6 +28,7 @@ import {
 import { JwtAuthGuard } from 'src/auth/jwt.guard';
 import { JoinChannelDto, joinChannelSchema } from './dto/join-channel-dto';
 import { MembershipDto, membershipSchema } from './dto/membership-dto';
+import { BlockUserStatusDto } from './dto/block-user-status-dto';
 import { TokenClaims } from 'src/auth/auth.model';
 
 // TODO: Block user logic
@@ -207,15 +208,30 @@ export class ChatController {
     }
   }
 
-  // @UseGuards(JwtAuthGuard)
-  // @Post('/block')
-  // async blockUser(@Request() req, @Body() body: UpdateMembershipDto) {
-  //   return this.chatService.createBlock(req.user, body);
-  // }
+  @UseGuards(JwtAuthGuard)
+  @Post('/block')
+  async blockUser(@Request() req, @Body() body: BlockUserStatusDto) {
+    return this.chatService.createBlock(req.user, body);
+  }
 
   // @UseGuards(JwtAuthGuard)
-  // @Post('/unblock')
-  // async unblockUser(@Request() req, @Body() body: UpdateMembershipDto) {
-  //   return this.chatService.deleteBlock(req.user, body);
+  // @Get('/block/user/:id')
+  // async getBlockUserStatus(
+  //   @Request() req,
+  //   @Param('id') id: string) {
+  //   return this.chatService.getBlockUserStatus(req.user, id);
   // }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/block/all')
+  async getAllBlockedUsers(
+    @Request() req) {
+    return this.chatService.getAllBlockedUsers(req.user);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('/unblock')
+  async unblockUser(@Request() req, @Body() body: {issuer_id: string, target_id: string}) {
+    return this.chatService.deleteBlock(body.issuer_id, body.target_id);
+  }
 }
