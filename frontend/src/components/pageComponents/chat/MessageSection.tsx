@@ -19,10 +19,26 @@ import {
   DeleteIcon,
   EmailIcon,
   LockIcon,
-  PlusSquareIcon,
   SettingsIcon,
   UnlockIcon,
 } from "@chakra-ui/icons";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  PopoverHeader,
+  PopoverBody,
+  PopoverFooter,
+  PopoverArrow,
+  PopoverCloseButton,
+  PopoverAnchor,
+  Portal,
+  Wrap,
+  Stat,
+  StatLabel,
+  StatNumber,
+} from '@chakra-ui/react'
+
 import {
   Avatar,
   AvatarBadge,
@@ -39,7 +55,6 @@ import {
   DrawerHeader,
   DrawerOverlay,
   Flex,
-  FormControl,
   FormLabel,
   HStack,
   Heading,
@@ -48,9 +63,7 @@ import {
   InputGroup,
   InputRightAddon,
   Select,
-  Skeleton,
   Stack,
-  Switch,
   Tab,
   TabList,
   TabPanel,
@@ -59,7 +72,7 @@ import {
   Text,
   Tooltip,
   VStack,
-  useDisclosure,
+  useDisclosure
 } from "@chakra-ui/react";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import {
@@ -79,6 +92,9 @@ import BanIcon from "@/components/icons/BanIcon";
 import CrownIcon from "@/components/icons/CrownIcon";
 import UndoIcon from "@/components/icons/UndoIcon";
 import DowngradeIcon from "@/components/icons/DowngradeIcon";
+import profilePopover from "../../user/Profile";
+import { inviteToPlay } from "@/lib/fetchers/invite";
+
 
 function membersFromChannel(
   channel: ChannelData["channel"]
@@ -533,6 +549,15 @@ export function MessageSection(
     ? props.channel.Memberships[0].user.nickname
     : props.channel.name;
 
+
+  const inviteUserToPlay = useCallback(async () => {
+    try {
+      await inviteToPlay(props.channel.Memberships[0].user.intra_login);
+    } catch (e) {
+      console.log(e);
+    }
+  }, [props.channel.Memberships[0].user.intra_login]);
+
   async function send() {
     if (text === "") return;
     const message = {
@@ -585,17 +610,118 @@ export function MessageSection(
       });
     }
   }, [messages]);
+  const cardData = dataFromProps();
+  function dataFromProps() {
+    if (props.channel.user2user) {
+      const isOnline = props.channel.Memberships[0].user.status === 'online';
+      if (props.channel.Memberships.length > 0) {
+        return {
+          avatar: props.channel.Memberships[0].user.avatar,
+          intra_login: props.channel.Memberships[0].user.intra_login,
+          nickname: props.channel.Memberships[0].user.nickname,
+          statusColor: isOnline ? 'green.300' : 'gray',
+        };
+      } else {
+        return {
+          avatar: "",
+          intra_login: "",
+          nickname: props.channel.name,
+          statusColor: 'gray',
+        };
+      }
+    } else {
+      return {
+        avatar: "",
+        intra_login: "",
+        nickname: props.channel.name,
+        statusColor: 'yellow',
+      };
+    }
+  }
 
   return (
     <>
       <Flex bg="pongBlue.300" p="2vh 1vw" justify={"space-between"}>
         <Flex>
           {props.channel.user2user ? (
-            <Avatar
-              mr="2vw"
-              name={channelName}
-              src={props.channel.Memberships[0].user.avatar}
-            />
+            <Popover>
+              <>{/* Profile PopOver */}</>
+              <PopoverTrigger>
+                <Avatar
+                  mr="2vw"
+                  name={channelName}
+                  src={props.channel.Memberships[0].user.avatar}
+                />
+              </PopoverTrigger>
+              <Portal>
+                <PopoverContent bg='pongBlue.500'>
+                  <PopoverArrow bg='pongBlue.500' />
+                  <HStack>
+                    <Avatar
+                      mr="2vw"
+                      name={channelName}
+                      src={props.channel.Memberships[0].user.avatar}>
+                      <AvatarBadge bg={cardData.statusColor} boxSize={'1em'} borderWidth={'0.1em'} />
+                    </Avatar>
+                    <PopoverHeader>
+                      <Heading textAlign="center" fontWeight="medium" size="md" pl="1vw">
+                        {channelName}
+                      </Heading>
+                    </PopoverHeader>
+                  </HStack>
+                  <PopoverCloseButton />
+                  <PopoverBody>
+                    <Button
+                      alignItems="center"
+                      colorScheme='green'
+                      onClick={inviteUserToPlay}
+                      isDisabled={props.channel.Memberships[0].user.status === 'offline'}
+                    >{props.channel.Memberships[0].user.status === 'offline' ? "Wait to invite" : "Invite to play"}
+                    </Button>
+                  </PopoverBody>
+                  <PopoverFooter>
+                    <Center flexDir="column" h="20%" w="100%">
+                      <Heading textAlign="center" fontWeight="medium" size="md" pl="1vw" > Stats of {channelName}</Heading>
+                      <Wrap spacing="1vw">
+                        <Stat
+                          borderWidth="2px"
+                          borderRadius="md"
+                          p="1vw 1vw"
+                          borderColor="yellow.200"
+                        >
+                          <StatLabel>Games</StatLabel>
+                          <StatNumber textAlign="center" color="yellow.300">
+                            20
+                          </StatNumber>
+                        </Stat>
+                        <Stat
+                          borderWidth="2px"
+                          borderRadius="md"
+                          p="1vw 1vw"
+                          borderColor="yellow.200"
+                        >
+                          <StatLabel>Victories</StatLabel>
+                          <StatNumber textAlign="center" color="green.400">
+                            10
+                          </StatNumber>
+                        </Stat>
+                        <Stat
+                          borderWidth="2px"
+                          borderRadius="md"
+                          p="1vw 1vw"
+                          borderColor="yellow.200"
+                        >
+                          <StatLabel>Loses</StatLabel>
+                          <StatNumber textAlign="center" color="red.400">
+                            10
+                          </StatNumber>
+                        </Stat>
+                      </Wrap>
+                    </Center>
+                  </PopoverFooter>
+                </PopoverContent>
+              </Portal>
+            </Popover>
           ) : (
             <Avatar mr="2vw" name={channelName} bg="yellow.300" />
           )}
@@ -837,3 +963,82 @@ function InviteUserCard(props: {
     </Flex>
   );
 }
+/*
+         <Popover>
+                 <>{ Profile PopOver }</>
+                 <PopoverTrigger>
+                 <Avatar
+                 mr="2vw"
+                 name={channelName}
+                 src={props.channel.Memberships[0].user.avatar}
+                 />
+             </PopoverTrigger>
+             <Portal>
+             <PopoverContent bg='pongBlue.500'>
+                 <PopoverArrow bg='pongBlue.500' />
+                 <HStack>
+                   <Avatar
+                     mr="2vw"
+                     name={channelName}
+                     src={props.channel.Memberships[0].user.avatar}>
+                     <AvatarBadge bg={cardData.statusColor} boxSize={'1em'} borderWidth={'0.1em'} />
+                   </Avatar>
+                   <PopoverHeader>
+                     <Heading textAlign="center" fontWeight="medium" size="md" pl="1vw">
+                     {channelName}
+                     </Heading>
+                   </PopoverHeader>
+                 </HStack>
+                 <PopoverCloseButton />
+                 <PopoverBody>
+                   <Button
+                   colorScheme='green'
+                   isDisabled={props.channel.Memberships[0].user.status === 'offline'}
+                   >{props.channel.Memberships[0].user.status === 'offline' ? "Wait to invite" : "Invite to play"}
+                   </Button>
+                 </PopoverBody>
+                 <PopoverFooter>
+                 <Center flexDir="column" h="20%" w="100%">
+                   <Heading textAlign="center" fontWeight="medium" size="md" pl="1vw" > Stats of {channelName}</Heading>
+                   <Wrap spacing="1vw">
+                     <Stat
+                       borderWidth="2px"
+                       borderRadius="md"
+                       p="1vw 1vw"
+                       borderColor="yellow.200"
+                     >
+                       <StatLabel>Games</StatLabel>
+                       <StatNumber textAlign="center" color="yellow.300">
+                         20
+                       </StatNumber>
+                     </Stat>
+                     <Stat
+                       borderWidth="2px"
+                       borderRadius="md"
+                       p="1vw 1vw"
+                       borderColor="yellow.200"
+                     >
+                       <StatLabel>Victories</StatLabel>
+                       <StatNumber textAlign="center" color="green.400">
+                         10
+                       </StatNumber>
+                     </Stat>
+                     <Stat
+                       borderWidth="2px"
+                       borderRadius="md"
+                       p="1vw 1vw"
+                       borderColor="yellow.200"
+                     >
+                       <StatLabel>Loses</StatLabel>
+                       <StatNumber textAlign="center" color="red.400">
+                         10
+                       </StatNumber>
+                     </Stat>
+                   </Wrap>
+                 </Center>
+               </PopoverFooter>
+             </PopoverContent>
+             </Portal>
+         </Popover>
+
+*/

@@ -1,24 +1,43 @@
 import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { UsersRepository } from 'src/users/users.repository';
+import { MatchRepository } from './match.repository';
 import { ForbiddenException } from '@nestjs/common';
-import { UpdateUserDto } from 'src/users/dto/update-user-dto';
 import { WebsocketService } from 'src/chat/websocket.service';
 import { chunk } from 'lodash'
-import { SocketGateway } from 'src/chat/chat.gateway';
 import QueueService from 'src/queue/queue.service';
 import { TokenClaims } from 'src/auth/auth.model';
 import { UsersService } from 'src/users/users.service';
+import { CreateInviteDto } from './dto/create-invite-dto';
 
 @Injectable()
 export class MatchService {
   constructor(
     private readonly websocketService: WebsocketService,
     private readonly userService: UsersService,
-    private readonly queueService: QueueService
-  ) {
-    this.startQueue();
-  }
+    private readonly queueService: QueueService,
+    private matchRepository: MatchRepository,
+    private userRepository: UsersRepository,
+  ) { }
   private readonly logger = new Logger(MatchService.name);
+  async createInvite(userId: string, targetId: string) {
+    const createInviteDto: CreateInviteDto = {
+      user_id: userId,
+      target_id: targetId
+    }
+    //console.log(targetId);
+    const targetUser = await this.userRepository.getUserById(targetId);
+    if (!targetUser || targetUser.status === 'offline') {
+      throw new ForbiddenException(`User with id ${targetId} is not online`);
+    }
+    const responseNewInvite = await this.matchRepository.createInvite(createInviteDto);
+    this.websocketService.emitToUser(createInviteDto.target_id, 'newInvite', responseNewInvite);
+    return responseNewInvite;
+  }
+
+  private queuedPlayers: Map<string, { joined: Date, elo: number }>
+  private pendingInvites: Map<string, boolean>;
+  // TODO: there might the need to implement more then one queue variable to prevent multiple functions
+  // (members entering queue via http requests and queueRuntime modifying it) to RW the same variable (race condition)
   private queueTimeout: NodeJS.Timeout | null = null;
   queueRuntime() {
     return () => {

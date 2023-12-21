@@ -7,15 +7,17 @@ import { ChatModule } from 'src/chat/chat.module';
 import { UsersService } from 'src/users/users.service';
 import { MatchController } from './match.controller';
 import { MatchService } from './match.service';
+import { MatchRepository } from './match.repository';
 import { QueueModule } from 'src/queue/queue.module';
 import { MatchRepository } from './match.repository';
 
 @Module({
   providers: [
-    UsersService,
     MatchService,
     MatchRepository,
-  ],
+    UsersRepository,
+    UsersService],
+
   controllers: [MatchController],
   imports: [PrismaModule, UsersModule, AuthModule, ChatModule, QueueModule],
   exports: [MatchRepository]
