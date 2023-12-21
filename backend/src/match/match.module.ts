@@ -7,9 +7,9 @@ import { ChatModule } from 'src/chat/chat.module';
 import { UsersService } from 'src/users/users.service';
 import { MatchController } from './match.controller';
 import { MatchService } from './match.service';
-import { MatchRepository } from './match.repository';
 import { QueueModule } from 'src/queue/queue.module';
 import { MatchRepository } from './match.repository';
+import { UsersRepository } from 'src/users/users.repository';
 
 @Module({
   providers: [
