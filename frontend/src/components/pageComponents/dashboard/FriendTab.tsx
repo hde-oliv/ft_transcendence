@@ -3,35 +3,11 @@ import {
   Avatar,
   AvatarBadge,
   Box,
-  Button,
-  Center,
   Flex,
-  HStack,
   Heading,
-  IconButton,
-  Input,
-  Modal,
-  ModalBody,
-  ModalContent,
-  ModalOverlay,
-  Stack,
-  Tab,
-  TabList,
-  TabPanel,
-  TabPanels,
-  Tabs,
-  Text,
   VStack,
-  useDisclosure,
 } from "@chakra-ui/react";
-import { AddIcon, CloseIcon } from "@chakra-ui/icons";
-import { ReturnUserSchema, fetchUsers } from "@/lib/fetchers/users";
-import { useCallback, useContext, useEffect, useState } from "react";
-import diacriticalNormalize from "@/lib/diacriticalNormalize";
-import { createFriendship, getAllFriends } from "@/lib/fetchers/friends";
-import { MeResponseData, getMe } from "@/lib/fetchers/me";
-import { blockUser } from "@/lib/fetchers/chat";
-import { MeStateContext } from "@/components/pageLayout/PageLayout";
+import { ReturnUserSchema } from "@/lib/fetchers/users";
 import { UserCardData } from "./FriendCard";
 
 export function ContactRow(props: ReturnUserSchema) {

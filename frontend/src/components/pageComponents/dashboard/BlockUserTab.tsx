@@ -4,25 +4,14 @@ import {
   AvatarBadge,
   Box,
   Button,
-  Center,
   Flex,
   Heading,
-  Input,
-  Modal,
-  ModalBody,
-  ModalContent,
-  ModalOverlay,
-  ModalHeader,
-  ModalCloseButton,
   VStack,
-  ModalFooter,
-  Text,
 } from "@chakra-ui/react";
-import { useCallback, useEffect, useState } from "react";
-import { userData } from '../../../pages/account/index';
+import { useState } from "react";
 import { MeResponseData, getMe } from "@/lib/fetchers/me";
 import { ReturnAllBlockedUsersResponse, unblockUser } from "@/lib/fetchers/chat";
-import { UserCardData } from "./FriendTab";
+
 
 
 interface BlockedRowProps {
