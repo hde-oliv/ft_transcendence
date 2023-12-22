@@ -53,9 +53,9 @@ export default function PageLayout({ children }: { children: ReactElement }) {
     })
   }, [toast])
 
-  const acceptInvite = useCallback(async (target_id: string)=> {
+  const acceptInvite = useCallback(async (inviteId: string)=> {
     try {
-      acceptP2P(target_id);
+      acceptP2P(inviteId);
     } catch (e) {
       console.log(e);
     }
@@ -79,7 +79,7 @@ export default function PageLayout({ children }: { children: ReactElement }) {
         alignItems="center"
         colorScheme='blue' 
         size='lg'
-        onClick={() => acceptInvite(data.user_id)}>
+        onClick={() => acceptInvite(data.id)}>
         Aceitar partida de {data.user_id} 
         </Button>}
     }

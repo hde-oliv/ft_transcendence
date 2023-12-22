@@ -48,8 +48,21 @@ export class MatchService {
     return responseNewInvite;
   }
 
-  async acceptP2P(userId: string, targetId: string){
-    
+  async acceptP2P(userId: string, inviteId: string){
+    try{
+      const invite = await this.matchRepository.getInviteById(inviteId)
+      if (invite.target_id === userId){
+        this.queueService.removeFromQueue(invite.target_id);
+        this.queueService.removeFromQueue(invite.user_id);
+      } else {
+        throw new ForbiddenException();
+      }
+    } catch(e) {
+      if (e instanceof PrismaClientKnownRequestError){
+        this.logger.warn(e.message);
+        throw new NotFoundException();
+      }
+    }
   }
 
   private queuedPlayers: Map<string, { joined: Date, elo: number }>

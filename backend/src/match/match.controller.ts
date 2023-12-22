@@ -60,9 +60,9 @@ export class MatchController {
 
   @UseGuards(JwtAuthGuard)
   @UsePipes(new ZodValidationPipe(updateUserSchema))
-  @Post('match/P2P/:targetId')
-  acceptInvite(@Request() req, @Param('targetId') targetId: string) {
-    return this.matchService.acceptP2P(req.user.intra_login, targetId);
+  @Post('/P2P/:inviteId')
+  acceptInvite(@Request() req, @Param('inviteId') inviteId: string) {
+    return this.matchService.acceptP2P(req.user.intra_login, inviteId);
   }
 
 

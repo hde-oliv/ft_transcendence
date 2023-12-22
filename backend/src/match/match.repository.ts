@@ -59,6 +59,15 @@ export class MatchRepository {
     })
   }
 
+  async getInviteById(inviteId: string) {
+    return this.prismaService.invites.findUniqueOrThrow({
+      where: {
+        id: inviteId
+      }
+    })
+  }
+
+
   async createMatch(pOneId: string, ptwoId: string) {
     return this.prismaService.matches.create({
       data: {
