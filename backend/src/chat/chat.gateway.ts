@@ -141,8 +141,6 @@ export class SocketGateway
     @MessageBody() data: PlayerActionPayload
   ) {
     const user = await this.chatService.getUserFromSocket(socket)
-    this.logger.warn(`user ${user.nickname} sent a playerAction with content:`);
-    this.logger.warn(`${JSON.stringify(data)}`);
     this.gameService.gameAction(user.intra_login, data);
   }
 

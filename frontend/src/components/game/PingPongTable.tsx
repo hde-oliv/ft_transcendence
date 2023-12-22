@@ -4,36 +4,18 @@ import Paddle from "./Paddle";
 import DashedLineSeparator from "./DashedLineSeparator";
 import Ball from "./Ball";
 import { GameContext } from "@/contexts/GameContext";
-import { SetStateAction, useCallback, useEffect, useState } from 'react'
+import { SetStateAction, useCallback, useContext, useEffect, useState } from 'react'
 
-import z from 'zod';
 import { wsBaseUrl } from "@/lib/fetchers/pongAxios";
 import { io } from "socket.io-client";
 import { getToken } from "@/lib/TokenMagagment";
 import { cloneDeep } from "lodash";
+import { gameState } from "@/pages/game/game.dto";
+import { SocketContext } from "../pageLayout/PageLayout";
 
-const ballData = z.object({
-  x: z.number(),
-  y: z.number()
-})
-const score = z.object({
-  pOne: z.number().int(),
-  pTwo: z.number().int()
-})
-const paddles = z.object({
-  pOne: z.number(),
-  pTwo: z.number()
-})
-
-const gameData = z.object({
-  ballData: ballData,
-  score: score,
-  paddles: paddles
-})
-
-type gameState = z.infer<typeof gameData>;
 
 export default function PingPongTable() {
+  const socket = useContext(SocketContext);
   const [gameData, setGameData] = useState<gameState>({
     ballData: { x: 50, y: 50 },
     paddles: { pOne: 50, pTwo: 50 },
@@ -42,16 +24,10 @@ export default function PingPongTable() {
   const [winner, setWinner] = useState('');
   const [gameOver, setGameOver] = useState(false);
   const websocketUrl = wsBaseUrl.concat('/game');
-  const socket = io(websocketUrl, {
-    autoConnect: false,
-    extraHeaders: {
-      Authorization: getToken(),
-    },
-    transports: ["websocket"],
-  });
-  function onGameData(payload: gameState) {
-    setGameData(cloneDeep(payload));
-  }
+  const onGameData = useCallback((payload: gameState) => {
+    console.log(payload);
+    setGameData(cloneDeep(payload))
+  }, [socket])
   useEffect(() => {
     socket.connect();
     socket.on('gameData', onGameData);

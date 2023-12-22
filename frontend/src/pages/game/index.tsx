@@ -10,14 +10,23 @@ import { useSearchParams } from 'next/navigation'
 
 function Game() {
   const socket = useContext(SocketContext)
-  const params = useSearchParams();
+  const gameId = useSearchParams().get('id') as string;
 
   const connectAction: PlayerActionPayload = {
     type: 'connected',
-    gameId: params.get('id') as string,
+    gameId,
     connected: true
+  };
+  const pauseAction: PlayerActionPayload = {
+    type: 'pause',
+    gameId,
+    paused: true
   }
-
+  const continueAction: PlayerActionPayload = {
+    type: 'pause',
+    gameId,
+    paused: false
+  }
   return (
     <Box className="App"
       display={'flex'}
@@ -31,9 +40,18 @@ function Game() {
       <Button
         onClick={() => {
           socket.emit('playerAction', connectAction)
-          console.log('emited');
         }}
-      >teste</Button>
+      >connected</Button>
+      <Button
+        onClick={() => {
+          socket.emit('playerAction', pauseAction)
+        }}
+      >pause</Button>
+      <Button
+        onClick={() => {
+          socket.emit('playerAction', continueAction)
+        }}
+      >continue</Button>
       <PingPongTable />
     </Box>
   );

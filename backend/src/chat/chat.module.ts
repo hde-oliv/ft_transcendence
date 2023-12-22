@@ -25,7 +25,6 @@ import { GameService } from 'src/game/game.service';
     UsersRepository,
     PrismaService,
     ChatRepository,
-    GameService
   ],
   controllers: [ChatController],
   imports: [UsersModule, AuthModule, JwtModule, forwardRef(() => GameModule)],

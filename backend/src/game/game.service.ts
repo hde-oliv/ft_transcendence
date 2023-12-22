@@ -14,9 +14,10 @@ export class GameService {
   private readonly logger = new Logger(GameService.name);
 
   buildGame(gameId: string, pOneId: string, pTwoId: string, socketService: WebsocketService) {
-    if (this.games.get(gameId) === undefined) {
+    const game = this.games.get(gameId)
+    if (game === undefined) {
       const newGame = new Game(gameId, pOneId, pTwoId, socketService)
-      this.games.set('gameId', newGame);
+      this.games.set(gameId, newGame);
     }
     return (gameId)
   }
