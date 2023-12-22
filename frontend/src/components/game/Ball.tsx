@@ -1,10 +1,5 @@
 'use client'
-import { GameContext } from "@/contexts/GameContext";
-import { getToken } from "@/lib/TokenMagagment";
-import { wsBaseUrl } from "@/lib/fetchers/pongAxios";
 import { Box } from "@chakra-ui/react";
-import { useContext, useEffect, useRef, useState } from "react";
-import { io } from "socket.io-client";
 
 enum RacketDirection {
   DEFAULT = 1,
