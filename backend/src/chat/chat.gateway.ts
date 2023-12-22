@@ -18,6 +18,7 @@ import { SendMessageDto } from './dto/send-message-dto';
 import { ChatFilter } from './chat.filter';
 import { WebsocketService } from './websocket.service';
 import { UsersService } from 'src/users/users.service';
+import { GameService } from 'src/game/game.service';
 
 // NOTE: Chat only works in the /chat page
 // TODO: Create a global websocket to handle user status later
@@ -37,7 +38,8 @@ export class SocketGateway
   constructor(
     private readonly chatService: ChatService,
     private readonly socketService: WebsocketService,
-    private readonly userServive: UsersService
+    private readonly userServive: UsersService,
+    private readonly gameService: GameService
   ) { }
 
   private readonly logger = new Logger(SocketGateway.name);
@@ -130,6 +132,46 @@ export class SocketGateway
     return message;
   }
 
+  @UseFilters(new ChatFilter())
+  @SubscribeMessage('playerAction')
+  async handlePlayerAction(
+    @MessageBody() data: { gameId: string, action: { id: string, value: string } }
+  ) {
+    const t = this.gameService.startGame('asdasdas', 'Matthew', 'Mark');
+    this.gameService.test();
+  }
+
+  //game listeners - Start
+  // @UseFilters(new ChatFilter())
+  // @SubscribeMessage('playerAction')
+  // async handlePlayerAction(
+  //   @MessageBody() data: { gameId: string, action: { id: string, value: string } }
+
+  // ) {
+
+  // }
+  // @SubscribeMessage('move_left_paddle')
+  // async handleMoveLeftPaddle(
+  //   @MessageBody() dir: number,
+  //   @ConnectedSocket() socket: Socket,
+  // ) {
+  //   this.logger.log(
+  //     `Client trying to move left paddle to: ${JSON.stringify(dir)}`,
+  //   );
+  //   this.game.setLeftPaddlePosition(dir);
+  // }
+
+  // @SubscribeMessage('move_right_paddle')
+  // async handleMoveRightPaddle(
+  //   @MessageBody() dir: number,
+  //   @ConnectedSocket() socket: Socket,
+  // ) {
+  //   this.logger.log(
+  //     `Client trying to move right paddle to: ${JSON.stringify(dir)}`,
+  //   );
+  //   this.game.setRightPaddlePosition(dir);
+  // }
+  //game listeners - End
   async broadcast(
     sender: Socket,
     targets: Socket[],

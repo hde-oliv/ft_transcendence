@@ -9,4 +9,4 @@ export const createInviteSchema = z
 
 export type CreateInviteDto = z.infer<typeof createInviteSchema>;
 
-export const responseInviteSchema = createInviteSchema.merge(z.object({fulfilled: z.boolean()}))
+export const responseInviteSchema = createInviteSchema.merge(z.object({ fulfilled: z.boolean() }))

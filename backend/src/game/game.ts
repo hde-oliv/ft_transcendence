@@ -1,5 +1,25 @@
-import { gameState } from "./game.gateway";
+import z from 'zod'
 
+const ballData = z.object({
+  x: z.number(),
+  y: z.number()
+})
+const score = z.object({
+  pOne: z.number().int(),
+  pTwo: z.number().int()
+})
+const paddles = z.object({
+  pOne: z.number(),
+  pTwo: z.number()
+})
+
+const gameData = z.object({
+  ballData: ballData,
+  score: score,
+  paddles: paddles
+})
+
+export type gameState = z.infer<typeof gameData>;
 
 enum RacketDirection {
   DEFAULT = 1,
@@ -13,26 +33,40 @@ enum YAxisDirection {
 }
 
 export class Game {
-  private paddleIncrement = 5;
-  private xAxisSpeed = 1.5;
-  private yAxisSpeed = 1.5;
-  private ballPosition = { x: 50, y: 50 };
-  private ballDirection = {
-    x: Math.random() < 0.5 ? +this.xAxisSpeed : -this.xAxisSpeed,
-    y: Math.random() < 0.5 ? +this.yAxisSpeed : -this.yAxisSpeed,
-  };
-  private yAxisDir = YAxisDirection.UP;
-  private directCrossedBall = false;
 
-  private pOnePaddleY = 50;
-  private pTwoPaddleY = 50;
-
-  private score = {
-    pOne: 0,
-    pTwo: 0
+  constructor(pOneId: string, pTwoId: string) {
+    this.playerOne = pOneId;
+    this.playerTwo = pTwoId;
+    this.paddleIncrement = 5;
+    this.xAxisSpeed = 1.5;
+    this.yAxisSpeed = 1.5;
+    this.ballPosition = { x: 50, y: 50 };
+    this.ballDirection = {
+      x: Math.random() < 0.5 ? +this.xAxisSpeed : -this.xAxisSpeed,
+      y: Math.random() < 0.5 ? +this.yAxisSpeed : -this.yAxisSpeed,
+    }
+    this.yAxisDir = YAxisDirection.UP;
+    this.directCrossedBall = false;
+    this.pOnePaddleY = 50;
+    this.pTwoPaddleY = 50;
+    this.score = {
+      pOne: 0,
+      pTwo: 0
+    }
   }
-  private pOne = 0;
-  private pTwo = 0;
+  private playerOne: string;
+  private playerTwo: string;
+  private paddleIncrement
+  private xAxisSpeed
+  private yAxisSpeed
+  private ballPosition
+  private ballDirection
+  private yAxisDir
+  private directCrossedBall
+  private pOnePaddleY
+  private pTwoPaddleY
+  private score
+
 
   gameTick() {
     // Check if the ball hits the vertical walls
@@ -247,12 +281,10 @@ export class Game {
     else
       this.pTwoPaddleY -= this.paddleIncrement;
   }
-
   public getLeftScore() {
-    return this.pOne;
+    return this.score.p_one;
   }
-
   public getRightScore() {
-    return this.pTwo;
+    return this.score.p_two;
   }
 }
