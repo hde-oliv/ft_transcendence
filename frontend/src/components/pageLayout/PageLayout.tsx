@@ -9,6 +9,7 @@ import theme from "@/lib/Theme";
 import PongNavBar from '../nav/PongNavBar';
 import { getMe, MeResponseData } from '@/lib/fetchers/me';
 import applicationSocket from '@/lib/sockets/applicationSocket';
+import { useRouter } from 'next/router';
 
 
 
@@ -25,6 +26,7 @@ export const SocketContext = createContext(applicationSocket);
 export default function PageLayout({ children }: { children: ReactElement }) {
   const toast = useToast();
   const [me, setMe] = useState<MeResponseData>(defaultMe);
+  const router = useRouter()
   const updateMe = async () => {
     try {
       const resp = await getMe()
@@ -62,6 +64,28 @@ export default function PageLayout({ children }: { children: ReactElement }) {
     }
     toast(toastConfig)
   }, [toast])
+  const goToGame = useCallback((data: { gameId: string }) => {
+    const toastDuration = 3000;
+    const redirectToGame = () => { router.push({ pathname: '/game', query: { id: data.gameId } }) };
+    const timeoutObject = setTimeout(redirectToGame, toastDuration);
+    toast({
+      title: `Let's play`,
+      description: `You are being redirected to game (id : ${data.gameId})`,
+      status: 'success',
+      duration: toastDuration,
+      onCloseComplete: () => { clearTimeout(timeoutObject); redirectToGame() },
+      isClosable: true,
+    })
+  }, [toast])
+  const reQueued = useCallback((data: { reason: string }) => {
+    toast({
+      title: `Server error`,
+      description: data.reason,
+      status: 'error',
+      duration: 3000,
+      isClosable: true,
+    })
+  }, [toast])
   useEffect(() => {
     if (me.intra_login === '')
       updateMe();
@@ -71,11 +95,15 @@ export default function PageLayout({ children }: { children: ReactElement }) {
     applicationSocket.on('kicked', channelKick);
     applicationSocket.on('banned', channelBan);
     applicationSocket.on('addedAsFriend', friendAdd);
+    applicationSocket.on('goToGame', goToGame);
+    applicationSocket.on('reQueued ', reQueued);
     return (() => {
       applicationSocket.disconnect();
       applicationSocket.off('kicked', channelKick);
       applicationSocket.off('banned', channelBan);
       applicationSocket.off('addedAsFriend', friendAdd);
+      applicationSocket.off('goToGame', goToGame);
+      applicationSocket.off('reQueued ', reQueued);
     })
   }, [channelKick, channelBan, friendAdd]);
   return (

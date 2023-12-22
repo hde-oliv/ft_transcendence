@@ -1,21 +1,22 @@
 import { Injectable, UseFilters, Logger } from '@nestjs/common';
 import { Game } from './game';
-import { MessageBody, SubscribeMessage, WebSocketGateway } from '@nestjs/websockets';
+import { PlayerActionPayload } from './dto/game.dto';
+import { MessageBody, SubscribeMessage, WebSocketGateway, WsException } from '@nestjs/websockets';
 import { ChatFilter } from 'src/chat/chat.filter';
 import { WebsocketService } from 'src/chat/websocket.service';
 @Injectable()
 export class GameService {
   constructor(
-    private readonly websocketService: WebsocketService
   ) {
     this.games = new Map();
   }
   private games: Map<string, Game>
   private readonly logger = new Logger(GameService.name);
 
-  startGame(gameId: string, pOneId: string, pTwoId: string) {
+  buildGame(gameId: string, pOneId: string, pTwoId: string, socketService: WebsocketService) {
     if (this.games.get(gameId) === undefined) {
-      this.games.set('gameId', new Game(pOneId, pTwoId))
+      const newGame = new Game(gameId, pOneId, pTwoId, socketService)
+      this.games.set('gameId', newGame);
     }
     return (gameId)
   }
@@ -25,17 +26,20 @@ export class GameService {
   getGames() {
     return this.games;
   }
-  test() {
-    this.logger.warn(`socketService users ${this.websocketService.clients.map((e => { return e.user.intra_login })).join(',')}`)
+  startGame(gameId) {
+    const game = this.games.get(gameId)
+    this.logger.log(`traying to start (id:${gameId})`)
+    if (game !== undefined) {
+      this.logger.log(`Game starting (id:${gameId})`)
+      game.startGame();
+    }
   }
-  // @UseFilters(new ChatFilter())
-  // @SubscribeMessage('playerAction')
-  // async handlePlayerAction(
-  //   @MessageBody() data: { gameId: string, action: { id: string, value: string } }
-  // ) {
-  //   this.logger.warn('RECEIVED MESSAGE-game')
-  //   this.logger.warn(`${this.websocketService.clients}`)
-  // }
+  gameAction(userId: string, payload: PlayerActionPayload) {
+    const game = this.games.get(payload.gameId);
+    if (game === undefined)
+      throw new WsException('Game not found.');
+    game.handleGameAction(userId, payload);
+  }
 }
 
 // async afterInit(server: Server) {

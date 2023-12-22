@@ -4,9 +4,19 @@ import PongNavBar from "@/components/nav/PongNavBar";
 import PageLayout, { SocketContext } from "@/components/pageLayout/PageLayout";
 import { Box, Button } from "@chakra-ui/react";
 import { ReactElement, useContext } from "react";
+import { playerActionPayload, PlayerActionPayload } from "./game.dto";
+import { useSearchParams } from 'next/navigation'
+
 
 function Game() {
   const socket = useContext(SocketContext)
+  const params = useSearchParams();
+
+  const connectAction: PlayerActionPayload = {
+    type: 'connected',
+    gameId: params.get('id') as string,
+    connected: true
+  }
 
   return (
     <Box className="App"
@@ -20,7 +30,7 @@ function Game() {
     >
       <Button
         onClick={() => {
-          socket.emit('playerAction')
+          socket.emit('playerAction', connectAction)
           console.log('emited');
         }}
       >teste</Button>

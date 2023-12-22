@@ -9,6 +9,7 @@ import { JwtModule } from '@nestjs/jwt';
 @Module({
   providers: [WebsocketService, GameService, WebsocketService],
   imports: [UsersModule, AuthModule, JwtModule],
+  exports: [GameService],
   controllers: [GameController],
 })
 export class GameModule { }

@@ -19,6 +19,7 @@ import { ChatFilter } from './chat.filter';
 import { WebsocketService } from './websocket.service';
 import { UsersService } from 'src/users/users.service';
 import { GameService } from 'src/game/game.service';
+import { PlayerActionPayload } from 'src/game/dto/game.dto';
 
 // NOTE: Chat only works in the /chat page
 // TODO: Create a global websocket to handle user status later
@@ -132,16 +133,20 @@ export class SocketGateway
     return message;
   }
 
+  //game listeners - Start
   @UseFilters(new ChatFilter())
   @SubscribeMessage('playerAction')
   async handlePlayerAction(
-    @MessageBody() data: { gameId: string, action: { id: string, value: string } }
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() data: PlayerActionPayload
   ) {
-    const t = this.gameService.startGame('asdasdas', 'Matthew', 'Mark');
-    this.gameService.test();
+    const user = await this.chatService.getUserFromSocket(socket)
+    this.logger.warn(`user ${user.nickname} sent a playerAction with content:`);
+    this.logger.warn(`${JSON.stringify(data)}`);
+    this.gameService.gameAction(user.intra_login, data);
   }
 
-  //game listeners - Start
+
   // @UseFilters(new ChatFilter())
   // @SubscribeMessage('playerAction')
   // async handlePlayerAction(

@@ -54,9 +54,9 @@ export default function PingPongTable() {
   }
   useEffect(() => {
     socket.connect();
-    socket.on('game_data', onGameData);
+    socket.on('gameData', onGameData);
     return () => {
-      socket.off('game_data', onGameData);
+      socket.off('gameData', onGameData);
       socket.disconnect();
     };
   }, []);
