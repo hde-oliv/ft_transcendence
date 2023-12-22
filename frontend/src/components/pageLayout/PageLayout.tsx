@@ -1,6 +1,6 @@
 'use client'
 import { createContext, ReactElement, useCallback, useEffect, useState } from 'react';
-import { Grid, GridItem, useToast, UseToastOptions } from '@chakra-ui/react';
+import { Button, Grid, GridItem, useToast, UseToastOptions } from '@chakra-ui/react';
 import React from 'react';
 
 import { ChakraProvider } from "@chakra-ui/react";
@@ -8,6 +8,7 @@ import theme from "@/lib/Theme";
 
 import PongNavBar from '../nav/PongNavBar';
 import { getMe, MeResponseData } from '@/lib/fetchers/me';
+import {acceptP2P} from '@/lib/fetchers/matches';
 import applicationSocket from '@/lib/sockets/applicationSocket';
 
 
@@ -51,6 +52,16 @@ export default function PageLayout({ children }: { children: ReactElement }) {
       isClosable: true,
     })
   }, [toast])
+
+  const acceptInvite = useCallback(async (inviteId: string)=> {
+    try {
+      acceptP2P(inviteId);
+    } catch (e) {
+      console.log(e);
+    }
+  }, []);
+
+
   const channelBan = useCallback((data: { name: string, banned: boolean }) => {
     const { banned } = data
     const toastConfig: UseToastOptions = {
@@ -62,6 +73,19 @@ export default function PageLayout({ children }: { children: ReactElement }) {
     }
     toast(toastConfig)
   }, [toast])
+  const receivesInvite = useCallback((data: { id: string, user_id: string, target_id: string, fulfilled: boolean}) => {
+    const toastConfig: UseToastOptions = {
+      render:(props)=>{return <Button 
+        alignItems="center"
+        colorScheme='blue' 
+        size='lg'
+        onClick={() => acceptInvite(data.id)}>
+        Aceitar partida de {data.user_id} 
+        </Button>}
+    }
+    toast(toastConfig)
+  }, [toast])
+
   useEffect(() => {
     if (me.intra_login === '')
       updateMe();
@@ -71,11 +95,13 @@ export default function PageLayout({ children }: { children: ReactElement }) {
     applicationSocket.on('kicked', channelKick);
     applicationSocket.on('banned', channelBan);
     applicationSocket.on('addedAsFriend', friendAdd);
+    applicationSocket.on('newInvite', receivesInvite)
     return (() => {
       applicationSocket.disconnect();
       applicationSocket.off('kicked', channelKick);
       applicationSocket.off('banned', channelBan);
       applicationSocket.off('addedAsFriend', friendAdd);
+      applicationSocket.off('newInvite', receivesInvite);
     })
   }, [channelKick, channelBan, friendAdd]);
   return (
