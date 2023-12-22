@@ -23,3 +23,11 @@ export async function acceptMatch() {
     return true;
   return false;
 }
+
+export async function acceptP2P(target_id: string) {
+  const fetcher = pongAxios();
+  const response = await fetcher.post("match/P2P/${target_id}")
+  if (response.status === 200)
+    return true;
+  return false;
+}

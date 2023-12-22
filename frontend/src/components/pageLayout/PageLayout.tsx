@@ -8,6 +8,7 @@ import theme from "@/lib/Theme";
 
 import PongNavBar from '../nav/PongNavBar';
 import { getMe, MeResponseData } from '@/lib/fetchers/me';
+import {acceptP2P} from '@/lib/fetchers/matches';
 import applicationSocket from '@/lib/sockets/applicationSocket';
 
 
@@ -51,6 +52,16 @@ export default function PageLayout({ children }: { children: ReactElement }) {
       isClosable: true,
     })
   }, [toast])
+
+  const acceptInvite = useCallback(async (target_id: string)=> {
+    try {
+      acceptP2P(target_id);
+    } catch (e) {
+      console.log(e);
+    }
+  }, []);
+
+
   const channelBan = useCallback((data: { name: string, banned: boolean }) => {
     const { banned } = data
     const toastConfig: UseToastOptions = {
@@ -68,7 +79,7 @@ export default function PageLayout({ children }: { children: ReactElement }) {
         alignItems="center"
         colorScheme='blue' 
         size='lg'
-        onClick={props.onClose}>
+        onClick={() => acceptInvite(data.user_id)}>
         Aceitar partida de {data.user_id} 
         </Button>}
     }
