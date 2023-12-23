@@ -21,7 +21,9 @@ export class MatchService {
     private readonly matchRepository: MatchRepository,
     private readonly userRepository: UsersRepository,
     private readonly gameService: GameService
-  ) { }
+  ) {
+    this.startQueue();
+  }
   private readonly logger = new Logger(MatchService.name);
   async createInvite(userId: string, targetId: string) {
     const createInviteDto: CreateInviteDto = {
@@ -35,32 +37,32 @@ export class MatchService {
     }
     const responseNewInvite = await this.matchRepository.createInvite(createInviteDto);
     this.websocketService.emitToUser(createInviteDto.target_id, 'newInvite', responseNewInvite);
-    setTimeout(async ()=>{
-      try{
+    setTimeout(async () => {
+      try {
         await this.matchRepository.deleteInvite(responseNewInvite.id);
-      } catch(e){
-        if (e instanceof PrismaClientKnownRequestError){
-          if (e.code === 'P2025'){
+      } catch (e) {
+        if (e instanceof PrismaClientKnownRequestError) {
+          if (e.code === 'P2025') {
             this.logger.warn(e.message);
           }
         }
       }
-    
+
     }, 10000);
     return responseNewInvite;
   }
 
-  async acceptP2P(userId: string, inviteId: string){
-    try{
+  async acceptP2P(userId: string, inviteId: string) {
+    try {
       const invite = await this.matchRepository.getInviteById(inviteId)
-      if (invite.target_id === userId){
+      if (invite.target_id === userId) {
         this.queueService.removeFromQueue(invite.target_id);
         this.queueService.removeFromQueue(invite.user_id);
       } else {
         throw new ForbiddenException();
       }
-    } catch(e) {
-      if (e instanceof PrismaClientKnownRequestError){
+    } catch (e) {
+      if (e instanceof PrismaClientKnownRequestError) {
         this.logger.warn(e.message);
         throw new NotFoundException();
       }
@@ -73,76 +75,74 @@ export class MatchService {
   // (members entering queue via http requests and queueRuntime modifying it) to RW the same variable (race condition)
   private queueTimeout: NodeJS.Timeout | null = null;
   queueRuntime() {
-    return () => {
-      if (this.queueService.queuedPlayerCount() > 1) {
-        const onlinePlayers = this.websocketService.clients.map(e => e.user.intra_login);
-        this.queueService.supplyOnlinePlayers(onlinePlayers);
-        const queueByElo = this.queueService.queuedPlayers().sort((pOne, pTwo) => pOne.elo - pTwo.elo);
-        const pairs = chunk(queueByElo, 2);
-        pairs.forEach((pair) => {
-          if (pair.length === 2) {
-            const issuedAt = Date.now();
-            const inviteDuration = 5000;
-            const expiresAt = issuedAt + inviteDuration
-            const { intra_login: p_one, nickname: nickname_one } = pair[0];
-            const { intra_login: p_two, nickname: nickname_two } = pair[1];
-            const pOneQueueRec = this.queueService.getQueueRecord(p_one); //TODO: getQueueRecord should throw if no queue rec is found.
-            const pTwoQueueRec = this.queueService.getQueueRecord(p_two);
-            this.queueService.removeFromQueue(p_one);
-            this.queueService.removeFromQueue(p_two);
-            this.queueService.addInvite(p_one);
-            this.queueService.addInvite(p_two);
-            this.websocketService.emitToUser(p_one, 'matched', { to: { intra_login: p_two, nickname: nickname_two }, expiresAt });
-            this.websocketService.emitToUser(p_two, 'matched', { to: { intra_login: p_one, nickname: nickname_one }, expiresAt });
-            setTimeout(async () => {
-              const pOneStatus = this.queueService.inviteStatus(p_one);
-              const pTwoStatus = this.queueService.inviteStatus(p_two);
-              this.queueService.removeInvite(p_one)
-              this.queueService.removeInvite(p_two)
-              if (pOneStatus && pTwoStatus) {
-                this.logger.log(`Creating game for ${p_one} and ${p_two}`)
-                try {
-                  const match = await this.matchRepository.createMatch(p_one, p_two);
-                  this.gameService.buildGame(match.id, p_one, p_two, this.websocketService);
-                  this.websocketService.addUserToRoom(p_one, match.id);
-                  this.websocketService.addUserToRoom(p_two, match.id);
-                  this.websocketService.emitToRoom(match.id, 'goToGame', { gameId: match.id })
-                  this.gameService.startGame(match.id);
+    if (this.queueService.queuedPlayerCount() > 1) {
+      const onlinePlayers = this.websocketService.clients.map(e => e.user.intra_login);
+      this.queueService.supplyOnlinePlayers(onlinePlayers);
+      const queueByElo = this.queueService.queuedPlayers().sort((pOne, pTwo) => pOne.elo - pTwo.elo);
+      const pairs = chunk(queueByElo, 2);
+      pairs.forEach((pair) => {
+        if (pair.length === 2) {
+          const issuedAt = Date.now();
+          const inviteDuration = 5000;
+          const expiresAt = issuedAt + inviteDuration
+          const { intra_login: p_one, nickname: nickname_one } = pair[0];
+          const { intra_login: p_two, nickname: nickname_two } = pair[1];
+          const pOneQueueRec = this.queueService.getQueueRecord(p_one); //TODO: getQueueRecord should throw if no queue rec is found.
+          const pTwoQueueRec = this.queueService.getQueueRecord(p_two);
+          this.queueService.removeFromQueue(p_one);
+          this.queueService.removeFromQueue(p_two);
+          this.queueService.addInvite(p_one);
+          this.queueService.addInvite(p_two);
+          this.websocketService.emitToUser(p_one, 'matched', { to: { intra_login: p_two, nickname: nickname_two }, expiresAt });
+          this.websocketService.emitToUser(p_two, 'matched', { to: { intra_login: p_one, nickname: nickname_one }, expiresAt });
+          setTimeout(async () => {
+            const pOneStatus = this.queueService.inviteStatus(p_one);
+            const pTwoStatus = this.queueService.inviteStatus(p_two);
+            this.queueService.removeInvite(p_one)
+            this.queueService.removeInvite(p_two)
+            if (pOneStatus && pTwoStatus) {
+              this.logger.log(`Creating game for ${p_one} and ${p_two}`)
+              try {
+                const match = await this.matchRepository.createMatch(p_one, p_two);
+                this.gameService.buildGame(match.id, p_one, p_two, this.websocketService);
+                this.websocketService.addUserToRoom(p_one, match.id);
+                this.websocketService.addUserToRoom(p_two, match.id);
+                this.websocketService.emitToRoom(match.id, 'goToGame', { gameId: match.id })
+                this.gameService.startGame(match.id);
 
-                } catch (e) {
-                  this.websocketService.emitToUser(p_one, 'reQueued', { reason: 'Server failed to create match' });
-                  this.websocketService.emitToUser(p_two, 'reQueued', { reason: 'Server failed to create match' });
-                }
-              } else {
-                if (pOneStatus) {
-                  this.websocketService.emitToUser(p_one, 'reQueued', { reason: 'Matched player failed to accept' });
-                  if (pOneQueueRec)
-                    this.queueService.reAddToQueue(p_one, pOneQueueRec)
-                } else {
-                  this.websocketService.emitToUser(p_one, 'deQueued', { reason: 'Matched player failed to accept' })
-                }
-                if (pTwoStatus) {
-                  this.websocketService.emitToUser(p_two, 'reQueued', { reason: 'Matched player failed to accept' });
-                  if (pTwoQueueRec)
-                    this.queueService.reAddToQueue(p_two, pTwoQueueRec)
-                } else {
-                  this.websocketService.emitToUser(p_two, 'deQueued', { reason: 'Matched player failed to accept' });
-                }
-                this.logger.log(`Could not create game for ${p_one} and ${p_two}`)
+              } catch (e) {
+                this.websocketService.emitToUser(p_one, 'reQueued', { reason: 'Server failed to create match' });
+                this.websocketService.emitToUser(p_two, 'reQueued', { reason: 'Server failed to create match' });
               }
-            }, inviteDuration + 300);//      if they dont confirm within time (on confirmation, this timeout must be cleared!)
-          }
-        })
-      } else if (this.queueService.queuedPlayerCount() === 0) {
-        this.logger.warn(`Queue stoped (no one in queue)`);
-        this.stopQueue();
-      }
+            } else {
+              if (pOneStatus) {
+                this.websocketService.emitToUser(p_one, 'reQueued', { reason: 'Matched player failed to accept' });
+                if (pOneQueueRec)
+                  this.queueService.reAddToQueue(p_one, pOneQueueRec)
+              } else {
+                this.websocketService.emitToUser(p_one, 'deQueued', { reason: 'Matched player failed to accept' })
+              }
+              if (pTwoStatus) {
+                this.websocketService.emitToUser(p_two, 'reQueued', { reason: 'Matched player failed to accept' });
+                if (pTwoQueueRec)
+                  this.queueService.reAddToQueue(p_two, pTwoQueueRec)
+              } else {
+                this.websocketService.emitToUser(p_two, 'deQueued', { reason: 'Matched player failed to accept' });
+              }
+              this.logger.log(`Could not create game for ${p_one} and ${p_two}`)
+            }
+          }, inviteDuration + 300);//      if they dont confirm within time (on confirmation, this timeout must be cleared!)
+        }
+      })
+    } else if (this.queueService.queuedPlayerCount() === 0) {
+      this.logger.warn(`Queue stoped (no one in queue)`);
+      this.stopQueue();
     }
   }
   startQueue() {
     if (this.queueTimeout === null) {
       this.logger.log('Matchmaking queue started');
-      this.queueTimeout = setInterval(this.queueRuntime(), 3000);
+      this.queueTimeout = setInterval(() => { this.queueRuntime() }, 3000);
     }
   }
   stopQueue() {

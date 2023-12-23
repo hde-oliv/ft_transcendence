@@ -23,18 +23,14 @@ export default function PingPongTable() {
   const gameId = useSearchParams().get('id') as string;
 
   const onGameData = useCallback((payload: GameState) => {
-    console.log('payload:');
-    console.log(payload);
     setGameData(cloneDeep(payload))
   }, [socket])
   useEffect(() => {
-    socket.connect();
     socket.on('gameData', onGameData);
     return () => {
       socket.off('gameData', onGameData);
-      socket.disconnect();
     };
-  }, []);
+  }, [onGameData]);
 
   useEffect(() => {
     if (gameData.score.pOne === 5 || gameData.score.pTwo === 5) {
