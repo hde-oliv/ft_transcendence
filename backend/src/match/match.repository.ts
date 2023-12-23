@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Invites } from '@prisma/client';
 import { CreateInviteDto } from './dto/create-invite-dto';
@@ -11,7 +11,7 @@ export class MatchRepository {
     const targetUser = await this.prismaService.users.findUnique({
       where: { id: newInviteForIntra.target_id },
     });
-  
+
     if (!targetUser) {
       throw new NotFoundException(`User with id ${newInviteForIntra.target_id} not found`);
     }

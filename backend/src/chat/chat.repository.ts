@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   Channels,
@@ -306,7 +306,7 @@ export class ChatRepository {
       }
     })
     if (membership === null)
-      throw new UnauthorizedException()
+      throw new ForbiddenException()
     const messages = await this.prismaService.messages.findMany({
       where: {
         channel_id: channelId
