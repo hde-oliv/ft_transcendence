@@ -4,27 +4,26 @@ import Paddle from "./Paddle";
 import DashedLineSeparator from "./DashedLineSeparator";
 import Ball from "./Ball";
 import { GameContext } from "@/contexts/GameContext";
-import { SetStateAction, useCallback, useContext, useEffect, useState } from 'react'
-
-import { wsBaseUrl } from "@/lib/fetchers/pongAxios";
-import { io } from "socket.io-client";
-import { getToken } from "@/lib/TokenMagagment";
+import { useCallback, useContext, useEffect, useState } from 'react'
 import { cloneDeep } from "lodash";
-import { gameState } from "@/pages/game/game.dto";
+import { GameState, PlayerActionPayload } from "@/pages/game/game.dto";
 import { SocketContext } from "../pageLayout/PageLayout";
+import { useSearchParams } from "next/navigation";
 
 
 export default function PingPongTable() {
   const socket = useContext(SocketContext);
-  const [gameData, setGameData] = useState<gameState>({
+  const [gameData, setGameData] = useState<GameState>({
     ballData: { x: 50, y: 50 },
     paddles: { pOne: 50, pTwo: 50 },
     score: { pOne: 0, pTwo: 0 }
   })
   const [winner, setWinner] = useState('');
   const [gameOver, setGameOver] = useState(false);
-  const websocketUrl = wsBaseUrl.concat('/game');
-  const onGameData = useCallback((payload: gameState) => {
+  const gameId = useSearchParams().get('id') as string;
+
+  const onGameData = useCallback((payload: GameState) => {
+    console.log('payload:');
     console.log(payload);
     setGameData(cloneDeep(payload))
   }, [socket])
@@ -47,26 +46,25 @@ export default function PingPongTable() {
     }
   }, [gameData.score.pOne, gameData.score.pTwo])
 
-  const movePonePaddle = (dir: number) => {
-    socket.emit('move_left_paddle', dir)
+  const movePaddle = (dir: number) => {
+    const payload: PlayerActionPayload = {
+      type: 'movePaddle',
+      dir,
+      gameId
+    }
+    socket.emit('playerAction', payload)
   }
   const movePtwoPaddle = (dir: number) => {
-    socket.emit('move_right_paddle', dir)
+    socket.emit('playerAction', dir)
   }
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       switch (event.key) {
         case 'w':
-          movePonePaddle(-1);
+          movePaddle(-1);
           break;
         case 's':
-          movePonePaddle(1);
-          break;
-        case 'o':
-          movePtwoPaddle(-1);
-          break;
-        case 'l':
-          movePtwoPaddle(1);
+          movePaddle(1);
           break;
       }
     }

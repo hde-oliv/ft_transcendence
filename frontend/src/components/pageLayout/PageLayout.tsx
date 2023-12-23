@@ -10,6 +10,7 @@ import PongNavBar from '../nav/PongNavBar';
 import { getMe, MeResponseData } from '@/lib/fetchers/me';
 import applicationSocket from '@/lib/sockets/applicationSocket';
 import { useRouter } from 'next/router';
+import { GameState } from '@/pages/game/game.dto';
 
 
 
@@ -35,7 +36,7 @@ export default function PageLayout({ children }: { children: ReactElement }) {
       console.log('manage different possible errors'); //TODO
     }
   };
-  const channelKick = useCallback((data: { name: string }) => {
+  const onChannelKick = useCallback((data: { name: string }) => {
     toast({
       title: `Kiked`,
       description: `You were kicked from "${data.name}" channel.`,
@@ -44,7 +45,7 @@ export default function PageLayout({ children }: { children: ReactElement }) {
       isClosable: true,
     })
   }, [toast])
-  const friendAdd = useCallback((data: { name: string }) => {
+  const onFriendAdd = useCallback((data: { name: string }) => {
     toast({
       title: `New Friend`,
       description: `You were added as a friend by "${data.name}"`,
@@ -53,7 +54,7 @@ export default function PageLayout({ children }: { children: ReactElement }) {
       isClosable: true,
     })
   }, [toast])
-  const channelBan = useCallback((data: { name: string, banned: boolean }) => {
+  const onChannelBan = useCallback((data: { name: string, banned: boolean }) => {
     const { banned } = data
     const toastConfig: UseToastOptions = {
       title: banned ? `Banned` : `Unbanned`,
@@ -64,20 +65,18 @@ export default function PageLayout({ children }: { children: ReactElement }) {
     }
     toast(toastConfig)
   }, [toast])
-  const goToGame = useCallback((data: { gameId: string }) => {
-    const toastDuration = 3000;
-    const redirectToGame = () => { router.push({ pathname: '/game', query: { id: data.gameId } }) };
-    const timeoutObject = setTimeout(redirectToGame, toastDuration);
+  const onGoToGame = useCallback((data: { gameId: string }) => {
+    const toastDuration = 1500;
     toast({
       title: `Let's play`,
       description: `You are being redirected to game (id : ${data.gameId})`,
       status: 'success',
       duration: toastDuration,
-      onCloseComplete: () => { clearTimeout(timeoutObject); redirectToGame() },
+      onCloseComplete: () => { router.push({ pathname: '/game', query: { id: data.gameId } }) },
       isClosable: true,
     })
   }, [toast])
-  const reQueued = useCallback((data: { reason: string }) => {
+  const onReQueued = useCallback((data: { reason: string }) => {
     toast({
       title: `Server error`,
       description: data.reason,
@@ -86,26 +85,29 @@ export default function PageLayout({ children }: { children: ReactElement }) {
       isClosable: true,
     })
   }, [toast])
+  const onGameData = (data: GameState) => { console.log(data.ballData) }
   useEffect(() => {
     if (me.intra_login === '')
       updateMe();
   }, [me]);
   useEffect(() => {
     applicationSocket.connect();
-    applicationSocket.on('kicked', channelKick);
-    applicationSocket.on('banned', channelBan);
-    applicationSocket.on('addedAsFriend', friendAdd);
-    applicationSocket.on('goToGame', goToGame);
-    applicationSocket.on('reQueued ', reQueued);
+    applicationSocket.on('kicked', onChannelKick);
+    applicationSocket.on('banned', onChannelBan);
+    applicationSocket.on('addedAsFriend', onFriendAdd);
+    applicationSocket.on('goToGame', onGoToGame);
+    applicationSocket.on('reQueued ', onReQueued);
+    applicationSocket.on('gameData ', onGameData);
     return (() => {
       applicationSocket.disconnect();
-      applicationSocket.off('kicked', channelKick);
-      applicationSocket.off('banned', channelBan);
-      applicationSocket.off('addedAsFriend', friendAdd);
-      applicationSocket.off('goToGame', goToGame);
-      applicationSocket.off('reQueued ', reQueued);
+      applicationSocket.off('kicked', onChannelKick);
+      applicationSocket.off('banned', onChannelBan);
+      applicationSocket.off('addedAsFriend', onFriendAdd);
+      applicationSocket.off('goToGame', onGoToGame);
+      applicationSocket.off('reQueued ', onReQueued);
+      applicationSocket.off('gameData ', onGameData);
     })
-  }, [channelKick, channelBan, friendAdd]);
+  }, [onChannelKick, onChannelBan, onFriendAdd]);
   return (
     <ChakraProvider theme={theme}>
       <SocketContext.Provider value={applicationSocket}>

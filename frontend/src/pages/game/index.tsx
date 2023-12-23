@@ -2,8 +2,8 @@
 import PingPongTable from "@/components/game/PingPongTable";
 import PongNavBar from "@/components/nav/PongNavBar";
 import PageLayout, { SocketContext } from "@/components/pageLayout/PageLayout";
-import { Box, Button } from "@chakra-ui/react";
-import { ReactElement, useContext } from "react";
+import { Box, Button, VStack } from "@chakra-ui/react";
+import { ReactElement, useCallback, useContext, useEffect } from "react";
 import { playerActionPayload, PlayerActionPayload } from "./game.dto";
 import { useSearchParams } from 'next/navigation'
 
@@ -37,21 +37,23 @@ function Game() {
       border='1px'
       borderColor='blue'
     >
-      <Button
-        onClick={() => {
-          socket.emit('playerAction', connectAction)
-        }}
-      >connected</Button>
-      <Button
-        onClick={() => {
-          socket.emit('playerAction', pauseAction)
-        }}
-      >pause</Button>
-      <Button
-        onClick={() => {
-          socket.emit('playerAction', continueAction)
-        }}
-      >continue</Button>
+      <VStack>
+        <Button
+          onClick={() => {
+            socket.emit('playerAction', connectAction)
+          }}
+        >connected</Button>
+        <Button
+          onClick={() => {
+            socket.emit('playerAction', pauseAction)
+          }}
+        >pause</Button>
+        <Button
+          onClick={() => {
+            socket.emit('playerAction', continueAction)
+          }}
+        >continue</Button>
+      </VStack>
       <PingPongTable />
     </Box>
   );

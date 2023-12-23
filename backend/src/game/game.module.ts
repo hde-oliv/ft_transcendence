@@ -1,14 +1,14 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { GameService } from './game.service';
 import { GameController } from './game.controller';
-import { WebsocketService } from 'src/chat/websocket.service';
 import { UsersModule } from 'src/users/users.module';
 import { AuthModule } from 'src/auth/auth.module';
 import { JwtModule } from '@nestjs/jwt';
+import { ChatModule } from 'src/chat/chat.module';
 
 @Module({
-  providers: [WebsocketService, GameService, WebsocketService],
-  imports: [UsersModule, AuthModule, JwtModule],
+  providers: [GameService],
+  imports: [UsersModule, AuthModule, JwtModule, forwardRef(() => ChatModule)],
   exports: [GameService],
   controllers: [GameController],
 })

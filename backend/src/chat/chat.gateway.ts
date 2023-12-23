@@ -61,7 +61,6 @@ export class SocketGateway
         const newClients = this.clients.filter(
           (cl: ClientSocket) => cl.socket.id !== socket.id,
         );
-
         this.clients = newClients;
         this.socketService.clients = newClients;
         const updater = this.userServive.updateUserOnline(user, false);
@@ -91,13 +90,15 @@ export class SocketGateway
         this.clients = [...this.clients, clientSocket];
         this.logger.log(`Client Connected: ${socket.id}`);
         const channels = await this.chatService.getRoomsByUser(user);
+        const games = this.gameService.getGamesByUser(user.intra_login);
+        const allRooms = [...channels, ...games];
         const allPromises: Array<Promise<any | void> | void> = []
         allPromises.push(this.userServive.updateUserOnline(user, true));
         socket.to(channels).emit('updateUser', {
           intra_login: user.intra_login,
           status: 'online'
         })
-        allPromises.push(socket.join(channels));
+        allPromises.push(socket.join(allRooms));
         await Promise.allSettled(allPromises);
       } catch (e) {
         socket.rooms.forEach(e => {
@@ -131,6 +132,17 @@ export class SocketGateway
     socket.to(channel.id.toString()).emit('server_message', { ...message, nickname: user.nickname });
     socket.emit('server_message', { ...message, nickname: user.nickname });
     return message;
+  }
+
+  @UseFilters(new ChatFilter())
+  @SubscribeMessage('joinRoom')
+  async handleJoinRoom(
+    @MessageBody() data: { roomId: string },
+    @ConnectedSocket() socket: Socket,
+  ) {
+    const user: Users = await this.chatService.getUserFromSocket(socket); //TODO: messages must be sanitized before included!
+    socket.join(data.roomId)
+    this.socketService.addUserToRoom(user.intra_login, data.roomId);
   }
 
   //game listeners - Start
@@ -185,15 +197,9 @@ export class SocketGateway
       targets[i].emit(event, message);
     }
   }
-
-  getClientList() {
-    let ret = '';
-    for (let i = 0; i < this.clients.length; i++) {
-      ret += `{${this.clients[i].socket.id}, ${this.clients[i].user.intra_login}}; `;
-    }
-    return ret;
+  getClients() {
+    return this.clients
   }
-
   getOnlineSocketsByMemberships(memberships: Memberships[]): Socket[] {
     this.logger.warn(`Memberships: ${JSON.stringify(memberships)}`);
 

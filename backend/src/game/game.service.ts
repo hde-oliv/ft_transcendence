@@ -24,14 +24,17 @@ export class GameService {
   finishGame(gameId: string) {
     this.games.delete(gameId);
   }
-  getGames() {
-    return this.games;
+  getGamesByUser(userId: string) {
+    const gameIds: string[] = [];
+    this.games.forEach((e, k) => {
+      if (e.getPlayers().includes(userId))
+        gameIds.push(k);
+    })
+    return gameIds;
   }
   startGame(gameId) {
     const game = this.games.get(gameId)
-    this.logger.log(`traying to start (id:${gameId})`)
     if (game !== undefined) {
-      this.logger.log(`Game starting (id:${gameId})`)
       game.startGame();
     }
   }

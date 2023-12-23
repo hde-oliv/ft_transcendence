@@ -12,7 +12,6 @@ import { ChatRepository } from './chat.repository';
 import { ChatController } from './chat.controller';
 import { WebsocketService } from './websocket.service';
 import { GameModule } from 'src/game/game.module';
-import { GameService } from 'src/game/game.service';
 
 
 @Module({

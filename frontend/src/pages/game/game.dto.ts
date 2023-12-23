@@ -41,7 +41,7 @@ const quitGameCmd = z.object({
 export const playerActionPayload = z.discriminatedUnion('type', [movePaddleCmd, connectedGameCmd, pauseGameCmd, quitGameCmd])
 export type PlayerActionPayload = z.infer<typeof playerActionPayload>
 
-export type gameState = z.infer<typeof gameData>
+export type GameState = z.infer<typeof gameData>
 export enum RacketDirection {
   DEFAULT = 1,
   INVERTED = 2,

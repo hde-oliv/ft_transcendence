@@ -21,7 +21,7 @@ import { GameModule } from 'src/game/game.module';
     UsersService
   ],
   controllers: [MatchController],
-  imports: [PrismaModule, UsersModule, AuthModule, QueueModule, forwardRef(() => ChatModule), GameModule],
+  imports: [PrismaModule, UsersModule, AuthModule, QueueModule, ChatModule, GameModule],
   exports: [MatchRepository]
 })
 export class MatchModule { }

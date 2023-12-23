@@ -30,7 +30,7 @@ export class Game {
     }
     this.paused = true;
     this.connections = [false, false]
-    this.tickInterval = 400;
+    this.tickInterval = 200;
     this.socketService = socketService
   }
   private id: string;
@@ -326,5 +326,8 @@ export class Game {
       }
       throw new WsException('Bad request');
     }
+  }
+  public getPlayers() {
+    return [this.playerOne, this.playerTwo];
   }
 }
