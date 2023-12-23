@@ -1,6 +1,12 @@
-import { WsException } from '@nestjs/websockets'
-import { ZodError } from 'zod'
-import { YAxisDirection, RacketDirection, gameState, PlayerActionPayload, playerActionPayload } from './dto/game.dto'
+import { WsException } from '@nestjs/websockets';
+import { ZodError } from 'zod';
+import {
+  YAxisDirection,
+  RacketDirection,
+  gameState,
+  PlayerActionPayload,
+  playerActionPayload,
+} from './dto/game.dto';
 import { WebsocketService } from 'src/chat/websocket.service';
 
 export class Game {
@@ -8,7 +14,8 @@ export class Game {
     gameId: string,
     pOneId: string,
     pTwoId: string,
-    socketService: WebsocketService) {
+    socketService: WebsocketService,
+  ) {
     this.id = gameId;
     this.playerOne = pOneId;
     this.playerTwo = pTwoId;
@@ -19,19 +26,19 @@ export class Game {
     this.ballDirection = {
       x: Math.random() < 0.5 ? +this.xAxisSpeed : -this.xAxisSpeed,
       y: Math.random() < 0.5 ? +this.yAxisSpeed : -this.yAxisSpeed,
-    }
+    };
     this.yAxisDir = YAxisDirection.UP;
     this.directCrossedBall = false;
     this.pOnePaddleY = 50;
     this.pTwoPaddleY = 50;
     this.score = {
       pOne: 0,
-      pTwo: 0
-    }
+      pTwo: 0,
+    };
     this.paused = true;
-    this.connections = [false, false]
+    this.connections = [false, false];
     this.tickInterval = 200;
-    this.socketService = socketService
+    this.socketService = socketService;
   }
   private id: string;
   private playerOne: string;
@@ -39,21 +46,21 @@ export class Game {
   private paddleIncrement: number;
   private xAxisSpeed: number;
   private yAxisSpeed: number;
-  private ballPosition: { x: number, y: number };
-  private ballDirection: { x: number, y: number };
+  private ballPosition: { x: number; y: number };
+  private ballDirection: { x: number; y: number };
   private yAxisDir: number;
   private directCrossedBall: boolean;
-  private pOnePaddleY: number
-  private pTwoPaddleY: number
-  private score: { pOne: number, pTwo: number }
-  private paused: boolean
+  private pOnePaddleY: number;
+  private pTwoPaddleY: number;
+  private score: { pOne: number; pTwo: number };
+  private paused: boolean;
   private connections: [boolean, boolean];
   private tickInterval: number;
   private intervalObject: NodeJS.Timeout;
-  private socketService: WebsocketService
+  private socketService: WebsocketService;
 
   private gameTick() {
-    if (!this.paused && this.connections.every(e => e)) {
+    if (!this.paused && this.connections.every((e) => e)) {
       // Check if the ball hits the vertical walls
       if (this.ballPosition.x <= 0 || this.ballPosition.x >= 100) {
         if (this.ballPosition.x <= 0) {
@@ -117,7 +124,6 @@ export class Game {
           return;
         }
         const racketDir: RacketDirection = Math.floor(Math.random() * 3) + 1;
-        // const racketDir: RacketDirection = RacketDirection.DEFAULT;
         if (racketDir == RacketDirection.DEFAULT) {
           this.ballDirection = { ...this.ballDirection, x: +this.xAxisSpeed };
           this.ballPosition = {
@@ -187,7 +193,6 @@ export class Game {
           return;
         }
         const racketDir: RacketDirection = Math.floor(Math.random() * 3) + 1;
-        // const racketDir: RacketDirection = RacketDirection.DEFAULT;
         if (racketDir == RacketDirection.DEFAULT) {
           this.ballDirection = { ...this.ballDirection, x: -this.xAxisSpeed };
           this.ballPosition = {
@@ -222,7 +227,7 @@ export class Game {
       }
       this.ballPosition = this.updatePosition();
     }
-    this.socketService.emitToRoom(this.id, 'gameData', this.getGameData())
+    this.socketService.emitToRoom(this.id, 'gameData', this.getGameData());
   }
 
   public updatePosition() {
@@ -243,30 +248,27 @@ export class Game {
       ballData: this.ballPosition,
       paddles: {
         pOne: this.pOnePaddleY,
-        pTwo: this.pTwoPaddleY
+        pTwo: this.pTwoPaddleY,
       },
-      score: this.score
-    }
+      score: this.score,
+    };
   }
 
   private movePlayerOne(direction: number) {
-    if (direction > 0)
-      this.pOnePaddleY += this.paddleIncrement;
-    else
-      this.pOnePaddleY -= this.paddleIncrement;
+    if (direction > 0) this.pOnePaddleY += this.paddleIncrement;
+    else this.pOnePaddleY -= this.paddleIncrement;
   }
 
   private movePlayerTwo(direction: number) {
-    if (direction > 0)
-      this.pTwoPaddleY += this.paddleIncrement;
-    else
-      this.pTwoPaddleY -= this.paddleIncrement;
+    if (direction > 0) this.pTwoPaddleY += this.paddleIncrement;
+    else this.pTwoPaddleY -= this.paddleIncrement;
   }
-  private movePlayerPaddle(player: 'playerOne' | 'playerTwo', direction: number) {
-    if (player === 'playerOne')
-      return this.movePlayerOne(direction);
-    if (player === 'playerTwo')
-      return this.movePlayerTwo(direction);
+  private movePlayerPaddle(
+    player: 'playerOne' | 'playerTwo',
+    direction: number,
+  ) {
+    if (player === 'playerOne') return this.movePlayerOne(direction);
+    if (player === 'playerTwo') return this.movePlayerTwo(direction);
   }
   private getLeftScore() {
     return this.score.pOne;
@@ -275,10 +277,8 @@ export class Game {
     return this.score.pTwo;
   }
   private evalPlayerId(userId: string) {
-    if (userId === this.playerOne)
-      return 'playerOne';
-    if (userId === this.playerTwo)
-      return 'playerTwo'
+    if (userId === this.playerOne) return 'playerOne';
+    if (userId === this.playerTwo) return 'playerTwo';
     throw new WsException('Forbidden action');
   }
   private setPaused(newValue: boolean) {
@@ -291,42 +291,46 @@ export class Game {
     this.connections[1] = newState;
   }
   private setConnected(player: 'playerOne' | 'playerTwo', newState: boolean) {
-    if (player === 'playerOne')
-      return this.setPlayerOneConnected(newState);
-    if (player === 'playerTwo')
-      return this.setPlayerTwoConnected(newState);
+    if (player === 'playerOne') return this.setPlayerOneConnected(newState);
+    if (player === 'playerTwo') return this.setPlayerTwoConnected(newState);
   }
+
   public startGame() {
-    this.intervalObject = setInterval(() => { this.gameTick() }, this.tickInterval)
+    this.intervalObject = setInterval(() => {
+      this.gameTick();
+    }, this.tickInterval);
   }
+
   public stopGame() {
     clearInterval(this.intervalObject);
   }
+
   public handleGameAction(userId: string, action: PlayerActionPayload) {
     try {
       const parsedAction = playerActionPayload.parse(action);
       const whoIs = this.evalPlayerId(userId);
       switch (parsedAction.type) {
         case 'movePaddle':
-          this.movePlayerPaddle(whoIs, parsedAction.dir)
+          this.movePlayerPaddle(whoIs, parsedAction.dir);
           break;
         case 'pause':
           this.setPaused(parsedAction.paused);
           break;
         case 'quit':
-          console.log(`Player ${userId} quited`);
+          console.log(`Player ${userId} quit`);
           break;
         case 'connected':
-          this.setConnected(whoIs, parsedAction.connected)
+          this.setConnected(whoIs, parsedAction.connected);
           break;
       }
     } catch (e) {
       if (e instanceof ZodError) {
-        throw new WsException('Unknow action');
+        throw new WsException('Unknown action');
       }
       throw new WsException('Bad request');
     }
   }
+
   public getPlayers() {
     return [this.playerOne, this.playerTwo];
   }
