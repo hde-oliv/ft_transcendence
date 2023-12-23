@@ -29,7 +29,7 @@ import { PlayerActionPayload } from 'src/game/dto/game.dto';
   cors: {
     origin: '*',
   },
-  transpors: ['websocket', 'webtransport'],
+  transpors: ['websocket', 'webtransport']
 })
 @Injectable({ scope: Scope.DEFAULT })
 export class SocketGateway
@@ -91,7 +91,7 @@ export class SocketGateway
         this.logger.log(`Client Connected: ${socket.id}`);
         const channels = await this.chatService.getRoomsByUser(user);
         const games = this.gameService.getGamesByUser(user.intra_login);
-        const allRooms = [...channels, ...games];
+        const allRooms = [...channels, ...games, user.intra_login];
         const allPromises: Array<Promise<any | void> | void> = []
         allPromises.push(this.userServive.updateUserOnline(user, true));
         socket.to(channels).emit('updateUser', {

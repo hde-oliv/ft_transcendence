@@ -6,6 +6,9 @@ import {
   Post,
   UseGuards,
   Request,
+  InternalServerErrorException,
+  Res,
+  HttpStatus,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/jwt.guard';
 import { FriendService } from './friend.service';
@@ -40,7 +43,14 @@ export class FriendController {
   async createFriendship(
     @Request() req,
     @Body() new_friendship: CreateFriendshipDto,
+    @Res() response
   ) {
-    return await this.friendService.createFriendship(req.user, new_friendship); //TODO review function,
+    const result = await this.friendService.createFriendship(req.user, new_friendship);
+    if (result === null)
+      throw new InternalServerErrorException();
+    if (result.new)
+      return response.status(HttpStatus.CREATED).json(result.friendship);
+    else
+      return response.status(HttpStatus.OK).json(result.friendship);
   }
 }

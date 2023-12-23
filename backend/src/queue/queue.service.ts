@@ -25,7 +25,7 @@ export default class QueueService {
    * Remove from queue all players that are not in the provided array
    * @param intra_logins
    */
-  removeListFromQueue(intra_logins: Array<string>) {
+  removeNotInListFromQeue(intra_logins: Array<string>) {
     const removed: string[] = []
     this.queue.forEach((rec, key) => {
       if (!intra_logins.includes(key)) {

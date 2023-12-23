@@ -20,7 +20,8 @@ export class WebsocketService {
   }
 
   emitToUser(userId: string, event: string, data: { [key: string]: any }) {
-    this.clients.filter(e => e.user.intra_login === userId).forEach(client => { client.socket.emit(event, data) })
+    this.server.to(userId).emit(event, data);
+    // this.clients.filter(e => e.user.intra_login === userId).forEach(client => { client.socket.emit(event, data) })
   }
   removeUserFromRoom(userId: string, channelId: string) {
     const socs = this.userSockets(userId);
@@ -35,13 +36,22 @@ export class WebsocketService {
   emitToRoom(room: string, event: string, data: { [key: string]: any }) {
     this.server.to(room).emit(event, data);
   }
+  /**
+   *
+   * @param userId
+   * @param event
+   * @param data
+   *
+   * @description Emit given event to all rooms the user is in, excepet self-room
+   */
   emitToUsersRooms(userId: string, event: string, data: { [key: string]: any }) {
     try {
       const socs = this.userSockets(userId);
       let rooms: Set<string> = new Set();
       socs.forEach(soc => {
         soc.rooms.forEach(room => {
-          rooms.add(room);
+          if (room !== userId)
+            rooms.add(room);
         })
       });
       const roomArr = Array.from(rooms);

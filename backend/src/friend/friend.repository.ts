@@ -12,6 +12,7 @@ import { CreateFriendshipDto } from './dto/create-friendship-dto';
 export class FriendRepository {
   constructor(private readonly prismaService: PrismaService) { }
 
+
   async createFriendship(
     new_friendship: CreateFriendshipDto,
   ): Promise<Friendships> {
@@ -20,6 +21,23 @@ export class FriendRepository {
         ...new_friendship,
       },
     });
+  }
+
+  async getFriendshipByUsers(userOne: string, userTwo: string) {
+    return this.prismaService.friendships.findFirstOrThrow({
+      where: {
+        OR: [
+          {
+            fOne: userOne,
+            fTwo: userTwo
+          },
+          {
+            fOne: userTwo,
+            fTwo: userOne
+          }
+        ]
+      }
+    })
   }
 
   async getAllFriendships(userId: string) {

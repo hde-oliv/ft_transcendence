@@ -184,33 +184,6 @@ export class ChatController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post('/channel/direct')
-  async getDirectChannelByUsers(
-    @Request() req,
-    @Body() body: { user1: string; user2: string },
-  ) {
-    // TODO: create dto later    let channel;
-    try {
-      return await this.chatService.getDirectChannelByUsers(
-        body.user1,
-        body.user2,
-      );
-    } catch (e) {
-      const member =
-        body.user1 === req.user.intra_login ? body.user2 : body.user1;
-      const createChannelDto = {
-        name: `${body.user1} - ${body.user2}`,
-        type: 'private',
-        password: '',
-        protected: false,
-        user2user: true,
-        members: [member],
-      };
-      return await this.chatService.createChannel(req.user, createChannelDto);
-    }
-  }
-
-  @UseGuards(JwtAuthGuard)
   @Post('/block')
   async blockUser(@Request() req, @Body() body: BlockUserStatusDto, @Res() res: Response) {
     let result = await this.chatService.createBlock(req.user, body);

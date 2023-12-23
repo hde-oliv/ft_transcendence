@@ -77,7 +77,7 @@ export class MatchService {
   queueRuntime() {
     if (this.queueService.queuedPlayerCount() > 1) {
       const onlinePlayers = this.websocketService.clients.map(e => e.user.intra_login);
-      const removed = this.queueService.removeListFromQueue(onlinePlayers);
+      const removed = this.queueService.removeNotInListFromQeue(onlinePlayers);
       removed.forEach(user => this.websocketService.emitToUser(user, 'deQueued', { reason: 'Connection unstable' }))
       const queueByElo = this.queueService.queuedPlayers().sort((pOne, pTwo) => pOne.elo - pTwo.elo);
       const pairs = chunk(queueByElo, 2);
