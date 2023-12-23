@@ -21,20 +21,6 @@ export default class QueueService {
   getQueueRecord(intra_login: string) {
     return this.queue.get(intra_login);
   }
-  /**
-   * Remove from queue all players that are not in the provided array
-   * @param intra_logins
-   */
-  removeNotInListFromQeue(intra_logins: Array<string>) {
-    const removed: string[] = []
-    this.queue.forEach((rec, key) => {
-      if (!intra_logins.includes(key)) {
-        this.queue.delete(key);
-        removed.push(key);
-      }
-    })
-    return removed;
-  }
   queuedPlayerCount() {
     return this.queue.size;
   }
