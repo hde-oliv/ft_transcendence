@@ -8,6 +8,7 @@ import QueueService from 'src/queue/queue.service';
 import { TokenClaims } from 'src/auth/auth.model';
 import { UsersService } from 'src/users/users.service';
 import { CreateInviteDto } from './dto/create-invite-dto';
+import { GameService } from 'src/game/game.service';
 import { PrismaClient } from '@prisma/client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
@@ -17,8 +18,9 @@ export class MatchService {
     private readonly websocketService: WebsocketService,
     private readonly userService: UsersService,
     private readonly queueService: QueueService,
-    private matchRepository: MatchRepository,
-    private userRepository: UsersRepository,
+    private readonly matchRepository: MatchRepository,
+    private readonly userRepository: UsersRepository,
+    private readonly gameService: GameService
   ) { }
   private readonly logger = new Logger(MatchService.name);
   async createInvite(userId: string, targetId: string) {
@@ -92,36 +94,43 @@ export class MatchService {
             this.queueService.addInvite(p_two);
             this.websocketService.emitToUser(p_one, 'matched', { to: { intra_login: p_two, nickname: nickname_two }, expiresAt });
             this.websocketService.emitToUser(p_two, 'matched', { to: { intra_login: p_one, nickname: nickname_one }, expiresAt });
-            setTimeout(() => {
+            setTimeout(async () => {
               const pOneStatus = this.queueService.inviteStatus(p_one);
               const pTwoStatus = this.queueService.inviteStatus(p_two);
               this.queueService.removeInvite(p_one)
               this.queueService.removeInvite(p_two)
               if (pOneStatus && pTwoStatus) {
                 this.logger.log(`Creating game for ${p_one} and ${p_two}`)
-                //create game (match record)
-                //create room for given match.id (uuid)
-                //join both players in given room
-                //start Game!
+                try {
+                  const match = await this.matchRepository.createMatch(p_one, p_two);
+                  this.gameService.buildGame(match.id, p_one, p_two, this.websocketService);
+                  this.websocketService.addUserToRoom(p_one, match.id);
+                  this.websocketService.addUserToRoom(p_two, match.id);
+                  this.websocketService.emitToRoom(match.id, 'goToGame', { gameId: match.id })
+                  this.gameService.startGame(match.id);
+
+                } catch (e) {
+                  this.websocketService.emitToUser(p_one, 'reQueued', { reason: 'Server failed to create match' });
+                  this.websocketService.emitToUser(p_two, 'reQueued', { reason: 'Server failed to create match' });
+                }
               } else {
                 if (pOneStatus) {
-                  this.websocketService.emitToUser(p_one, 'reQueued', {});
+                  this.websocketService.emitToUser(p_one, 'reQueued', { reason: 'Matched player failed to accept' });
                   if (pOneQueueRec)
                     this.queueService.reAddToQueue(p_one, pOneQueueRec)
                 } else {
-                  this.websocketService.emitToUser(p_one, 'deQueued', {})
+                  this.websocketService.emitToUser(p_one, 'deQueued', { reason: 'Matched player failed to accept' })
                 }
                 if (pTwoStatus) {
-                  this.websocketService.emitToUser(p_two, 'reQueued', {});
+                  this.websocketService.emitToUser(p_two, 'reQueued', { reason: 'Matched player failed to accept' });
                   if (pTwoQueueRec)
                     this.queueService.reAddToQueue(p_two, pTwoQueueRec)
                 } else {
-                  this.websocketService.emitToUser(p_two, 'deQueued', {})
+                  this.websocketService.emitToUser(p_two, 'deQueued', { reason: 'Matched player failed to accept' });
                 }
                 this.logger.log(`Could not create game for ${p_one} and ${p_two}`)
               }
-            }, inviteDuration + 300);
-            //      if they dont confirm within time (on confirmation, this timeout must be cleared!)
+            }, inviteDuration + 300);//      if they dont confirm within time (on confirmation, this timeout must be cleared!)
           }
         })
       } else if (this.queueService.queuedPlayerCount() === 0) {

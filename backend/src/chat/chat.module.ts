@@ -1,6 +1,6 @@
 import { UsersModule } from 'src/users/users.module';
 import { SocketGateway } from './chat.gateway';
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { AuthModule } from 'src/auth/auth.module';
 import { ChatService } from './chat.service';
 import { AuthService } from 'src/auth/auth.service';
@@ -11,6 +11,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { ChatRepository } from './chat.repository';
 import { ChatController } from './chat.controller';
 import { WebsocketService } from './websocket.service';
+import { GameModule } from 'src/game/game.module';
 
 
 @Module({
@@ -25,7 +26,7 @@ import { WebsocketService } from './websocket.service';
     ChatRepository,
   ],
   controllers: [ChatController],
-  imports: [UsersModule, AuthModule, JwtModule],
+  imports: [UsersModule, AuthModule, JwtModule, forwardRef(() => GameModule)],
   exports: [ChatService, SocketGateway, WebsocketService],
 })
 export class ChatModule { }

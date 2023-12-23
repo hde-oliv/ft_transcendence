@@ -2,11 +2,11 @@ import { Injectable, Logger } from '@nestjs/common';
 import { WebSocketServer } from '@nestjs/websockets';
 import { Users } from '@prisma/client';
 import { Server, Socket } from 'socket.io';
-import { SocketGateway } from './chat.gateway';
 
 @Injectable()
 export class WebsocketService {
-  constructor() { }
+  constructor(
+  ) { }
   @WebSocketServer() server: Server;
   private readonly logger = new Logger(WebsocketService.name);
 

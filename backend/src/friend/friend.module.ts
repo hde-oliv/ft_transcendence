@@ -4,12 +4,10 @@ import { FriendService } from './friend.service';
 import { FriendRepository } from './friend.repository';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ChatModule } from 'src/chat/chat.module';
-import { ChatService } from 'src/chat/chat.service';
-import { WebsocketService } from 'src/chat/websocket.service';
 
 @Module({
-  imports: [ChatModule],
+  providers: [FriendService, FriendRepository, PrismaService],
   controllers: [FriendController],
-  providers: [FriendService, FriendRepository, PrismaService, WebsocketService],
+  imports: [ChatModule],
 })
 export class FriendModule { }

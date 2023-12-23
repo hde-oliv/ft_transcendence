@@ -10,6 +10,8 @@ import PongNavBar from '../nav/PongNavBar';
 import { getMe, MeResponseData } from '@/lib/fetchers/me';
 import {acceptP2P} from '@/lib/fetchers/matches';
 import applicationSocket from '@/lib/sockets/applicationSocket';
+import { useRouter } from 'next/router';
+import { GameState } from '@/pages/game/game.dto';
 
 
 
@@ -26,6 +28,7 @@ export const SocketContext = createContext(applicationSocket);
 export default function PageLayout({ children }: { children: ReactElement }) {
   const toast = useToast();
   const [me, setMe] = useState<MeResponseData>(defaultMe);
+  const router = useRouter()
   const updateMe = async () => {
     try {
       const resp = await getMe()
@@ -34,7 +37,7 @@ export default function PageLayout({ children }: { children: ReactElement }) {
       console.log('manage different possible errors'); //TODO
     }
   };
-  const channelKick = useCallback((data: { name: string }) => {
+  const onChannelKick = useCallback((data: { name: string }) => {
     toast({
       title: `Kiked`,
       description: `You were kicked from "${data.name}" channel.`,
@@ -43,7 +46,7 @@ export default function PageLayout({ children }: { children: ReactElement }) {
       isClosable: true,
     })
   }, [toast])
-  const friendAdd = useCallback((data: { name: string }) => {
+  const onFriendAdd = useCallback((data: { name: string }) => {
     toast({
       title: `New Friend`,
       description: `You were added as a friend by "${data.name}"`,
@@ -52,7 +55,6 @@ export default function PageLayout({ children }: { children: ReactElement }) {
       isClosable: true,
     })
   }, [toast])
-
   const acceptInvite = useCallback(async (inviteId: string)=> {
     try {
       acceptP2P(inviteId);
@@ -73,6 +75,26 @@ export default function PageLayout({ children }: { children: ReactElement }) {
     }
     toast(toastConfig)
   }, [toast])
+  const onGoToGame = useCallback((data: { gameId: string }) => {
+    const toastDuration = 1500;
+    toast({
+      title: `Let's play`,
+      description: `You are being redirected to game (id : ${data.gameId})`,
+      status: 'success',
+      duration: toastDuration,
+      onCloseComplete: () => { router.push({ pathname: '/game', query: { id: data.gameId } }) },
+      isClosable: true,
+    })
+  }, [toast])
+  const onReQueued = useCallback((data: { reason: string }) => {
+    toast({
+      title: `Server error`,
+      description: data.reason,
+      status: 'error',
+      duration: 3000,
+      isClosable: true,
+    })
+  }, [toast])
   const receivesInvite = useCallback((data: { id: string, user_id: string, target_id: string, fulfilled: boolean}) => {
     const toastConfig: UseToastOptions = {
       render:(props)=>{return <Button 
@@ -92,18 +114,22 @@ export default function PageLayout({ children }: { children: ReactElement }) {
   }, [me]);
   useEffect(() => {
     applicationSocket.connect();
-    applicationSocket.on('kicked', channelKick);
-    applicationSocket.on('banned', channelBan);
-    applicationSocket.on('addedAsFriend', friendAdd);
+    applicationSocket.on('kicked', onChannelKick);
+    applicationSocket.on('banned', onChannelBan);
+    applicationSocket.on('addedAsFriend', onFriendAdd);
+    applicationSocket.on('goToGame', onGoToGame);
+    applicationSocket.on('reQueued ', onReQueued);
     applicationSocket.on('newInvite', receivesInvite)
     return (() => {
-      applicationSocket.disconnect();
-      applicationSocket.off('kicked', channelKick);
-      applicationSocket.off('banned', channelBan);
-      applicationSocket.off('addedAsFriend', friendAdd);
+      applicationSocket.off('kicked', onChannelKick);
+      applicationSocket.off('banned', onChannelBan);
+      applicationSocket.off('addedAsFriend', onFriendAdd);
+      applicationSocket.off('goToGame', onGoToGame);
+      applicationSocket.off('reQueued ', onReQueued);
       applicationSocket.off('newInvite', receivesInvite);
+      applicationSocket.disconnect();
     })
-  }, [channelKick, channelBan, friendAdd]);
+  }, [onChannelKick, onChannelBan, onFriendAdd, onGoToGame, onReQueued, receivesInvite]);
   return (
     <ChakraProvider theme={theme}>
       <SocketContext.Provider value={applicationSocket}>

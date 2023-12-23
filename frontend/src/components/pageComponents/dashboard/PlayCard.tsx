@@ -97,8 +97,9 @@ const useProgress = (durationMs: number) => {
   }
   const setDone = () => {
     setAccepted(true);
+    setProgress(prev => 100);
   }
-  const setCancelled = () => { setProgress(100); setColor(colors.ended) }
+  const setCancelled = () => { setProgress(prev => 100); setColor(colors.ended) }
   const increment = () => {
     setProgress(prev => {
       if (prev < 100)
@@ -134,12 +135,14 @@ const MatchedComponent: React.FC<{ to: string, expiresAt: number, goIdle: any, r
   const { progress, color, setDone, cancel } = useProgress(props.expiresAt - Date.now());
   const [accepted, setAccepted] = useState(false);
   const socket = useContext(SocketContext);
+  const [loading, setLoading] = useState(false);
 
   const onCancel = async () => {
     cancel();
     props.goIdle();
   }
   const onAccept = async () => {
+    setLoading(true)
     try {
       const worked = await acceptMatch();
       if (worked) {
@@ -157,6 +160,7 @@ const MatchedComponent: React.FC<{ to: string, expiresAt: number, goIdle: any, r
           onCancel()
         }
       }
+      setLoading(false)
     }
   }
   const onDecline = () => {
@@ -182,12 +186,14 @@ const MatchedComponent: React.FC<{ to: string, expiresAt: number, goIdle: any, r
           <ClashIcon fill='yellow.300' boxSize={'20%'} />
           <ButtonGroup isAttached>
             <Button
+              isDisabled={progress === 100 || loading}
               mt='0.5em'
               size='sm'
               bgColor={'green.300'}
               onClick={onAccept}
             >Accept</Button>
             <Button
+              isDisabled={progress === 100}
               mt='0.5em'
               size='sm'
               bgColor={'red.300'}

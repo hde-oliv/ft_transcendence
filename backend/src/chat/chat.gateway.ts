@@ -18,6 +18,8 @@ import { SendMessageDto } from './dto/send-message-dto';
 import { ChatFilter } from './chat.filter';
 import { WebsocketService } from './websocket.service';
 import { UsersService } from 'src/users/users.service';
+import { GameService } from 'src/game/game.service';
+import { PlayerActionPayload } from 'src/game/dto/game.dto';
 
 // NOTE: Chat only works in the /chat page
 // TODO: Create a global websocket to handle user status later
@@ -37,7 +39,8 @@ export class SocketGateway
   constructor(
     private readonly chatService: ChatService,
     private readonly socketService: WebsocketService,
-    private readonly userServive: UsersService
+    private readonly userServive: UsersService,
+    private readonly gameService: GameService
   ) { }
 
   private readonly logger = new Logger(SocketGateway.name);
@@ -58,7 +61,6 @@ export class SocketGateway
         const newClients = this.clients.filter(
           (cl: ClientSocket) => cl.socket.id !== socket.id,
         );
-
         this.clients = newClients;
         this.socketService.clients = newClients;
         const updater = this.userServive.updateUserOnline(user, false);
@@ -88,13 +90,15 @@ export class SocketGateway
         this.clients = [...this.clients, clientSocket];
         this.logger.log(`Client Connected: ${socket.id}`);
         const channels = await this.chatService.getRoomsByUser(user);
+        const games = this.gameService.getGamesByUser(user.intra_login);
+        const allRooms = [...channels, ...games];
         const allPromises: Array<Promise<any | void> | void> = []
         allPromises.push(this.userServive.updateUserOnline(user, true));
         socket.to(channels).emit('updateUser', {
           intra_login: user.intra_login,
           status: 'online'
         })
-        allPromises.push(socket.join(channels));
+        allPromises.push(socket.join(allRooms));
         await Promise.allSettled(allPromises);
       } catch (e) {
         socket.rooms.forEach(e => {
@@ -130,6 +134,59 @@ export class SocketGateway
     return message;
   }
 
+  @UseFilters(new ChatFilter())
+  @SubscribeMessage('joinRoom')
+  async handleJoinRoom(
+    @MessageBody() data: { roomId: string },
+    @ConnectedSocket() socket: Socket,
+  ) {
+    const user: Users = await this.chatService.getUserFromSocket(socket); //TODO: messages must be sanitized before included!
+    socket.join(data.roomId)
+    this.socketService.addUserToRoom(user.intra_login, data.roomId);
+  }
+
+  //game listeners - Start
+  @UseFilters(new ChatFilter())
+  @SubscribeMessage('playerAction')
+  async handlePlayerAction(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() data: PlayerActionPayload
+  ) {
+    const user = await this.chatService.getUserFromSocket(socket)
+    this.gameService.gameAction(user.intra_login, data);
+  }
+
+
+  // @UseFilters(new ChatFilter())
+  // @SubscribeMessage('playerAction')
+  // async handlePlayerAction(
+  //   @MessageBody() data: { gameId: string, action: { id: string, value: string } }
+
+  // ) {
+
+  // }
+  // @SubscribeMessage('move_left_paddle')
+  // async handleMoveLeftPaddle(
+  //   @MessageBody() dir: number,
+  //   @ConnectedSocket() socket: Socket,
+  // ) {
+  //   this.logger.log(
+  //     `Client trying to move left paddle to: ${JSON.stringify(dir)}`,
+  //   );
+  //   this.game.setLeftPaddlePosition(dir);
+  // }
+
+  // @SubscribeMessage('move_right_paddle')
+  // async handleMoveRightPaddle(
+  //   @MessageBody() dir: number,
+  //   @ConnectedSocket() socket: Socket,
+  // ) {
+  //   this.logger.log(
+  //     `Client trying to move right paddle to: ${JSON.stringify(dir)}`,
+  //   );
+  //   this.game.setRightPaddlePosition(dir);
+  // }
+  //game listeners - End
   async broadcast(
     sender: Socket,
     targets: Socket[],
@@ -140,15 +197,9 @@ export class SocketGateway
       targets[i].emit(event, message);
     }
   }
-
-  getClientList() {
-    let ret = '';
-    for (let i = 0; i < this.clients.length; i++) {
-      ret += `{${this.clients[i].socket.id}, ${this.clients[i].user.intra_login}}; `;
-    }
-    return ret;
+  getClients() {
+    return this.clients
   }
-
   getOnlineSocketsByMemberships(memberships: Memberships[]): Socket[] {
     this.logger.warn(`Memberships: ${JSON.stringify(memberships)}`);
 
