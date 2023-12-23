@@ -59,178 +59,176 @@ export class Game {
   private intervalObject: NodeJS.Timeout;
   private socketService: WebsocketService;
 
-  private gameTick() {
-    if (!this.paused && this.connections.every((e) => e)) {
-      // Check if the ball hits the vertical walls
-      if (this.ballPosition.x <= 0 || this.ballPosition.x >= 100) {
-        if (this.ballPosition.x <= 0) {
-          this.score.pTwo++;
-        } else {
-          this.score.pOne++;
-        }
-        this.ballPosition = { x: 50, y: 50 };
-        this.ballDirection = {
-          x: Math.random() < 0.5 ? +this.xAxisSpeed : -this.xAxisSpeed,
-          y: Math.random() < 0.5 ? +this.yAxisSpeed : -this.yAxisSpeed,
-        };
+  private CheckIfItWasMadePointByThePlayers() {
+    if (this.ballPosition.x <= 0 || this.ballPosition.x >= 100) {
+      if (this.ballPosition.x <= 0) {
+        this.score.pTwo++;
+      } else {
+        this.score.pOne++;
       }
-
-      // Check if the ball hits the horizontal walls
-      if (this.ballPosition.y <= 3.5) {
-        this.ballDirection = { ...this.ballDirection, y: +this.yAxisSpeed };
-        this.yAxisDir = YAxisDirection.DOWN;
-        this.directCrossedBall = false;
-      }
-
-      if (this.ballPosition.y >= 96.5) {
-        this.ballDirection = { ...this.ballDirection, y: -this.yAxisSpeed };
-        this.yAxisDir = YAxisDirection.UP;
-        this.directCrossedBall = false;
-      }
-
-      // Check if the ball hits the left paddle
-      let biggerPos =
-        this.ballPosition.y > this.pOnePaddleY
-          ? this.ballPosition.y
-          : this.pOnePaddleY;
-      let smallerPos =
-        this.ballPosition.y < this.pOnePaddleY
-          ? this.ballPosition.y
-          : this.pOnePaddleY;
-      if (this.ballPosition.x <= 5 && biggerPos - smallerPos < 10) {
-        if (this.ballPosition.x <= 2.5) {
-          this.ballDirection = {
-            x: -this.xAxisSpeed,
-            y:
-              this.yAxisDir == YAxisDirection.UP
-                ? +this.ballPosition.y
-                : -this.ballPosition.y,
-          };
-          this.ballPosition = {
-            x: this.ballPosition.x - this.xAxisSpeed,
-            y:
-              this.yAxisDir == YAxisDirection.UP
-                ? +this.ballPosition.y
-                : -this.ballPosition.y,
-          };
-          this.ballPosition = {
-            x: this.ballPosition.x + this.ballDirection.x,
-            y: this.ballPosition.y + this.ballDirection.y,
-          };
-          this.ballPosition = {
-            x: this.ballPosition.x + this.ballDirection.x,
-            y: this.ballPosition.y + this.ballDirection.y,
-          };
-          return;
-        }
-        const racketDir: RacketDirection = Math.floor(Math.random() * 3) + 1;
-        if (racketDir == RacketDirection.DEFAULT) {
-          this.ballDirection = { ...this.ballDirection, x: +this.xAxisSpeed };
-          this.ballPosition = {
-            ...this.ballPosition,
-            x: this.ballPosition.x + this.xAxisSpeed,
-          };
-          this.directCrossedBall = false;
-        } else if (racketDir == RacketDirection.STRAIGHT) {
-          this.ballDirection = { ...this.ballDirection, x: +this.xAxisSpeed };
-          this.ballPosition = {
-            ...this.ballPosition,
-            x: this.ballPosition.x + this.xAxisSpeed,
-          };
-          this.directCrossedBall = true;
-        } else {
-          this.ballDirection = {
-            x: +this.xAxisSpeed,
-            y:
-              this.yAxisDir == YAxisDirection.UP
-                ? +this.yAxisSpeed
-                : -this.yAxisSpeed,
-          };
-          this.ballPosition = {
-            x: this.ballPosition.x + this.xAxisSpeed,
-            y:
-              this.yAxisDir == YAxisDirection.UP
-                ? this.ballPosition.y + this.yAxisSpeed
-                : this.ballPosition.y - this.yAxisSpeed,
-          };
-          this.directCrossedBall = false;
-        }
-      }
-
-      // Check if the ball hits the right paddle
-      biggerPos =
-        this.ballPosition.y > this.pTwoPaddleY
-          ? this.ballPosition.y
-          : this.pTwoPaddleY;
-      smallerPos =
-        this.ballPosition.y < this.pTwoPaddleY
-          ? this.ballPosition.y
-          : this.pTwoPaddleY;
-      if (this.ballPosition.x >= 95 && biggerPos - smallerPos < 10) {
-        if (this.ballPosition.x >= 97.5) {
-          this.ballDirection = {
-            x: +this.xAxisSpeed,
-            y:
-              this.yAxisDir == YAxisDirection.UP
-                ? +this.ballPosition.y
-                : -this.ballPosition.y,
-          };
-          this.ballPosition = {
-            x: this.ballPosition.x + this.xAxisSpeed,
-            y:
-              this.yAxisDir == YAxisDirection.UP
-                ? +this.ballPosition.y
-                : -this.ballPosition.y,
-          };
-          this.ballPosition = {
-            x: this.ballPosition.x + this.ballDirection.x,
-            y: this.ballPosition.y + this.ballDirection.y,
-          };
-          this.ballPosition = {
-            x: this.ballPosition.x + this.ballDirection.x,
-            y: this.ballPosition.y + this.ballDirection.y,
-          };
-          return;
-        }
-        const racketDir: RacketDirection = Math.floor(Math.random() * 3) + 1;
-        if (racketDir == RacketDirection.DEFAULT) {
-          this.ballDirection = { ...this.ballDirection, x: -this.xAxisSpeed };
-          this.ballPosition = {
-            ...this.ballPosition,
-            x: this.ballPosition.x - this.xAxisSpeed,
-          };
-          this.directCrossedBall = false;
-        } else if (racketDir == RacketDirection.STRAIGHT) {
-          this.ballDirection = { ...this.ballDirection, x: -this.xAxisSpeed };
-          this.ballPosition = {
-            ...this.ballPosition,
-            x: this.ballPosition.x - this.xAxisSpeed,
-          };
-          this.directCrossedBall = true;
-        } else {
-          this.ballDirection = {
-            x: -this.xAxisSpeed,
-            y:
-              this.yAxisDir == YAxisDirection.UP
-                ? +this.yAxisSpeed
-                : -this.yAxisSpeed,
-          };
-          this.ballPosition = {
-            x: this.ballPosition.x - this.xAxisSpeed,
-            y:
-              this.yAxisDir == YAxisDirection.UP
-                ? this.ballPosition.y + this.yAxisSpeed
-                : this.ballPosition.y - this.yAxisSpeed,
-          };
-          this.directCrossedBall = false;
-        }
-      }
-      this.ballPosition = this.updatePosition();
+      this.ballPosition = { x: 50, y: 50 };
+      this.ballDirection = {
+        x: Math.random() < 0.5 ? +this.xAxisSpeed : -this.xAxisSpeed,
+        y: Math.random() < 0.5 ? +this.yAxisSpeed : -this.yAxisSpeed,
+      };
     }
-    this.socketService.emitToRoom(this.id, 'gameData', this.getGameData());
   }
 
-  public updatePosition() {
+  private checkIfTheBallHitTheSidelines() {
+    if (this.ballPosition.y <= 3.5) {
+      this.ballDirection = { ...this.ballDirection, y: +this.yAxisSpeed };
+      this.yAxisDir = YAxisDirection.DOWN;
+      this.directCrossedBall = false;
+    }
+
+    if (this.ballPosition.y >= 96.5) {
+      this.ballDirection = { ...this.ballDirection, y: -this.yAxisSpeed };
+      this.yAxisDir = YAxisDirection.UP;
+      this.directCrossedBall = false;
+    }
+  }
+
+  private checkIfTheBallHitsTheLeftPaddle() {
+    const biggerPos =
+      this.ballPosition.y > this.pOnePaddleY
+        ? this.ballPosition.y
+        : this.pOnePaddleY;
+    const smallerPos =
+      this.ballPosition.y < this.pOnePaddleY
+        ? this.ballPosition.y
+        : this.pOnePaddleY;
+    if (this.ballPosition.x <= 5 && biggerPos - smallerPos < 10) {
+      if (this.ballPosition.x <= 2.5) {
+        this.ballDirection = {
+          x: -this.xAxisSpeed,
+          y:
+            this.yAxisDir == YAxisDirection.UP
+              ? +this.ballPosition.y
+              : -this.ballPosition.y,
+        };
+        this.ballPosition = {
+          x: this.ballPosition.x - this.xAxisSpeed,
+          y:
+            this.yAxisDir == YAxisDirection.UP
+              ? +this.ballPosition.y
+              : -this.ballPosition.y,
+        };
+        this.ballPosition = {
+          x: this.ballPosition.x + this.ballDirection.x,
+          y: this.ballPosition.y + this.ballDirection.y,
+        };
+        this.ballPosition = {
+          x: this.ballPosition.x + this.ballDirection.x,
+          y: this.ballPosition.y + this.ballDirection.y,
+        };
+        return;
+      }
+      const racketDir: RacketDirection = Math.floor(Math.random() * 3) + 1;
+      if (racketDir == RacketDirection.DEFAULT) {
+        this.ballDirection = { ...this.ballDirection, x: +this.xAxisSpeed };
+        this.ballPosition = {
+          ...this.ballPosition,
+          x: this.ballPosition.x + this.xAxisSpeed,
+        };
+        this.directCrossedBall = false;
+      } else if (racketDir == RacketDirection.STRAIGHT) {
+        this.ballDirection = { ...this.ballDirection, x: +this.xAxisSpeed };
+        this.ballPosition = {
+          ...this.ballPosition,
+          x: this.ballPosition.x + this.xAxisSpeed,
+        };
+        this.directCrossedBall = true;
+      } else {
+        this.ballDirection = {
+          x: +this.xAxisSpeed,
+          y:
+            this.yAxisDir == YAxisDirection.UP
+              ? +this.yAxisSpeed
+              : -this.yAxisSpeed,
+        };
+        this.ballPosition = {
+          x: this.ballPosition.x + this.xAxisSpeed,
+          y:
+            this.yAxisDir == YAxisDirection.UP
+              ? this.ballPosition.y + this.yAxisSpeed
+              : this.ballPosition.y - this.yAxisSpeed,
+        };
+        this.directCrossedBall = false;
+      }
+    }
+  }
+
+  private checkIfTheBallHitsTheRightPaddle() {
+    const biggerPos =
+      this.ballPosition.y > this.pTwoPaddleY
+        ? this.ballPosition.y
+        : this.pTwoPaddleY;
+    const smallerPos =
+      this.ballPosition.y < this.pTwoPaddleY
+        ? this.ballPosition.y
+        : this.pTwoPaddleY;
+    if (this.ballPosition.x >= 95 && biggerPos - smallerPos < 10) {
+      if (this.ballPosition.x >= 97.5) {
+        this.ballDirection = {
+          x: +this.xAxisSpeed,
+          y:
+            this.yAxisDir == YAxisDirection.UP
+              ? +this.ballPosition.y
+              : -this.ballPosition.y,
+        };
+        this.ballPosition = {
+          x: this.ballPosition.x + this.xAxisSpeed,
+          y:
+            this.yAxisDir == YAxisDirection.UP
+              ? +this.ballPosition.y
+              : -this.ballPosition.y,
+        };
+        this.ballPosition = {
+          x: this.ballPosition.x + this.ballDirection.x,
+          y: this.ballPosition.y + this.ballDirection.y,
+        };
+        this.ballPosition = {
+          x: this.ballPosition.x + this.ballDirection.x,
+          y: this.ballPosition.y + this.ballDirection.y,
+        };
+        return;
+      }
+      const racketDir: RacketDirection = Math.floor(Math.random() * 3) + 1;
+      if (racketDir == RacketDirection.DEFAULT) {
+        this.ballDirection = { ...this.ballDirection, x: -this.xAxisSpeed };
+        this.ballPosition = {
+          ...this.ballPosition,
+          x: this.ballPosition.x - this.xAxisSpeed,
+        };
+        this.directCrossedBall = false;
+      } else if (racketDir == RacketDirection.STRAIGHT) {
+        this.ballDirection = { ...this.ballDirection, x: -this.xAxisSpeed };
+        this.ballPosition = {
+          ...this.ballPosition,
+          x: this.ballPosition.x - this.xAxisSpeed,
+        };
+        this.directCrossedBall = true;
+      } else {
+        this.ballDirection = {
+          x: -this.xAxisSpeed,
+          y:
+            this.yAxisDir == YAxisDirection.UP
+              ? +this.yAxisSpeed
+              : -this.yAxisSpeed,
+        };
+        this.ballPosition = {
+          x: this.ballPosition.x - this.xAxisSpeed,
+          y:
+            this.yAxisDir == YAxisDirection.UP
+              ? this.ballPosition.y + this.yAxisSpeed
+              : this.ballPosition.y - this.yAxisSpeed,
+        };
+        this.directCrossedBall = false;
+      }
+    }
+  }
+
+  private updatePosition() {
     if (this.directCrossedBall) {
       return {
         ...this.ballPosition,
@@ -241,6 +239,17 @@ export class Game {
       x: this.ballPosition.x + this.ballDirection.x,
       y: this.ballPosition.y + this.ballDirection.y,
     };
+  }
+
+  private gameTick() {
+    if (!this.paused && this.connections.every((e) => e)) {
+      this.CheckIfItWasMadePointByThePlayers();
+      this.checkIfTheBallHitTheSidelines();
+      this.checkIfTheBallHitsTheLeftPaddle();
+      this.checkIfTheBallHitsTheRightPaddle();
+      this.ballPosition = this.updatePosition();
+    }
+    this.socketService.emitToRoom(this.id, 'gameData', this.getGameData());
   }
 
   public getGameData(): gameState {
@@ -263,6 +272,7 @@ export class Game {
     if (direction > 0) this.pTwoPaddleY += this.paddleIncrement;
     else this.pTwoPaddleY -= this.paddleIncrement;
   }
+
   private movePlayerPaddle(
     player: 'playerOne' | 'playerTwo',
     direction: number,
@@ -270,26 +280,25 @@ export class Game {
     if (player === 'playerOne') return this.movePlayerOne(direction);
     if (player === 'playerTwo') return this.movePlayerTwo(direction);
   }
-  private getLeftScore() {
-    return this.score.pOne;
-  }
-  private getRightScore() {
-    return this.score.pTwo;
-  }
+
   private evalPlayerId(userId: string) {
     if (userId === this.playerOne) return 'playerOne';
     if (userId === this.playerTwo) return 'playerTwo';
     throw new WsException('Forbidden action');
   }
+
   private setPaused(newValue: boolean) {
     this.paused = newValue;
   }
+
   private setPlayerOneConnected(newState: boolean) {
     this.connections[0] = newState;
   }
+
   private setPlayerTwoConnected(newState: boolean) {
     this.connections[1] = newState;
   }
+
   private setConnected(player: 'playerOne' | 'playerTwo', newState: boolean) {
     if (player === 'playerOne') return this.setPlayerOneConnected(newState);
     if (player === 'playerTwo') return this.setPlayerTwoConnected(newState);
