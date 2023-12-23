@@ -25,12 +25,15 @@ export default class QueueService {
    * Remove from queue all players that are not in the provided array
    * @param intra_logins
    */
-  supplyOnlinePlayers(intra_logins: Array<string>) {
+  removeListFromQueue(intra_logins: Array<string>) {
+    const removed: string[] = []
     this.queue.forEach((rec, key) => {
       if (!intra_logins.includes(key)) {
         this.queue.delete(key);
+        removed.push(key);
       }
     })
+    return removed;
   }
   queuedPlayerCount() {
     return this.queue.size;
