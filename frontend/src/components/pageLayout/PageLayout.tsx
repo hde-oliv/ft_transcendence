@@ -1,6 +1,6 @@
 'use client'
 import { createContext, ReactElement, useCallback, useEffect, useState } from 'react';
-import { Grid, GridItem, useToast, UseToastOptions } from '@chakra-ui/react';
+import { Button, Grid, GridItem, useToast, UseToastOptions } from '@chakra-ui/react';
 import React from 'react';
 
 import { ChakraProvider } from "@chakra-ui/react";
@@ -8,6 +8,7 @@ import theme from "@/lib/Theme";
 
 import PongNavBar from '../nav/PongNavBar';
 import { getMe, MeResponseData } from '@/lib/fetchers/me';
+import {acceptP2P} from '@/lib/fetchers/matches';
 import applicationSocket from '@/lib/sockets/applicationSocket';
 import { useRouter } from 'next/router';
 import { GameState } from '@/pages/game/game.dto';
@@ -54,7 +55,16 @@ export default function PageLayout({ children }: { children: ReactElement }) {
       isClosable: true,
     })
   }, [toast])
-  const onChannelBan = useCallback((data: { name: string, banned: boolean }) => {
+  const acceptInvite = useCallback(async (inviteId: string)=> {
+    try {
+      acceptP2P(inviteId);
+    } catch (e) {
+      console.log(e);
+    }
+  }, []);
+
+
+  const channelBan = useCallback((data: { name: string, banned: boolean }) => {
     const { banned } = data
     const toastConfig: UseToastOptions = {
       title: banned ? `Banned` : `Unbanned`,
@@ -85,7 +95,19 @@ export default function PageLayout({ children }: { children: ReactElement }) {
       isClosable: true,
     })
   }, [toast])
-  const onGameData = (data: GameState) => { console.log(data.ballData) }
+  const receivesInvite = useCallback((data: { id: string, user_id: string, target_id: string, fulfilled: boolean}) => {
+    const toastConfig: UseToastOptions = {
+      render:(props)=>{return <Button 
+        alignItems="center"
+        colorScheme='blue' 
+        size='lg'
+        onClick={() => acceptInvite(data.id)}>
+        Aceitar partida de {data.user_id} 
+        </Button>}
+    }
+    toast(toastConfig)
+  }, [toast])
+
   useEffect(() => {
     if (me.intra_login === '')
       updateMe();
@@ -97,17 +119,17 @@ export default function PageLayout({ children }: { children: ReactElement }) {
     applicationSocket.on('addedAsFriend', onFriendAdd);
     applicationSocket.on('goToGame', onGoToGame);
     applicationSocket.on('reQueued ', onReQueued);
-    applicationSocket.on('gameData ', onGameData);
+    applicationSocket.on('newInvite', receivesInvite)
     return (() => {
-      applicationSocket.disconnect();
       applicationSocket.off('kicked', onChannelKick);
       applicationSocket.off('banned', onChannelBan);
       applicationSocket.off('addedAsFriend', onFriendAdd);
       applicationSocket.off('goToGame', onGoToGame);
       applicationSocket.off('reQueued ', onReQueued);
-      applicationSocket.off('gameData ', onGameData);
+      applicationSocket.off('newInvite', receivesInvite);
+      applicationSocket.disconnect();
     })
-  }, [onChannelKick, onChannelBan, onFriendAdd]);
+  }, [onChannelKick, onChannelBan, onFriendAdd, onGoToGame, onReQueued, receivesInvite]);
   return (
     <ChakraProvider theme={theme}>
       <SocketContext.Provider value={applicationSocket}>

@@ -9,6 +9,8 @@ import { TokenClaims } from 'src/auth/auth.model';
 import { UsersService } from 'src/users/users.service';
 import { CreateInviteDto } from './dto/create-invite-dto';
 import { GameService } from 'src/game/game.service';
+import { PrismaClient } from '@prisma/client';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 @Injectable()
 export class MatchService {
@@ -33,7 +35,36 @@ export class MatchService {
     }
     const responseNewInvite = await this.matchRepository.createInvite(createInviteDto);
     this.websocketService.emitToUser(createInviteDto.target_id, 'newInvite', responseNewInvite);
+    setTimeout(async ()=>{
+      try{
+        await this.matchRepository.deleteInvite(responseNewInvite.id);
+      } catch(e){
+        if (e instanceof PrismaClientKnownRequestError){
+          if (e.code === 'P2025'){
+            this.logger.warn(e.message);
+          }
+        }
+      }
+    
+    }, 10000);
     return responseNewInvite;
+  }
+
+  async acceptP2P(userId: string, inviteId: string){
+    try{
+      const invite = await this.matchRepository.getInviteById(inviteId)
+      if (invite.target_id === userId){
+        this.queueService.removeFromQueue(invite.target_id);
+        this.queueService.removeFromQueue(invite.user_id);
+      } else {
+        throw new ForbiddenException();
+      }
+    } catch(e) {
+      if (e instanceof PrismaClientKnownRequestError){
+        this.logger.warn(e.message);
+        throw new NotFoundException();
+      }
+    }
   }
 
   private queuedPlayers: Map<string, { joined: Date, elo: number }>

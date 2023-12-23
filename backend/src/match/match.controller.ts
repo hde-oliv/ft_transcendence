@@ -58,6 +58,12 @@ export class MatchController {
     return this.matchService.createInvite(req.user.intra_login, targetId);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @UsePipes(new ZodValidationPipe(updateUserSchema))
+  @Post('/P2P/:inviteId')
+  acceptInvite(@Request() req, @Param('inviteId') inviteId: string) {
+    return this.matchService.acceptP2P(req.user.intra_login, inviteId);
+  }
 
 
 }
