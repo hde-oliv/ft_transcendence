@@ -6,6 +6,8 @@ import { useContext, useState } from "react";
 import { updateMe } from "@/lib/fetchers/me";
 import { userData } from "../../../pages/account";
 import { MeStateContext } from "@/components/pageLayout/PageLayout";
+import { useAuthSafeFetch } from "@/lib/fetchers/SafeAuthWrapper";
+import { useRouter } from "next/router";
 
 type UserNickSegmentProps = userData & {
   updateNickName: (str: string) => void;
@@ -15,6 +17,7 @@ export function UserNickSegment(props: UserNickSegmentProps): JSX.Element {
   const [newNick, setNewNick] = useState("");
   const [loading, setLoading] = useState(false);
   const [me, syncMe] = useContext(MeStateContext);
+  const router = useRouter();
 
   async function saveNewNick() {
     const params = {
@@ -23,7 +26,7 @@ export function UserNickSegment(props: UserNickSegmentProps): JSX.Element {
     };
     setLoading(true);
     try {
-      if (await updateMe(params)) {
+      if (await useAuthSafeFetch(router, updateMe, params)) {
         props.updateNickName(newNick);
         setLoading(false)
         onClose();

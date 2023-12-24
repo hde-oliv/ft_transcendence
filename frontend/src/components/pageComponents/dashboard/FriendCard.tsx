@@ -17,11 +17,13 @@ import {
 import BlockUserTab from "./BlockUserTab";
 import { FriendTab } from "./FriendTab";
 import { useCallback, useContext, useEffect, useState } from "react";
-import { ReturnUserSchema, fetchAllUsersWithRelations, fetchUsers } from "@/lib/fetchers/users";
+import { ReturnUserSchema, fetchUsers } from "@/lib/fetchers/users";
 import { createFriendship, getAllFriends } from "@/lib/fetchers/friends";
 import { MeStateContext } from "@/components/pageLayout/PageLayout";
 import AllUsersTab from "./AllUsersTab";
 import { ReturnAllBlockedUsersResponse, blockUser, fetchAllBlockedUsers } from "@/lib/fetchers/chat";
+import { useRouter } from "next/router";
+import { useAuthSafeFetch } from "@/lib/fetchers/SafeAuthWrapper";
 
 export type UserCardData = ReturnUserSchema & { friend?: boolean, blocked?: boolean }
 
@@ -32,12 +34,13 @@ export function UserCard(props: {
 }) {
   const [loading, setLoading] = useState(false);
   const [me] = useContext(MeStateContext);
+  const router = useRouter();
 
 
   async function addFriend() {
     setLoading(true);
     try {
-      await createFriendship({
+      await useAuthSafeFetch(router, createFriendship, {
         fOne: me.intra_login,
         fTwo: props.userData.intra_login,
       });
@@ -51,7 +54,7 @@ export function UserCard(props: {
   async function blockUserRequest() {
     setLoading(true);
     try {
-      await blockUser({
+      await useAuthSafeFetch(router, blockUser, {
         issuerId: me.intra_login,
         targetId: props.userData.intra_login,
       });
@@ -121,59 +124,67 @@ export default function FriendCard(props: {}) {
   const [friends, setFriends] = useState<ReturnUserSchema[]>([])
   const [blockedUsers, setBlockedUsers] = useState<ReturnAllBlockedUsersResponse[]>([]);
   const [me] = useContext(MeStateContext);
+  const router = useRouter();
 
   function syncFriends() {
-    getAllFriends()
+    useAuthSafeFetch(router, getAllFriends)
       .then((e) => setFriends(e))
       .catch(() => console.error('Could not fetch friends'));
   }
   function syncBlocked() {
-    fetchAllBlockedUsers()
+    useAuthSafeFetch(router, fetchAllBlockedUsers)
       .then((e) => setBlockedUsers(e))
       .catch(() => console.error('Could not fetch blocked'));
   }
   const formatUsers = useCallback(() => {
-    return (
-      users.filter(e => e.intra_login !== me.intra_login).map(usr => {
-        return {
-          ...usr,
-          friend: friends.some(f => f.intra_login === usr.intra_login),
-          blocked: blockedUsers.some(b => b.target_id === usr.intra_login)
-        }
-      })
-    )
+    try {
+      return (
+        users.filter(e => e.intra_login !== me.intra_login).map(usr => {
+          return {
+            ...usr,
+            friend: friends.some(f => f.intra_login === usr.intra_login),
+            blocked: blockedUsers.some(b => b.target_id === usr.intra_login)
+          }
+        })
+      )
+    } catch (e) {
+      return [];
+    }
   }, [users, friends, blockedUsers])
   const formatFriends = useCallback(() => {
-    return (
-      friends.map(f => {
-        return {
-          ...f,
-          friend: true,
-          blocked: blockedUsers.some(b => b.target_id === f.intra_login)
-        }
-      }))
+    try {
+      return (
+        friends.map(f => {
+          return {
+            ...f,
+            friend: true,
+            blocked: blockedUsers.some(b => b.target_id === f.intra_login)
+          }
+        }))
+    } catch (e) {
+      return []
+    }
   }, [users, friends, blockedUsers])
   const formatBlocked = useCallback(() => {
-    return (
-      blockedUsers.map(bl => {
-        return {
-          ...bl,
-          friend: friends.some(f => f.intra_login === bl.target_id),
-          blocked: true
-        }
-      })
-    )
+    try {
+      return (
+        blockedUsers.map(bl => {
+          return {
+            ...bl,
+            friend: friends.some(f => f.intra_login === bl.target_id),
+            blocked: true
+          }
+        })
+      )
+    } catch (e) {
+      return []
+    }
   }, [users, friends, blockedUsers])
 
   useEffect(() => {
-    (async () => {
-      const usr = fetchUsers();
-      const fri = getAllFriends();
-      const blk = fetchAllBlockedUsers();
-      setUsers(await usr);
-      setFriends(await fri);
-      setBlockedUsers(await blk);
-    })()
+    useAuthSafeFetch(router, fetchUsers).then(e => { setUsers(e) }).catch(f => { console.warn(`Could not fetch users`) });
+    useAuthSafeFetch(router, getAllFriends).then(e => { setFriends(e) }).catch(f => { console.warn(`Could not fetch friends`) });
+    useAuthSafeFetch(router, fetchAllBlockedUsers).then(e => { setBlockedUsers(e) }).catch(f => { console.log(`Could not fetch blocked users`) });
   }, []);
 
   return (

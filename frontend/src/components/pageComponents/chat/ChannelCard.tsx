@@ -1,9 +1,5 @@
-import { ChannelData, fetchChannelUsers } from "@/lib/fetchers/chat";
-import { FetchChannelUsers } from "@/lib/fetchers/chat";
-import { Avatar, AvatarBadge, Box, Flex, Heading, Skeleton, Text } from "@chakra-ui/react";
-import { useEffect, useState } from "react";
+import { Avatar, AvatarBadge, Box, Flex, Heading, Text } from "@chakra-ui/react";
 import { ChannelComponentProps, userSchema } from "../../../pages/chat";
-import profilePopover from "../../user/Profile";
 
 export function ChannelCard(
   props: ChannelComponentProps & { active: boolean },

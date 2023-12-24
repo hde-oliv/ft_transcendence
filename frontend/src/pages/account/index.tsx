@@ -42,6 +42,8 @@ import pinkGuy from "../../components/pageComponents/account/pinkGuy";
 import { getMe, updateMe } from "@/lib/fetchers/me";
 import { DisableTPOModal } from "../../components/pageComponents/account/DisableTPOModal";
 import { UserNickSegment } from "../../components/pageComponents/account/UserNickSegment";
+import { useAuthSafeFetch } from "@/lib/fetchers/SafeAuthWrapper";
+import { useRouter } from "next/router";
 
 export const ModalContext = createContext<() => void>(() => { }); //used by Modals of this page
 
@@ -65,6 +67,7 @@ function AvatarEditComponent(props: AvatarEditProps): JSX.Element {
   const [uploaded, setUploaded] = useState(false);
   const hiddenRef = useRef<HTMLInputElement>(null);
   const [me, syncMe] = useContext(MeStateContext);
+  const router = useRouter();
 
   async function saveNewAvatar() {
     const params = {
@@ -72,7 +75,7 @@ function AvatarEditComponent(props: AvatarEditProps): JSX.Element {
       avatar: tempAvatar,
     };
     try {
-      if (await updateMe(params)) {
+      if (await useAuthSafeFetch(router, updateMe, params)) {
         syncMe();
         setAvatar(tempAvatar);
         onClose();
@@ -173,6 +176,7 @@ function AvatarEditComponent(props: AvatarEditProps): JSX.Element {
 }
 
 export default function Account(props: any) {
+  const router = useRouter();
   const {
     isOpen: isOpenTF,
     onOpen: onOpenTF,
@@ -236,7 +240,7 @@ export default function Account(props: any) {
   useEffect(() => {
     (async () => {
       try {
-        const ftData = await getMe();
+        const ftData = await useAuthSafeFetch(router, getMe);
         let tmp: userData = {
           forthyTwoTag: ftData.intra_login,
           avatar: ftData.avatar,

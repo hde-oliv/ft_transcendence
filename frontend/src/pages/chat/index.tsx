@@ -36,6 +36,8 @@ import { ChannelCard } from "../../components/pageComponents/chat/ChannelCard";
 import { MessageSection } from "@/components/pageComponents/chat/MessageSection";
 import { ZodError } from "zod";
 import _ from 'lodash';
+import { useRouter } from "next/router";
+import { useAuthSafeFetch } from "@/lib/fetchers/SafeAuthWrapper";
 
 export type userSchema = {
   nickname: string;
@@ -108,7 +110,7 @@ export default function Chat(props: any) {
   const [groupPsw, setGroupPsw] = useState("");
   const [loading, setLoading] = useState(false);
   const { onOpen, onClose, isOpen, onToggle } = useDisclosure();
-
+  const router = useRouter();
 
   function onConnect() {
     setOnline(true);
@@ -149,7 +151,7 @@ export default function Chat(props: any) {
     };
     setLoading(true);
     try {
-      await createChannel(newChannel);
+      await useAuthSafeFetch(router, createChannel, newChannel);
       setGroupName("");
       setGroupPsw("");
       await updateChannelCards();
@@ -161,7 +163,7 @@ export default function Chat(props: any) {
   }
   async function updateChannelCards() {
     try {
-      let response = await fetchMyChannels();
+      let response = await useAuthSafeFetch(router, fetchMyChannels);
       let parsedResp: Array<ChannelComponentProps> = response.map((newChan) => {
         let old = myChannels.find(oldChan => oldChan.channelId === newChan.channelId)
         let lastMessage: string = old?.lastMessage ?? '';
@@ -191,7 +193,7 @@ export default function Chat(props: any) {
 
   const onSyncChannel = useCallback(async (payload: { channelId: number }) => {
     try {
-      const channelData = await fetchSingleChannel(payload.channelId);
+      const channelData = await useAuthSafeFetch(router, fetchSingleChannel, payload.channelId);
       updateSingleCard(channelData);
     } catch (e) {
       if (e instanceof ZodError) {
@@ -230,7 +232,7 @@ export default function Chat(props: any) {
   }, [myChannels]);
 
   useEffect(() => {
-    fetchMyChannels()
+    useAuthSafeFetch(router, fetchMyChannels)
       .then((e) => setMyChannels(e))
       .catch(() => setMyChannels([]));
     socket.on("connect", onConnect);

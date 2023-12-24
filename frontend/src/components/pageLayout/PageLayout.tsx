@@ -1,17 +1,19 @@
 'use client'
-import { createContext, ReactElement, useCallback, useEffect, useState } from 'react';
+import { createContext, ReactElement, use, useCallback, useEffect, useState } from 'react';
 import { Button, Grid, GridItem, useToast, UseToastOptions } from '@chakra-ui/react';
 import React from 'react';
 
 import { ChakraProvider } from "@chakra-ui/react";
 import theme from "@/lib/Theme";
 
-import PongNavBar from '../nav/PongNavBar';
+import PongNavBar, { logOff } from '../nav/PongNavBar';
 import { getMe, MeResponseData } from '@/lib/fetchers/me';
 import { acceptP2P } from '@/lib/fetchers/matches';
 import applicationSocket from '@/lib/sockets/applicationSocket';
-import { useRouter } from 'next/router';
+import { NextRouter, useRouter } from 'next/router';
 import { GameState } from '@/pages/game/game.dto';
+import { AxiosError } from 'axios';
+import { useAuthSafeFetch } from '@/lib/fetchers/SafeAuthWrapper';
 
 
 
@@ -25,15 +27,17 @@ const defaultMe = {
 export const MeStateContext = createContext<[MeResponseData, () => Promise<void>]>([defaultMe, async () => { }]);
 export const SocketContext = createContext(applicationSocket);
 
+
 export default function PageLayout({ children }: { children: ReactElement }) {
   const toast = useToast();
   const [me, setMe] = useState<MeResponseData>(defaultMe);
   const router = useRouter()
   const updateMe = async () => {
     try {
-      const resp = await getMe()
+      const resp = await useAuthSafeFetch(router, getMe);
       setMe(resp);
     } catch (e) {
+      console.log(e);
       console.log('manage different possible errors'); //TODO
     }
   };
@@ -57,7 +61,7 @@ export default function PageLayout({ children }: { children: ReactElement }) {
   }, [toast])
   const acceptInvite = useCallback(async (inviteId: string) => {
     try {
-      acceptP2P(inviteId);
+      useAuthSafeFetch(router, acceptP2P, inviteId);
     } catch (e) {
       console.log(e);
     }
@@ -111,8 +115,12 @@ export default function PageLayout({ children }: { children: ReactElement }) {
   }, [toast])
 
   useEffect(() => {
-    if (me.intra_login === '')
-      updateMe();
+    try {
+      if (me.intra_login === '')
+        updateMe();
+    } catch (e) {
+      console.warn(`me is undefined!`)
+    }
   }, [me]);
   useEffect(() => {
     applicationSocket.connect();

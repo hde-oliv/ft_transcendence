@@ -6,7 +6,8 @@ import { SocketContext } from "@/components/pageLayout/PageLayout";
 import ClashIcon from "@/components/icons/ClashIcon";
 import z from 'zod'
 import { AxiosError } from "axios";
-import { socket } from "@/pages/game/index_old";
+import { useAuthSafeFetch } from "@/lib/fetchers/SafeAuthWrapper";
+import { useRouter } from "next/router";
 
 //{ to: { intra_login: p_two, nickname: nickname_one }, expiresAt }
 const matchedEventPayload = z.object({
@@ -23,10 +24,11 @@ const QueuedComponent: React.FC<{ [key: string]: any } & { prev: any, next: any,
   const [commaCount, setCommaCount] = useState(0);
   const socket = useContext(SocketContext);
   const toast = useToast();
+  const router = useRouter();
 
 
   const onLeaveQueue = async () => {
-    await leaveQueue();
+    await useAuthSafeFetch(router, leaveQueue);
     if (props.prev)
       props.prev();
   }
@@ -55,7 +57,7 @@ const QueuedComponent: React.FC<{ [key: string]: any } & { prev: any, next: any,
   useEffect(() => {
     const onJoinQueue = async () => {
       try {
-        await joinQueue();
+        await useAuthSafeFetch(router, joinQueue);
       } catch (e) {
         if (e instanceof AxiosError) {
           toast({
@@ -136,6 +138,7 @@ const MatchedComponent: React.FC<{ to: string, expiresAt: number, goIdle: any, r
   const [accepted, setAccepted] = useState(false);
   const socket = useContext(SocketContext);
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const onCancel = async () => {
     cancel();
@@ -144,7 +147,7 @@ const MatchedComponent: React.FC<{ to: string, expiresAt: number, goIdle: any, r
   const onAccept = async () => {
     setLoading(true)
     try {
-      const worked = await acceptMatch();
+      const worked = await useAuthSafeFetch(router, acceptMatch);
       if (worked) {
         setDone();
         setAccepted(true);

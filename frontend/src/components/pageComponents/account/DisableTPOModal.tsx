@@ -17,6 +17,8 @@ import {
 import { disableOTP } from "@/lib/fetchers/disableOTP";
 import { useState, useRef, useEffect } from "react";
 import { AxiosError } from "axios";
+import { useAuthSafeFetch } from "@/lib/fetchers/SafeAuthWrapper";
+import { useRouter } from "next/router";
 
 type DisableTPOModalProps = {
   onClose: () => void;
@@ -32,6 +34,7 @@ const OTPInputStack: React.FC<{
   const [text, setText] = useState("");
   const firstPinRef = useRef<HTMLInputElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
+  const router = useRouter()
 
   let btnFocus = () => {
     setTimeout(() => {
@@ -50,7 +53,7 @@ const OTPInputStack: React.FC<{
 
   const getter = async (token: string) => {
     try {
-      await disableOTP(token);
+      await useAuthSafeFetch(router, disableOTP, token);
       props.setOTP(false);
       props.close();
     } catch (e) {

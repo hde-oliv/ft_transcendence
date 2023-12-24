@@ -19,11 +19,14 @@ import {
 } from "@chakra-ui/react";
 import { useCallback, useEffect, useState } from "react";
 import { userData } from '../../../pages/account/index';
-import { 
-    PublicChannelResponse,
-    fetchAllPublicChannels,
-    joinPublicChannel,
-    fetchUserCheckInChannel } from "@/lib/fetchers/chat";
+import {
+  PublicChannelResponse,
+  fetchAllPublicChannels,
+  joinPublicChannel,
+  fetchUserCheckInChannel
+} from "@/lib/fetchers/chat";
+import { useAuthSafeFetch } from "@/lib/fetchers/SafeAuthWrapper";
+import { useRouter } from "next/router";
 
 function ChannelRow(props: PublicChannelResponse) {
   const [loading, setLoading] = useState(false);
@@ -31,10 +34,11 @@ function ChannelRow(props: PublicChannelResponse) {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [password, setPassword] = useState('');
   const [passwordError, setPasswordError] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchUserStatus = async () => {
-      const userCheckIn = await fetchUserCheckInChannel(props.id);
+      const userCheckIn = await useAuthSafeFetch(router, fetchUserCheckInChannel, props.id);
       setIsUserInChannel(userCheckIn);
     };
     fetchUserStatus();
@@ -46,10 +50,10 @@ function ChannelRow(props: PublicChannelResponse) {
     } else {
       setLoading(true);
       try {
-        await joinPublicChannel({
+        await useAuthSafeFetch(router, joinPublicChannel, {
           channelId: props.id,
           password: password
-        });
+        })
         setIsUserInChannel(true);
       } catch (e) {
         console.warn("Could not join channel :(");
@@ -61,7 +65,7 @@ function ChannelRow(props: PublicChannelResponse) {
   const handlePasswordSubmit = useCallback(async () => {
     setLoading(true);
     try {
-      await joinPublicChannel({
+      await useAuthSafeFetch(router, joinPublicChannel, {
         channelId: props.id,
         password: password,
       });
@@ -79,13 +83,13 @@ function ChannelRow(props: PublicChannelResponse) {
 
   return (
     <Flex w="100%"
-    p="1vh 1vw"
-    justifyContent="space-between"
-    borderRadius={10}
-    borderColor={"yellow.300"}
-    borderWidth={2}>
+      p="1vh 1vw"
+      justifyContent="space-between"
+      borderRadius={10}
+      borderColor={"yellow.300"}
+      borderWidth={2}>
       <Box>
-      <Avatar name={props.name} />
+        <Avatar name={props.name} />
         <Box display="inline-block">
           <Heading fontWeight="medium" size="md" pl="1vw">
             {props.name}
@@ -103,16 +107,16 @@ function ChannelRow(props: PublicChannelResponse) {
         </Button>
       </Center>
       <Modal
-      onClose={() => setShowPasswordModal(false)}
-      isOpen={showPasswordModal}
-      isCentered={true}
-      size="sm"
-    >
-      <ModalOverlay />
-      <ModalContent bg="pongBlue.500">
-      <ModalHeader>Password is required</ModalHeader>
-      <ModalCloseButton />
-        <ModalBody>
+        onClose={() => setShowPasswordModal(false)}
+        isOpen={showPasswordModal}
+        isCentered={true}
+        size="sm"
+      >
+        <ModalOverlay />
+        <ModalContent bg="pongBlue.500">
+          <ModalHeader>Password is required</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
             <Input
               value={password}
               minH={"2.5em"}
@@ -121,28 +125,28 @@ function ChannelRow(props: PublicChannelResponse) {
               placeholder="channel password"
             />
             {passwordError && <Text color="red">Invalid password. Please try again.</Text>}
-        </ModalBody>
-        <ModalFooter>
-        <Center>
-          <Button
-              colorScheme="yellow"
-              onClick={handlePasswordSubmit}
-            >OK</Button>
-        </Center>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+          </ModalBody>
+          <ModalFooter>
+            <Center>
+              <Button
+                colorScheme="yellow"
+                onClick={handlePasswordSubmit}
+              >OK</Button>
+            </Center>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Flex>
   );
 }
 
 export function ChannelCard() {
   const [channels, setChannels] = useState<Array<PublicChannelResponse>>([]);
-
+  const router = useRouter();
   useEffect(() => {
-    fetchAllPublicChannels()
-    .then((e) => setChannels(e))
-    .catch((e) => { });
+    useAuthSafeFetch(router, fetchAllPublicChannels)
+      .then((e) => setChannels(e))
+      .catch((e) => { });
   }, []);
 
   return (

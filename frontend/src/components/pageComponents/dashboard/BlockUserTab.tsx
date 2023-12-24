@@ -9,8 +9,10 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { useState } from "react";
-import { MeResponseData, getMe } from "@/lib/fetchers/me";
+import { MeResponseData } from "@/lib/fetchers/me";
 import { ReturnAllBlockedUsersResponse, unblockUser } from "@/lib/fetchers/chat";
+import { useRouter } from "next/router";
+import { useAuthSafeFetch } from "@/lib/fetchers/SafeAuthWrapper";
 
 
 
@@ -31,13 +33,12 @@ interface BlockedRowProps {
 function BlockedRow({ ...props }: BlockedRowProps) {
   const color = props.target_user.status === "online" ? "green.300" : "gray.300";
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   async function unblockUserRequest() {
     setLoading(true);
     try {
-      await unblockUser(
-        props.target_id
-      );
+      await useAuthSafeFetch(router, unblockUser, props.target_id);
       props.syncBlocked()
     } catch (e) {
       console.warn("Could not unblock user");

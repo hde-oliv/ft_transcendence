@@ -53,12 +53,6 @@ import { useRouter } from "next/router";
 import { CheckIcon } from "@chakra-ui/icons";
 import PageLayout from "@/components/pageLayout/PageLayout";
 import { NextPageWithLayout } from "../_app";
-import {
-  createFriendship,
-  getAllFriends,
-  getFriendsById,
-  getFriendsByUser,
-} from "@/lib/fetchers/friends";
 import { FriendTab } from "../../components/pageComponents/dashboard/FriendTab";
 import { ChannelCard } from "../../components/pageComponents/dashboard/PublicChannelCard";
 import PlayCard from "../../components/pageComponents/dashboard/PlayCard";

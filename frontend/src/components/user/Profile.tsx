@@ -23,12 +23,13 @@ import {
 } from '@chakra-ui/react'
 import { Button, Portal } from "@chakra-ui/react";
 import { useRouter } from "next/router";
+import { useAuthSafeFetch } from "@/lib/fetchers/SafeAuthWrapper";
 
 function profilePopover(intraLogin: string) {
-
+  const router = useRouter();
   useEffect(() => {
     const fetchUserStatus = async () => {
-      const userStats = await fetchUserById(intraLogin);
+      const userStats = await useAuthSafeFetch(router, fetchUserById, intraLogin);
     };
     fetchUserStatus();
   }, [intraLogin]);

@@ -94,7 +94,7 @@ const DynamicNavBar = dynamic(() => Promise.resolve(PongNavBar), {
 });
 export default DynamicNavBar;
 
-function logOff(router: NextRouter, ls: Storage) {
+export function logOff(router: NextRouter, ls: Storage) {
   ls.removeItem("token");
   ls.removeItem("tokenExp");
   router.push("/");
@@ -164,7 +164,7 @@ function PongNavBar(props: PongBarNavProps): JSX.Element {
 }
 
 function UserClickableAvatar(props: { isWide: boolean }) {
-  const [me, setMe] = useContext(MeStateContext);
+  const [me] = useContext(MeStateContext);
   const router = useRouter();
 
   // TODO: Why this isn't a Menu component?
@@ -178,7 +178,7 @@ function UserClickableAvatar(props: { isWide: boolean }) {
             </Heading>
           ) : undefined}
           {props.isWide ? <Box w="2vw"></Box> : undefined}
-          <Avatar bg="pongBlue.500" src={me.avatar} />
+          <Avatar bg="pongBlue.500" src={me?.avatar} />
           <Box w="2vw"></Box>
         </Flex>
       </PopoverTrigger>

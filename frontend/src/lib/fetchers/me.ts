@@ -1,7 +1,10 @@
+import { NextRouter, useRouter } from "next/router";
 import { pongAxios } from "./pongAxios";
 import z from "zod";
+import { AxiosError } from "axios";
+import { logOff } from "@/components/nav/PongNavBar";
 
-const meResponseData = z.object({
+export const meResponseData = z.object({
   nickname: z.string(),
   avatar: z.string(),
   intra_login: z.string(),
