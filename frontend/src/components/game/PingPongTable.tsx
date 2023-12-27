@@ -6,7 +6,7 @@ import Ball from "./Ball";
 import { GameContext } from "@/contexts/GameContext";
 import { useCallback, useContext, useEffect, useState } from 'react'
 import { cloneDeep } from "lodash";
-import { GameState, PlayerActionPayload } from "@/pages/game/game.dto";
+import { GameState, PlayerActionPayload } from '@/lib/dto/game.dto'
 import { SocketContext } from "../pageLayout/PageLayout";
 import { useSearchParams } from "next/navigation";
 

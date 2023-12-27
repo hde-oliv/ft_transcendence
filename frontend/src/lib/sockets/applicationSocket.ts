@@ -4,7 +4,7 @@ import { getToken } from "../TokenMagagment";
 
 
 const applicationSocket = io(wsBaseUrl, {
-  autoConnect: false,
+  // autoConnect: true,
   extraHeaders: {
     Authorization: getToken()
   }

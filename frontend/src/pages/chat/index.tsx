@@ -37,7 +37,7 @@ import { MessageSection } from "@/components/pageComponents/chat/MessageSection"
 import { ZodError } from "zod";
 import _ from 'lodash';
 import { useRouter } from "next/router";
-import { useAuthSafeFetch } from "@/lib/fetchers/SafeAuthWrapper";
+import { fetchWrapper } from "@/lib/fetchers/SafeAuthWrapper";
 
 export type userSchema = {
   nickname: string;
@@ -151,7 +151,7 @@ export default function Chat(props: any) {
     };
     setLoading(true);
     try {
-      await useAuthSafeFetch(router, createChannel, newChannel);
+      await fetchWrapper(router, createChannel, newChannel);
       setGroupName("");
       setGroupPsw("");
       await updateChannelCards();
@@ -163,7 +163,7 @@ export default function Chat(props: any) {
   }
   async function updateChannelCards() {
     try {
-      let response = await useAuthSafeFetch(router, fetchMyChannels);
+      let response = await fetchWrapper(router, fetchMyChannels);
       let parsedResp: Array<ChannelComponentProps> = response.map((newChan) => {
         let old = myChannels.find(oldChan => oldChan.channelId === newChan.channelId)
         let lastMessage: string = old?.lastMessage ?? '';
@@ -193,7 +193,7 @@ export default function Chat(props: any) {
 
   const onSyncChannel = useCallback(async (payload: { channelId: number }) => {
     try {
-      const channelData = await useAuthSafeFetch(router, fetchSingleChannel, payload.channelId);
+      const channelData = await fetchWrapper(router, fetchSingleChannel, payload.channelId);
       updateSingleCard(channelData);
     } catch (e) {
       if (e instanceof ZodError) {
@@ -202,7 +202,7 @@ export default function Chat(props: any) {
         console.warn(`Channel with id [${payload.channelId}] could't be syncronized`);
       }
     }
-  }, [updateSingleCard])
+  }, [updateSingleCard, router])
 
   const onLeaveChannel = useCallback((payload: { channelId: number }) => {
     const tmp = myChannels.filter(e => e.channelId !== payload.channelId);
@@ -232,7 +232,7 @@ export default function Chat(props: any) {
   }, [myChannels]);
 
   useEffect(() => {
-    useAuthSafeFetch(router, fetchMyChannels)
+    fetchWrapper(router, fetchMyChannels)
       .then((e) => setMyChannels(e))
       .catch(() => setMyChannels([]));
     socket.on("connect", onConnect);
@@ -241,7 +241,7 @@ export default function Chat(props: any) {
       socket.off("connect", onConnect);
       socket.off("disconnect", onDisconnect);
     };
-  }, [socket]);
+  }, [socket, router]);
 
   useEffect(() => {
     socket.on('updateUser', updateUser)

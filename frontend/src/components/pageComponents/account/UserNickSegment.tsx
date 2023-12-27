@@ -6,87 +6,87 @@ import { useContext, useState } from "react";
 import { updateMe } from "@/lib/fetchers/me";
 import { userData } from "../../../pages/account";
 import { MeStateContext } from "@/components/pageLayout/PageLayout";
-import { useAuthSafeFetch } from "@/lib/fetchers/SafeAuthWrapper";
+import { fetchWrapper } from "@/lib/fetchers/SafeAuthWrapper";
 import { useRouter } from "next/router";
 
 type UserNickSegmentProps = userData & {
-  updateNickName: (str: string) => void;
+	updateNickName: (str: string) => void;
 };
 export function UserNickSegment(props: UserNickSegmentProps): JSX.Element {
-  const { onOpen, onClose, isOpen } = useDisclosure();
-  const [newNick, setNewNick] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [me, syncMe] = useContext(MeStateContext);
-  const router = useRouter();
+	const { onOpen, onClose, isOpen } = useDisclosure();
+	const [newNick, setNewNick] = useState("");
+	const [loading, setLoading] = useState(false);
+	const [me, syncMe] = useContext(MeStateContext);
+	const router = useRouter();
 
-  async function saveNewNick() {
-    const params = {
-      intra_login: props.forthyTwoTag,
-      nickname: newNick,
-    };
-    setLoading(true);
-    try {
-      if (await useAuthSafeFetch(router, updateMe, params)) {
-        props.updateNickName(newNick);
-        setLoading(false)
-        onClose();
-        syncMe();
-      } else {
-        console.log("failed to update nickname");
-        setTimeout(() => {
-          setLoading(false);
-        }, 200);
-      }
-    } catch (e) {
-      console.log(e);
-      setTimeout(() => {
-        setLoading(false);
-      }, 200);
-    }
-  }
-  return (
-    <>
-      <Flex justifyContent="space-between" alignItems="stretch">
-        <Box flexGrow={1}>
-          <Heading pl="1vw" size="sm">
-            Nickname{" "}
-          </Heading>
-          <Text pl="2vw">{props.nickname}</Text>
-        </Box>
-        <IconButton
-          colorScheme="yellow"
-          aria-label="edit"
-          minW="5vw"
-          w="5vw"
-          onClick={isOpen ? onClose : onOpen}
-          icon={<EditIcon />}
-        />
-      </Flex>
-      <Collapse in={isOpen}>
-        <Flex pl="2vw">
-          <Input
-            flexGrow={1}
-            placeholder="New Nickname"
-            bg="pongBlue.800"
-            borderRightRadius={0}
-            value={newNick}
-            isDisabled={loading}
-            onChange={(e) => {
-              setNewNick(e.target.value);
-            }}
-          />
-          <IconButton
-            colorScheme="green"
-            aria-label="save-new-nickname"
-            borderLeftRadius={0}
-            minW="5vw"
-            w="5vw"
-            isDisabled={newNick.length === 0 || loading}
-            onClick={saveNewNick}
-            icon={<CheckIcon />}
-          />
-        </Flex>
-      </Collapse>
-    </>
-  );
+	async function saveNewNick() {
+		const params = {
+			intra_login: props.forthyTwoTag,
+			nickname: newNick,
+		};
+		setLoading(true);
+		try {
+			if (await fetchWrapper(router, updateMe, params)) {
+				props.updateNickName(newNick);
+				setLoading(false)
+				onClose();
+				syncMe();
+			} else {
+				console.log("failed to update nickname");
+				setTimeout(() => {
+					setLoading(false);
+				}, 200);
+			}
+		} catch (e) {
+			console.log(e);
+			setTimeout(() => {
+				setLoading(false);
+			}, 200);
+		}
+	}
+	return (
+		<>
+			<Flex justifyContent="space-between" alignItems="stretch">
+				<Box flexGrow={1}>
+					<Heading pl="1vw" size="sm">
+						Nickname{" "}
+					</Heading>
+					<Text pl="2vw">{props.nickname}</Text>
+				</Box>
+				<IconButton
+					colorScheme="yellow"
+					aria-label="edit"
+					minW="5vw"
+					w="5vw"
+					onClick={isOpen ? onClose : onOpen}
+					icon={<EditIcon />}
+				/>
+			</Flex>
+			<Collapse in={isOpen}>
+				<Flex pl="2vw">
+					<Input
+						flexGrow={1}
+						placeholder="New Nickname"
+						bg="pongBlue.800"
+						borderRightRadius={0}
+						value={newNick}
+						isDisabled={loading}
+						onChange={(e) => {
+							setNewNick(e.target.value);
+						}}
+					/>
+					<IconButton
+						colorScheme="green"
+						aria-label="save-new-nickname"
+						borderLeftRadius={0}
+						minW="5vw"
+						w="5vw"
+						isDisabled={newNick.length === 0 || loading}
+						onClick={saveNewNick}
+						icon={<CheckIcon />}
+					/>
+				</Flex>
+			</Collapse>
+		</>
+	);
 }

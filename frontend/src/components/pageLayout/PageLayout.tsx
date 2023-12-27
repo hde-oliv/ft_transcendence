@@ -11,9 +11,9 @@ import { getMe, MeResponseData } from '@/lib/fetchers/me';
 import { acceptP2P } from '@/lib/fetchers/matches';
 import applicationSocket from '@/lib/sockets/applicationSocket';
 import { NextRouter, useRouter } from 'next/router';
-import { GameState } from '@/pages/game/game.dto';
+import { GameState } from '@/lib/dto/game.dto';
 import { AxiosError } from 'axios';
-import { useAuthSafeFetch } from '@/lib/fetchers/SafeAuthWrapper';
+import { fetchWrapper } from '@/lib/fetchers/SafeAuthWrapper';
 
 
 
@@ -34,7 +34,7 @@ export default function PageLayout({ children }: { children: ReactElement }) {
   const router = useRouter()
   const updateMe = async () => {
     try {
-      const resp = await useAuthSafeFetch(router, getMe);
+      const resp = await fetchWrapper(router, getMe);
       setMe(resp);
     } catch (e) {
       console.log(e);
@@ -61,7 +61,7 @@ export default function PageLayout({ children }: { children: ReactElement }) {
   }, [toast])
   const acceptInvite = useCallback(async (inviteId: string) => {
     try {
-      useAuthSafeFetch(router, acceptP2P, inviteId);
+      fetchWrapper(router, acceptP2P, inviteId);
     } catch (e) {
       console.log(e);
     }

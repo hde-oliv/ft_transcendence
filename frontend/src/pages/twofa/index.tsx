@@ -13,7 +13,7 @@ import { PinInput, PinInputField } from "@chakra-ui/react";
 import { sendOTP } from "@/lib/fetchers/sendOTP";
 import { clearToken, storeToken } from "@/lib/TokenMagagment";
 import { useRouter } from "next/router";
-import { useAuthSafeFetch } from "@/lib/fetchers/SafeAuthWrapper";
+import { fetchWrapper } from "@/lib/fetchers/SafeAuthWrapper";
 
 export default function TwoFaPage(props: PropsWithChildren) {
   const [pin, setPin] = useState<string>("");
@@ -28,7 +28,7 @@ export default function TwoFaPage(props: PropsWithChildren) {
     setLoading(true);
     const confyTimer = 1000;
     try {
-      const accessToken = await useAuthSafeFetch(router, sendOTP, pin, user);
+      const accessToken = await fetchWrapper(router, sendOTP, pin, user);
       storeToken(accessToken, localStorage);
       setTimeout(() => {
         router.push("/dashboard");

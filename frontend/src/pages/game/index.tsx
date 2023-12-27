@@ -4,7 +4,7 @@ import PongNavBar from "@/components/nav/PongNavBar";
 import PageLayout, { SocketContext } from "@/components/pageLayout/PageLayout";
 import { Box, Button, VStack } from "@chakra-ui/react";
 import { ReactElement, useCallback, useContext, useEffect } from "react";
-import { playerActionPayload, PlayerActionPayload } from "./game.dto";
+import { playerActionPayload, PlayerActionPayload } from "../../lib/dto/game.dto";
 import { useSearchParams } from 'next/navigation'
 
 

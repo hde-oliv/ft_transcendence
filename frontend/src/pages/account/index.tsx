@@ -42,7 +42,7 @@ import pinkGuy from "../../components/pageComponents/account/pinkGuy";
 import { getMe, updateMe } from "@/lib/fetchers/me";
 import { DisableTPOModal } from "../../components/pageComponents/account/DisableTPOModal";
 import { UserNickSegment } from "../../components/pageComponents/account/UserNickSegment";
-import { useAuthSafeFetch } from "@/lib/fetchers/SafeAuthWrapper";
+import { fetchWrapper } from "@/lib/fetchers/SafeAuthWrapper";
 import { useRouter } from "next/router";
 
 export const ModalContext = createContext<() => void>(() => { }); //used by Modals of this page
@@ -75,7 +75,7 @@ function AvatarEditComponent(props: AvatarEditProps): JSX.Element {
       avatar: tempAvatar,
     };
     try {
-      if (await useAuthSafeFetch(router, updateMe, params)) {
+      if (await fetchWrapper(router, updateMe, params)) {
         syncMe();
         setAvatar(tempAvatar);
         onClose();
@@ -240,7 +240,7 @@ export default function Account(props: any) {
   useEffect(() => {
     (async () => {
       try {
-        const ftData = await useAuthSafeFetch(router, getMe);
+        const ftData = await fetchWrapper(router, getMe);
         let tmp: userData = {
           forthyTwoTag: ftData.intra_login,
           avatar: ftData.avatar,
@@ -253,7 +253,7 @@ export default function Account(props: any) {
         console.log(e);
       }
     })();
-  }, []);
+  }, [router]);
   if (!userData) return <Center>Loading</Center>;
   return (
     <Center pt="2vh">
