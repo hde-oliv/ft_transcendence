@@ -54,7 +54,6 @@ export default function Login() {
         let localToken: string = "";
         const totalTime = 2000;
         try {
-
           localToken = await sendCode();
           const bearerRegex = /(^[\w-]*\.[\w-]*\.[\w-]*$)/g;
           if (bearerRegex.test(localToken)) {
@@ -91,9 +90,6 @@ export default function Login() {
             });
           }
         } catch (e) {
-          const redirector = setTimeout(() => {
-            router.push("/");
-          }, totalTime);
           toast({
             title: "Login Failed",
             description: "Redirecting to home",
@@ -101,7 +97,6 @@ export default function Login() {
             isClosable: true,
             duration: totalTime - 1000,
             onCloseComplete: () => {
-              clearTimeout(redirector);
               router.push("/");
             },
           });

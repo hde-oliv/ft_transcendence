@@ -96,7 +96,6 @@ export default DynamicNavBar;
 
 export function logOff(router: NextRouter, ls: Storage) {
   ls.removeItem("token");
-  ls.removeItem("tokenExp");
   router.push("/");
 }
 
@@ -110,11 +109,7 @@ function PongNavBar(props: PongBarNavProps): JSX.Element {
   useEffect(() => {
     window.localStorage;
     const token = localStorage.getItem("token");
-    const tokenExp = localStorage.getItem("tokenExp");
-    if (token !== null && tokenExp !== null) {
-      const isValid: boolean = parseInt(tokenExp) > Date.now();
-      if (!isValid) logOff(router, localStorage);
-    } else {
+    if (token === null) {
       logOff(router, localStorage);
     }
   }, [router]);
