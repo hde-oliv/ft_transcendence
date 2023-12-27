@@ -8,7 +8,7 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { Toast } from "@chakra-ui/react";
-import axios, { AxiosRequestConfig } from "axios";
+import axios, { AxiosError, AxiosRequestConfig } from "axios";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
 import { z, ZodError } from "zod";
@@ -57,10 +57,6 @@ export default function Login() {
           localToken = await sendCode();
           const bearerRegex = /(^[\w-]*\.[\w-]*\.[\w-]*$)/g;
           if (bearerRegex.test(localToken)) {
-            storeToken(localToken, localStorage);
-            const redirector = setTimeout(() => {
-              router.push("/dashboard");
-            }, totalTime);
             toast({
               title: "Login Succeeded",
               description: "Redirecting to dashboard",
@@ -68,15 +64,12 @@ export default function Login() {
               isClosable: true,
               duration: totalTime - 1000,
               onCloseComplete: () => {
-                clearTimeout(redirector);
+                storeToken(localToken, localStorage);
                 router.push("/dashboard");
               },
             });
           } else {
             localStorage.setItem("username", localToken);
-            const redirector = setTimeout(() => {
-              router.push("/");
-            }, totalTime);
             toast({
               title: "Login Succeeded",
               description: "Redirecting to 2FA login",
@@ -84,15 +77,21 @@ export default function Login() {
               isClosable: true,
               duration: totalTime - 1000,
               onCloseComplete: () => {
-                clearTimeout(redirector);
                 router.push("/twofa");
               },
             });
           }
         } catch (e) {
+          let message = 'Redirecting to home'
+          if (e instanceof AxiosError) {
+            if (e.response) {
+              if (e.response.data.message)
+                message = e.response.data.message;
+            }
+          }
           toast({
             title: "Login Failed",
-            description: "Redirecting to home",
+            description: message,
             status: "error",
             isClosable: true,
             duration: totalTime - 1000,

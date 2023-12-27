@@ -45,7 +45,7 @@ export class TokenStrategy extends PassportStrategy(
       this.logger.log(`Sucessful call.`);
     } catch (e) {
       this.logger.error(`Couldn't call Intra API. [error=${e}]`);
-      throw new UnauthorizedException('User auth failed');
+      throw new UnauthorizedException('Could not validate sso code.');
     }
 
     try {
@@ -54,7 +54,7 @@ export class TokenStrategy extends PassportStrategy(
       this.logger.log(`Sucessful call.`);
     } catch (e) {
       this.logger.error(`Couldn't call Intra API. [error=${e}]`);
-      throw new UnauthorizedException('User auth failed');
+      throw new UnauthorizedException('Could not fetch users data from 42.');
     }
 
     try {

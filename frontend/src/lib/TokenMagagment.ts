@@ -5,7 +5,7 @@ export function storeToken(jwt: string, ls: Storage) {
   localStorage.setItem('token', jwt);
 }
 export function clearToken(ls: Storage) {
-  localStorage.removeItem('token',);
+  localStorage.removeItem('token');
 }
 export function getToken() {
   try {
