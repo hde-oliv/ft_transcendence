@@ -25,9 +25,9 @@ export class MatchService {
     this.startQueue();
   }
   private readonly logger = new Logger(MatchService.name);
-  async createInvite(userId: string, targetId: string) {
+  async createInvite(user: TokenClaims, targetId: string) {
     const createInviteDto: CreateInviteDto = {
-      user_id: userId,
+      user_id: user.intra_login,
       target_id: targetId
 
     }
@@ -39,7 +39,14 @@ export class MatchService {
     }
 
     const responseNewInvite = await this.matchRepository.createInvite(createInviteDto);
-    this.websocketService.emitToUser(createInviteDto.target_id, 'newInvite', responseNewInvite);
+    const inviteData = {
+      id: responseNewInvite.id,
+      issuer: {
+        nickname: user.nickname,
+        userId: user.intra_login
+      }
+    }
+    this.websocketService.emitToUser(createInviteDto.target_id, 'newInvite', inviteData);
     setTimeout(async () => {
       try {
         await this.matchRepository.deleteInvite(responseNewInvite.id);

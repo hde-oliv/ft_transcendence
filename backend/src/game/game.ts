@@ -3,7 +3,7 @@ import { ZodError } from 'zod';
 import {
   YAxisDirection,
   RacketDirection,
-  gameState,
+  GameState,
   PlayerActionPayload,
   playerActionPayload,
 } from './dto/game.dto';
@@ -17,6 +17,8 @@ export class Game {
     socketService: WebsocketService,
   ) {
     this.id = gameId;
+    this.maxDisconnectedTime = 20000;
+    this.currentDisconnectedTime = 0;
     this.playerOne = pOneId;
     this.playerTwo = pTwoId;
     this.paddleIncrement = 5;
@@ -58,6 +60,8 @@ export class Game {
   private tickInterval: number;
   private intervalObject: NodeJS.Timeout;
   private socketService: WebsocketService;
+  private maxDisconnectedTime: number;
+  private disconnectedTicks: number;
 
   private CheckIfItWasMadePointByThePlayers() {
     if (this.ballPosition.x <= 0 || this.ballPosition.x >= 100) {
@@ -249,12 +253,26 @@ export class Game {
       this.checkIfTheBallHitsTheRightPaddle();
       this.ballPosition = this.updatePosition();
     }
+    //disconnection handler -start
+    if (!this.connections.every(e => e)) {
+      this.disconnectedTicks++;
+    } else {
+      this.disconnectedTicks = 0;
+    }
+    if (this.disconnectedTicks * this.tickInterval > this.maxDisconnectedTime) {
+      //end game!
+    }
+    //disconnection handler -end
     this.socketService.emitToRoom(this.id, 'gameData', this.getGameData());
   }
 
-  public getGameData(): gameState {
+  public getGameData(): GameState {
     return {
       gameId: this.id,
+      connections: {
+        pOne: this.connections[0],
+        pTwo: this.connections[1]
+      },
       ballData: this.ballPosition,
       paddles: {
         pOne: this.pOnePaddleY,
@@ -278,6 +296,8 @@ export class Game {
     player: 'playerOne' | 'playerTwo',
     direction: number,
   ) {
+    if (this.paused)
+      return;
     if (player === 'playerOne') return this.movePlayerOne(direction);
     if (player === 'playerTwo') return this.movePlayerTwo(direction);
   }

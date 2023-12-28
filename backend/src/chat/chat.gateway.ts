@@ -69,6 +69,7 @@ export class SocketGateway
           intra_login: user.intra_login,
           status: 'offline'
         })
+        //TODO: inform games in which player is in, he is now offline!
         this.logger.log(`Client Disconnected: ${socket.id}`);
         await updater;
       } catch (e) {
@@ -91,6 +92,7 @@ export class SocketGateway
         this.logger.log(`Client Connected: ${socket.id}`);
         const channels = await this.chatService.getRoomsByUser(user);
         const games = this.gameService.getGamesByUser(user.intra_login);
+        this.logger.log(games);
         const allRooms = [...channels, ...games, user.intra_login];
         const allPromises: Array<Promise<any | void> | void> = []
         allPromises.push(this.userServive.updateUserOnline(user, true));
@@ -153,6 +155,7 @@ export class SocketGateway
     @MessageBody() data: PlayerActionPayload
   ) {
     const user = await this.chatService.getUserFromSocket(socket)
+    this.logger.log(data);
     this.gameService.gameAction(user.intra_login, data);
   }
 

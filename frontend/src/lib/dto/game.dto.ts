@@ -15,6 +15,10 @@ const paddles = z.object({
 })
 const gameData = z.object({
   gameId: z.string(),
+  connections: z.object({
+    pOne: z.boolean(),
+    pTwo: z.boolean()
+  }),
   ballData: ballData,
   score: score,
   paddles: paddles

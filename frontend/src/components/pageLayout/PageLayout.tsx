@@ -1,6 +1,6 @@
 'use client'
 import { createContext, ReactElement, use, useCallback, useEffect, useState } from 'react';
-import { Button, Grid, GridItem, useToast, UseToastOptions } from '@chakra-ui/react';
+import { Button, Grid, GridItem, HStack, IconButton, useToast, UseToastOptions } from '@chakra-ui/react';
 import React from 'react';
 
 import { ChakraProvider } from "@chakra-ui/react";
@@ -14,6 +14,7 @@ import { NextRouter, useRouter } from 'next/router';
 import { GameState } from '@/lib/dto/game.dto';
 import { AxiosError } from 'axios';
 import { fetchWrapper } from '@/lib/fetchers/SafeAuthWrapper';
+import { CloseIcon } from '@chakra-ui/icons';
 
 
 
@@ -99,16 +100,21 @@ export default function PageLayout({ children }: { children: ReactElement }) {
       isClosable: true,
     })
   }, [toast])
-  const receivesInvite = useCallback((data: { id: string, user_id: string, target_id: string, fulfilled: boolean }) => {
+
+  const receivesInvite = useCallback((data: { id: string, issuer: { nickname: string, userId: string } }) => {
     const toastConfig: UseToastOptions = {
       render: (props) => {
-        return <Button
-          alignItems="center"
-          colorScheme='blue'
-          size='lg'
-          onClick={() => acceptInvite(data.id)}>
-          Aceitar partida de {data.user_id}
-        </Button>
+        return (<HStack>
+          <Button
+            alignItems="center"
+            colorScheme='blue'
+            size='lg'
+            onClick={() => acceptInvite(data.id)}>
+            Clique para aceitar partida de {data.issuer.nickname}
+          </Button>
+          <IconButton onClick={props.onClose} icon={<CloseIcon />} aria-label='reject invite' />
+        </HStack>)
+
       }
     }
     toast(toastConfig)

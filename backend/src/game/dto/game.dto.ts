@@ -15,6 +15,10 @@ const paddles = z.object({
 })
 const gameData = z.object({
   gameId: z.string(),
+  connections: z.object({
+    pOne: z.boolean(),
+    pTwo: z.boolean()
+  }),
   ballData: ballData,
   score: score,
   paddles: paddles
@@ -42,7 +46,7 @@ const quitGameCmd = z.object({
 export const playerActionPayload = z.discriminatedUnion('type', [movePaddleCmd, connectedGameCmd, pauseGameCmd, quitGameCmd])
 export type PlayerActionPayload = z.infer<typeof playerActionPayload>
 
-export type gameState = z.infer<typeof gameData>
+export type GameState = z.infer<typeof gameData>
 export enum RacketDirection {
   DEFAULT = 1,
   INVERTED = 2,

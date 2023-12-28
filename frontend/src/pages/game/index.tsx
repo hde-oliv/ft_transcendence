@@ -27,6 +27,12 @@ function Game() {
     gameId,
     paused: false
   }
+  useEffect(() => {
+    socket.emit('playerAction', { ...connectAction })
+    return () => {
+      socket.emit('playerAction', { ...connectAction, connected: false })
+    }
+  }, [])
   return (
     <Box className="App"
       display={'flex'}
@@ -38,11 +44,6 @@ function Game() {
       borderColor='blue'
     >
       <VStack>
-        <Button
-          onClick={() => {
-            socket.emit('playerAction', connectAction)
-          }}
-        >connected</Button>
         <Button
           onClick={() => {
             socket.emit('playerAction', pauseAction)

@@ -54,7 +54,7 @@ export class MatchController {
   @UseGuards(JwtAuthGuard)
   @Post('/invite/:targetId')
   inviteIntra(@Request() req, @Param('targetId') targetId: string) {
-    return this.matchService.createInvite(req.user.intra_login, targetId);
+    return this.matchService.createInvite(req.user, targetId);
   }
 
   @UseGuards(JwtAuthGuard)
