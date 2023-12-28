@@ -94,7 +94,7 @@ import CrownIcon from "@/components/icons/CrownIcon";
 import UndoIcon from "@/components/icons/UndoIcon";
 import DowngradeIcon from "@/components/icons/DowngradeIcon";
 import { inviteToPlay } from "@/lib/fetchers/invite";
-import { fetchWrapper } from "@/lib/fetchers/SafeAuthWrapper";
+import { fetchWrapper } from '@/lib/fetchers/SafeAuthWrapper';
 import { useRouter } from "next/router";
 
 
@@ -561,7 +561,16 @@ export function MessageSection(
   // console.log(e);
   // }
   // }, [props.channel.Memberships[0].user.intra_login]);
-  const inviteUserToPlay = async () => { }; //TODO: this is a temp function to unbreak chat!
+
+  const inviteUserToPlay = async () => {
+    try{
+      if(props.channel.Memberships.length !== 0){
+        await fetchWrapper(router,inviteToPlay,props.channel.Memberships[0].user.intra_login);
+      } 
+    }catch (e) {
+      console.log(e);
+    }
+  }; //TODO: this is a temp function to unbreak chat!
 
   async function send() {
     if (text === "") return;
@@ -750,7 +759,7 @@ function ProfilePopover(props: {
     }[];
   };
 } & { onClick?: (() => void) | undefined; lastMessage?: string | undefined; } & { syncAll: () => void; }) {
-  return (<Avatar mr="2vw" name={props.channelName} bg="yellow.300" />)
+  //return (<Avatar mr="2vw" name={props.channelName} bg="yellow.300" />)
   if (props.channel.user2user || props.channel.Memberships.length === 0)
     return (
       <Popover>
