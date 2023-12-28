@@ -32,7 +32,7 @@ export default function PageLayout({ children }: { children: ReactElement }) {
   const toast = useToast();
   const [me, setMe] = useState<MeResponseData>(defaultMe);
   const router = useRouter()
-  const updateMe = async () => {
+  const updateMe = useCallback(async () => {
     try {
       const resp = await fetchWrapper(router, getMe);
       setMe(resp);
@@ -40,7 +40,7 @@ export default function PageLayout({ children }: { children: ReactElement }) {
       console.log(e);
       console.log('manage different possible errors'); //TODO
     }
-  };
+  }, [router])
   const onChannelKick = useCallback((data: { name: string }) => {
     toast({
       title: `Kiked`,
@@ -65,7 +65,7 @@ export default function PageLayout({ children }: { children: ReactElement }) {
     } catch (e) {
       console.log(e);
     }
-  }, []);
+  }, [router]);
 
 
   const onChannelBan = useCallback((data: { name: string, banned: boolean }) => {
@@ -89,7 +89,7 @@ export default function PageLayout({ children }: { children: ReactElement }) {
       onCloseComplete: () => { router.push({ pathname: '/game', query: { id: data.gameId } }) },
       isClosable: true,
     })
-  }, [toast])
+  }, [toast, router])
   const onReQueued = useCallback((data: { reason: string }) => {
     toast({
       title: `Server error`,
@@ -112,7 +112,7 @@ export default function PageLayout({ children }: { children: ReactElement }) {
       }
     }
     toast(toastConfig)
-  }, [toast])
+  }, [toast, acceptInvite])
 
   useEffect(() => {
     try {
@@ -121,7 +121,7 @@ export default function PageLayout({ children }: { children: ReactElement }) {
     } catch (e) {
       console.warn(`me is undefined!`)
     }
-  }, [me]);
+  }, [me, updateMe]);
   useEffect(() => {
     applicationSocket.connect();
     applicationSocket.on('kicked', onChannelKick);
@@ -129,7 +129,7 @@ export default function PageLayout({ children }: { children: ReactElement }) {
     applicationSocket.on('addedAsFriend', onFriendAdd);
     applicationSocket.on('goToGame', onGoToGame);
     applicationSocket.on('reQueued ', onReQueued);
-    applicationSocket.on('newInvite', receivesInvite)
+    applicationSocket.on('newInvite', receivesInvite);
     return (() => {
       applicationSocket.off('kicked', onChannelKick);
       applicationSocket.off('banned', onChannelBan);

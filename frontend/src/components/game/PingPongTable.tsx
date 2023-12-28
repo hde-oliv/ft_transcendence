@@ -24,13 +24,13 @@ export default function PingPongTable() {
 
   const onGameData = useCallback((payload: GameState) => {
     setGameData(cloneDeep(payload))
-  }, [socket])
+  }, []);
   useEffect(() => {
     socket.on('gameData', onGameData);
     return () => {
       socket.off('gameData', onGameData);
     };
-  }, [onGameData]);
+  }, [onGameData, socket]);
 
   useEffect(() => {
     if (gameData.score.pOne === 5 || gameData.score.pTwo === 5) {
@@ -66,7 +66,7 @@ export default function PingPongTable() {
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => { document.removeEventListener('keydown', handleKeyDown) }
-  }, [])
+  }, [movePaddle])
   return (
     <GameContext.Provider value={{ gameOver: gameOver }}>
       <Box

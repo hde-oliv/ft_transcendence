@@ -606,7 +606,7 @@ export function MessageSection(
         );
       })
       .catch();
-  }, [props.userId, props.channelId]);
+  }, [props.userId, props.channelId, router]);
   useEffect(() => {
     if (messagesRef.current) {
       messagesRef.current.scrollTo({
@@ -856,7 +856,7 @@ export function InviteMembers(props: {
         )
         .catch((e) => console.log(e));
     }
-  }, [isOpen, me, props.channel.id]);
+  }, [isOpen, me, props.channel.id, router]);
 
   const visibleUserCallback = useCallback(() => {
     const members = membersFromChannel(props.channel);
