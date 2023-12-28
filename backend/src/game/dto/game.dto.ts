@@ -14,6 +14,7 @@ const paddles = z.object({
   pTwo: z.number()
 })
 const gameData = z.object({
+  gameId: z.string(),
   ballData: ballData,
   score: score,
   paddles: paddles

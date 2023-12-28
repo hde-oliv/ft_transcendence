@@ -8,12 +8,14 @@ import { useCallback, useContext, useEffect, useState } from 'react'
 import { cloneDeep } from "lodash";
 import { GameState, PlayerActionPayload } from '@/lib/dto/game.dto'
 import { SocketContext } from "../pageLayout/PageLayout";
-import { useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
+import { useRouter } from "next/router";
 
 
 export default function PingPongTable() {
   const socket = useContext(SocketContext);
   const [gameData, setGameData] = useState<GameState>({
+    gameId: '',
     ballData: { x: 50, y: 50 },
     paddles: { pOne: 50, pTwo: 50 },
     score: { pOne: 0, pTwo: 0 }
@@ -23,7 +25,8 @@ export default function PingPongTable() {
   const gameId = useSearchParams().get('id') as string;
 
   const onGameData = useCallback((payload: GameState) => {
-    setGameData(cloneDeep(payload))
+    if (payload.gameId === gameId)
+      setGameData(cloneDeep(payload));
   }, []);
   useEffect(() => {
     socket.on('gameData', onGameData);

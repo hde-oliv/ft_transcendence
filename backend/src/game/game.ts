@@ -254,6 +254,7 @@ export class Game {
 
   public getGameData(): gameState {
     return {
+      gameId: this.id,
       ballData: this.ballPosition,
       paddles: {
         pOne: this.pOnePaddleY,

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Invites } from '@prisma/client';
 import { CreateInviteDto } from './dto/create-invite-dto';
@@ -29,26 +29,24 @@ export class MatchRepository {
       existingInvite = null;
     }
 
-    if (existingInvite) {
+    if (existingInvite !== null) {
       return {
         id: existingInvite.id,
         user_id: existingInvite.user_id,
         target_id: existingInvite.target_id,
         fulfilled: existingInvite.fulfilled,
       };
-    } else {
-      try {
-        return await this.prismaService.invites.create({
-          data: {
-            user_id: newInviteForIntra.user_id,
-            target_id: newInviteForIntra.target_id,
-          },
-        });
-      } catch (error) {
-
-      }
     }
-    throw new NotFoundException(`User with id ${newInviteForIntra.target_id} not found`);
+    try {
+      return await this.prismaService.invites.create({
+        data: {
+          user_id: newInviteForIntra.user_id,
+          target_id: newInviteForIntra.target_id,
+        },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(`Server wasn't able to create invite in the database`);
+    }
   }
 
   async deleteInvite(id: string) {

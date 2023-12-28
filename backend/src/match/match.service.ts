@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { UsersRepository } from 'src/users/users.repository';
 import { MatchRepository } from './match.repository';
 import { ForbiddenException } from '@nestjs/common';
@@ -29,12 +29,15 @@ export class MatchService {
     const createInviteDto: CreateInviteDto = {
       user_id: userId,
       target_id: targetId
+
     }
-    //console.log(targetId);
     const targetUser = await this.userRepository.getUserById(targetId);
-    if (!targetUser || targetUser.status === 'offline') {
-      throw new ForbiddenException(`User with id ${targetId} is not online`);
+    if (targetUser === null)
+      throw new BadRequestException(`User does not exist`);
+    if (targetUser.status !== 'online') {
+      throw new ForbiddenException(`User with id ${targetId} is currently ${targetUser.status}`);
     }
+
     const responseNewInvite = await this.matchRepository.createInvite(createInviteDto);
     this.websocketService.emitToUser(createInviteDto.target_id, 'newInvite', responseNewInvite);
     setTimeout(async () => {
@@ -55,20 +58,27 @@ export class MatchService {
   async acceptP2P(userId: string, inviteId: string) {
     try {
       const invite = await this.matchRepository.getInviteById(inviteId)
-      if (invite.target_id === userId) {
-        this.queueService.removeFromQueue(invite.target_id);
-        this.queueService.removeFromQueue(invite.user_id);
-      } else {
+      if (invite.target_id !== userId)
         throw new ForbiddenException();
-      }
+      await this.createGame(invite.user_id, invite.target_id);
+      this.queueService.removeFromQueue(invite.target_id);
+      this.queueService.removeFromQueue(invite.user_id);
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError) {
         this.logger.warn(e.message);
         throw new NotFoundException();
       }
+      throw new InternalServerErrorException('Error in acceptP2P')
     }
   }
-
+  private async createGame(p_one: string, p_two: string) {
+    const match = await this.matchRepository.createMatch(p_one, p_two);
+    this.gameService.buildGame(match.id, p_one, p_two, this.websocketService);
+    this.websocketService.addUserToRoom(p_one, match.id);
+    this.websocketService.addUserToRoom(p_two, match.id);
+    this.websocketService.emitToRoom(match.id, 'goToGame', { gameId: match.id })
+    this.gameService.startGame(match.id);
+  }
   private queuedPlayers: Map<string, { joined: Date, elo: number }>
   private pendingInvites: Map<string, boolean>;
   // TODO: there might the need to implement more then one queue variable to prevent multiple functions
@@ -104,13 +114,7 @@ export class MatchService {
             if (pOneStatus && pTwoStatus) {
               this.logger.log(`Creating game for ${p_one} and ${p_two}`)
               try {
-                const match = await this.matchRepository.createMatch(p_one, p_two);
-                this.gameService.buildGame(match.id, p_one, p_two, this.websocketService);
-                this.websocketService.addUserToRoom(p_one, match.id);
-                this.websocketService.addUserToRoom(p_two, match.id);
-                this.websocketService.emitToRoom(match.id, 'goToGame', { gameId: match.id })
-                this.gameService.startGame(match.id);
-
+                await this.createGame(p_one, p_two);
               } catch (e) {
                 this.websocketService.emitToUser(p_one, 'reQueued', { reason: 'Server failed to create match' });
                 this.websocketService.emitToUser(p_two, 'reQueued', { reason: 'Server failed to create match' });
