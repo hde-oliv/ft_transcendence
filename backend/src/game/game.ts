@@ -18,7 +18,7 @@ export class Game {
   ) {
     this.id = gameId;
     this.endtime = null;
-    this.status = 'ok';
+    this.status = 'paused';
     this.maxDisconnectedTime = 20000;
     this.disconnectedTicks = 0;
     this.playerOne = { ...pOneId, connected: false };
@@ -62,7 +62,7 @@ export class Game {
   private socketService: WebsocketService;
   private maxDisconnectedTime: number;
   private disconnectedTicks: number;
-  private status: 'ok' | 'aborted';
+  private status: GameState['status'];
   private endtime: Date | null;
 
   private CheckIfItWasMadePointByThePlayers() {
@@ -276,6 +276,7 @@ export class Game {
       x: 50,
       y: 50
     }
+    this.status = 'finished'
     this.endtime = new Date();
     this.stopGame();
   }
@@ -348,6 +349,7 @@ export class Game {
 
   private setPaused(newValue: boolean) {
     this.paused = newValue;
+    this.status = newValue ? 'paused' : 'running'
   }
 
   private setPlayerOneConnected(newState: boolean) {
@@ -377,7 +379,7 @@ export class Game {
     try {
       const parsedAction = playerActionPayload.parse(action);
       const whoIs = this.evalPlayerId(userId);
-      if (this.endtime !== null || this.status === 'aborted')
+      if (this.endtime !== null || this.status === 'aborted' || this.status === 'finished')
         return
       switch (parsedAction.type) {
         case 'movePaddle':

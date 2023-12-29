@@ -1,23 +1,26 @@
-import { Box, Flex, Kbd, Text } from "@chakra-ui/react";
+import { Box, Flex, Heading, Kbd, Text } from "@chakra-ui/react";
 import Score from "./Score";
 import Paddle from "./Paddle";
 import DashedLineSeparator from "./DashedLineSeparator";
 import Ball from "./Ball";
-import { GameContext } from "@/contexts/GameContext";
-import { useCallback, useContext, useEffect, useState } from 'react'
-import { cloneDeep } from "lodash";
-import { GameState, PlayerActionPayload } from '@/lib/dto/game.dto'
-import { SocketContext } from "../pageLayout/PageLayout";
-import { useSearchParams } from "next/navigation";
-
+import _ from 'lodash';
+import { GameState } from '@/lib/dto/game.dto'
+import CentralMsg from "./CentralMsg";
 
 const PingPongTable: React.FC<GameState> = (props) => {
+  const totalWidth = '47%';
 
   return (
     <>
+      <Flex
+        w={totalWidth}
+        justifyContent={'space-between'}>
+        <Heading size='md'>{props.playerOne.nickname}</Heading>
+        <Heading size='md'>{props.playerTwo.nickname}</Heading>
+      </Flex>
       <Box
         position={'relative'}
-        w={'47%'}
+        w={totalWidth}
         h={'56%'}
         border={'2px solid white'}
         borderTop={'2px solid white'}
@@ -28,7 +31,7 @@ const PingPongTable: React.FC<GameState> = (props) => {
       >
         <Score side={{ left: '30%', }} counter={props.score.pOne} />
         <Score side={{ right: '30%', }} counter={props.score.pTwo} />
-
+        {props.status !== 'running' ? <CentralMsg value={props.status} /> : undefined}
         <Paddle
           position={props.paddles.pOne}
           side={{ left: '1.6%', }}

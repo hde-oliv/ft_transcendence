@@ -19,7 +19,7 @@ function Game() {
     paddles: { pOne: 50, pTwo: 50 },
     score: { pOne: 0, pTwo: 0 },
     ended: null,
-    status: 'ok'
+    status: 'paused'
   })
   const gameId = useSearchParams().get('id') as string;
 
