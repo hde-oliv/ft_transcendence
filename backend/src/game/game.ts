@@ -12,8 +12,8 @@ import { WebsocketService } from 'src/chat/websocket.service';
 export class Game {
   constructor(
     gameId: string,
-    pOneId: string,
-    pTwoId: string,
+    pOneId: { id: string, nickname: string },
+    pTwoId: { id: string, nickname: string },
     socketService: WebsocketService,
   ) {
     this.id = gameId;
@@ -21,8 +21,8 @@ export class Game {
     this.status = 'ok';
     this.maxDisconnectedTime = 20000;
     this.disconnectedTicks = 0;
-    this.playerOne = pOneId;
-    this.playerTwo = pTwoId;
+    this.playerOne = { ...pOneId, connected: false };
+    this.playerTwo = { ...pTwoId, connected: false };
     this.paddleIncrement = 5;
     this.xAxisSpeed = 1.5;
     this.yAxisSpeed = 1.5;
@@ -40,13 +40,12 @@ export class Game {
       pTwo: 0,
     };
     this.paused = true;
-    this.connections = [false, false];
-    this.tickInterval = 200;
+    this.tickInterval = 50;
     this.socketService = socketService;
   }
   private id: string;
-  private playerOne: string;
-  private playerTwo: string;
+  private playerOne: GameState['playerOne'];
+  private playerTwo: GameState['playerTwo'];
   private paddleIncrement: number;
   private xAxisSpeed: number;
   private yAxisSpeed: number;
@@ -58,7 +57,6 @@ export class Game {
   private pTwoPaddleY: number;
   private score: { pOne: number; pTwo: number };
   private paused: boolean;
-  private connections: [boolean, boolean];
   private tickInterval: number;
   private intervalObject: NodeJS.Timeout;
   private socketService: WebsocketService;
@@ -253,12 +251,12 @@ export class Game {
     this.socketService.emitToRoom(this.id, 'gameData', gameData);
   }
   private abortGame() { //a players that disconnects looses, if both disconnect, its a tie
-    if (this.connections[0] && !this.connections[1]) {
+    if (this.playerOne.connected && !this.playerTwo.connected) {
       this.score = {
         pOne: 1,
         pTwo: 0
       }
-    } else if (!this.connections[0] && this.connections[1]) {
+    } else if (!this.playerOne.connected && this.playerTwo.connected) {
       this.score = {
         pOne: 0,
         pTwo: 1
@@ -274,19 +272,27 @@ export class Game {
     this.stopGame();
   }
   private finishGame() {
+    this.ballPosition = {
+      x: 50,
+      y: 50
+    }
     this.endtime = new Date();
     this.stopGame();
   }
   private gameTick() {
-    if (!this.paused && this.connections.every((e) => e)) {
+    if (!this.paused && this.playerOne.connected && this.playerTwo.connected) {
       this.CheckIfItWasMadePointByThePlayers();
       this.checkIfTheBallHitTheSidelines();
       this.checkIfTheBallHitsTheLeftPaddle();
       this.checkIfTheBallHitsTheRightPaddle();
       this.ballPosition = this.updatePosition();
     }
-    //disconnection handler -start
-    if (!this.connections.every(e => e)) {
+    this.checkConnections();
+    this.broadcastState();
+  }
+
+  private checkConnections() {
+    if (!this.playerOne.connected || !this.playerTwo.connected) {
       this.disconnectedTicks++;
     } else {
       this.disconnectedTicks = 0;
@@ -294,19 +300,15 @@ export class Game {
     if (this.disconnectedTicks * this.tickInterval > this.maxDisconnectedTime) {
       this.abortGame();
     }
-    if (this.score.pOne > 5 || this.score.pTwo > 5)
+    if (this.score.pOne >= 5 || this.score.pTwo >= 5)
       this.finishGame();
-    //disconnection handler -end
-    this.broadcastState();
   }
 
   public getGameData(): GameState {
     return {
       gameId: this.id,
-      connections: {
-        pOne: this.connections[0],
-        pTwo: this.connections[1]
-      },
+      playerOne: this.playerOne,
+      playerTwo: this.playerTwo,
       ballData: this.ballPosition,
       paddles: {
         pOne: this.pOnePaddleY,
@@ -339,8 +341,8 @@ export class Game {
   }
 
   private evalPlayerId(userId: string) {
-    if (userId === this.playerOne) return 'playerOne';
-    if (userId === this.playerTwo) return 'playerTwo';
+    if (userId === this.playerOne.id) return 'playerOne';
+    if (userId === this.playerTwo.id) return 'playerTwo';
     throw new WsException('Forbidden action');
   }
 
@@ -349,11 +351,11 @@ export class Game {
   }
 
   private setPlayerOneConnected(newState: boolean) {
-    this.connections[0] = newState;
+    this.playerOne.connected = newState;
   }
 
   private setPlayerTwoConnected(newState: boolean) {
-    this.connections[1] = newState;
+    this.playerTwo.connected = newState;
   }
 
   private setConnected(player: 'playerOne' | 'playerTwo', newState: boolean) {

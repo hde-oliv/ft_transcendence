@@ -1,4 +1,4 @@
-import z from "zod";
+import z, { boolean } from "zod";
 
 
 const ballData = z.object({
@@ -13,12 +13,15 @@ const paddles = z.object({
   pOne: z.number(),
   pTwo: z.number()
 })
+const playerdata = z.object({
+  id: z.string(),
+  nickname: z.string(),
+  connected: z.boolean()
+})
 const gameData = z.object({
   gameId: z.string(),
-  connections: z.object({
-    pOne: z.boolean(),
-    pTwo: z.boolean()
-  }),
+  playerOne: playerdata,
+  playerTwo: playerdata,
   ballData: ballData,
   score: score,
   paddles: paddles,

@@ -1,4 +1,4 @@
-import { Box } from "@chakra-ui/react";
+import { Box, Flex, Kbd, Text } from "@chakra-ui/react";
 import Score from "./Score";
 import Paddle from "./Paddle";
 import DashedLineSeparator from "./DashedLineSeparator";
@@ -11,70 +11,10 @@ import { SocketContext } from "../pageLayout/PageLayout";
 import { useSearchParams } from "next/navigation";
 
 
+const PingPongTable: React.FC<GameState> = (props) => {
 
-export default function PingPongTable() {
-  const socket = useContext(SocketContext);
-  const [gameData, setGameData] = useState<GameState>({
-    gameId: '',
-    connections: {
-      pOne: false,
-      pTwo: false
-    },
-    ballData: { x: 50, y: 50 },
-    paddles: { pOne: 50, pTwo: 50 },
-    score: { pOne: 0, pTwo: 0 },
-    ended: null,
-    status: 'ok'
-  })
-  const [winner, setWinner] = useState('');
-  const [gameOver, setGameOver] = useState(false);
-  const gameId = useSearchParams().get('id') as string;
-
-  const onGameData = useCallback((payload: GameState) => {
-    if (payload.gameId === gameId)
-      setGameData(cloneDeep(payload));
-  }, []);
-  useEffect(() => {
-    socket.on('gameData', onGameData);
-    return () => {
-      socket.off('gameData', onGameData);
-    };
-  }, [onGameData, socket]);
-
-  useEffect(() => {
-    if (gameData.score.pOne === 5 || gameData.score.pTwo === 5) {
-      setGameOver(true);
-      if (gameData.score.pOne === 10)
-        setWinner('Left player');
-      else
-        setWinner('Right player');
-    }
-  }, [gameData.score.pOne, gameData.score.pTwo])
-
-  const movePaddle = (dir: number) => {
-    const payload: PlayerActionPayload = {
-      type: 'movePaddle',
-      dir,
-      gameId
-    }
-    socket.emit('playerAction', payload)
-  }
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      switch (event.key) {
-        case 'w':
-          movePaddle(-1);
-          break;
-        case 's':
-          movePaddle(1);
-          break;
-      }
-    }
-    document.addEventListener('keydown', handleKeyDown)
-    return () => { document.removeEventListener('keydown', handleKeyDown) }
-  }, [movePaddle])
   return (
-    <GameContext.Provider value={{ gameOver: gameOver }}>
+    <>
       <Box
         position={'relative'}
         w={'47%'}
@@ -84,12 +24,13 @@ export default function PingPongTable() {
         borderBottom={'2px solid white'}
         borderLeft={'0px'}
         borderRight={'0px'}
+        userSelect={'none'}
       >
-        <Score side={{ left: '30%', }} counter={gameData.score.pOne} />
-        <Score side={{ right: '30%', }} counter={gameData.score.pTwo} />
+        <Score side={{ left: '30%', }} counter={props.score.pOne} />
+        <Score side={{ right: '30%', }} counter={props.score.pTwo} />
 
         <Paddle
-          position={gameData.paddles.pOne}
+          position={props.paddles.pOne}
           side={{ left: '1.6%', }}
           color='blue'
         />
@@ -97,17 +38,38 @@ export default function PingPongTable() {
         <DashedLineSeparator />
 
         <Ball
-          x={gameData.ballData.x}
-          y={gameData.ballData.y}
+          x={props.ballData.x}
+          y={props.ballData.y}
         />
 
         <Paddle
-          position={gameData.paddles.pTwo}
+          position={props.paddles.pTwo}
           side={{ right: '1.6%', }}
           color='red'
         />
         {/* {gameOver && <h2>{winner} is the winner!</h2>} */}
       </Box>
-    </GameContext.Provider>
+      <Flex justifyContent={'space-between'} w='40%' mt='0.5em' alignItems={'center'} userSelect={'none'}>
+        <Flex flexDir={'column'}>
+          <Flex>
+            <Kbd boxSize='2em'>w</Kbd>
+            <Text ml='0.5em'>Move up</Text>
+          </Flex>
+          <Flex>
+            <Kbd boxSize='2em'>s</Kbd>
+            <Text ml='0.5em'>Move Down</Text>
+          </Flex>
+        </Flex>
+        <Flex>
+          <Kbd boxSize='3em'>p</Kbd>
+          <Text ml='0.5em'>Pause</Text>
+        </Flex>
+        <Flex>
+          <Kbd boxSize='3em'>c</Kbd>
+          <Text ml='0.5em'>Continue</Text>
+        </Flex>
+      </Flex>
+    </>
   );
 }
+export default PingPongTable;

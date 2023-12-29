@@ -5,10 +5,12 @@ import { MessageBody, SubscribeMessage, WebSocketGateway, WsException } from '@n
 import { ChatFilter } from 'src/chat/chat.filter';
 import { WebsocketService } from 'src/chat/websocket.service';
 import { GameRepository } from './game.reposotory';
+import { UsersRepository } from 'src/users/users.repository';
 @Injectable()
 export class GameService {
   constructor(
-    private readonly gameRepository: GameRepository
+    private readonly gameRepository: GameRepository,
+    private readonly userReposotory: UsersRepository
   ) {
     this.games = new Map();
     this.watcher = setInterval(() => { this.finishedGameHandler() }, 1000);
@@ -17,10 +19,12 @@ export class GameService {
   private readonly logger = new Logger(GameService.name);
   private watcher: NodeJS.Timeout
 
-  buildGame(gameId: string, pOneId: string, pTwoId: string, socketService: WebsocketService) {
+  async buildGame(gameId: string, pOneId: string, pTwoId: string, socketService: WebsocketService) {
     const game = this.games.get(gameId)
     if (game === undefined) {
-      const newGame = new Game(gameId, pOneId, pTwoId, socketService)
+      const pOne = await this.userReposotory.getUserByIntra(pOneId);
+      const pTwo = await this.userReposotory.getUserByIntra(pTwoId);
+      const newGame = new Game(gameId, { id: pOne.intra_login, nickname: pOne.nickname }, { id: pTwo.intra_login, nickname: pTwo.nickname }, socketService)
       this.games.set(gameId, newGame);
     }
     return (gameId)
@@ -32,7 +36,7 @@ export class GameService {
   getGamesByUser(userId: string) {
     const gameIds: string[] = [];
     this.games.forEach((e, k) => {
-      if (e.getPlayers().includes(userId))
+      if (e.getPlayers().map(e => e.id).includes(userId))
         gameIds.push(k);
     })
     return gameIds;
@@ -41,6 +45,7 @@ export class GameService {
     const game = this.games.get(gameId)
     if (game !== undefined) {
       game.startGame();
+      this.logger.log(`Game ${gameId} has begun.`)
     }
   }
   gameAction(userId: string, payload: PlayerActionPayload) {

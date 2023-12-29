@@ -80,7 +80,7 @@ export class MatchService {
   }
   private async createGame(p_one: string, p_two: string) {
     const match = await this.matchRepository.createMatch(p_one, p_two);
-    this.gameService.buildGame(match.id, p_one, p_two, this.websocketService);
+    await this.gameService.buildGame(match.id, p_one, p_two, this.websocketService);
     this.websocketService.addUserToRoom(p_one, match.id);
     this.websocketService.addUserToRoom(p_two, match.id);
     this.websocketService.emitToRoom(match.id, 'goToGame', { gameId: match.id })
