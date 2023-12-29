@@ -21,7 +21,9 @@ const gameData = z.object({
   }),
   ballData: ballData,
   score: score,
-  paddles: paddles
+  paddles: paddles,
+  status: z.enum(['ok', 'aborted']),
+  ended: z.date().nullable()
 })
 const movePaddleCmd = z.object({
   type: z.literal('movePaddle'),

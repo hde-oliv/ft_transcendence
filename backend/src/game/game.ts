@@ -17,8 +17,10 @@ export class Game {
     socketService: WebsocketService,
   ) {
     this.id = gameId;
+    this.endtime = null;
+    this.status = 'ok';
     this.maxDisconnectedTime = 20000;
-    this.currentDisconnectedTime = 0;
+    this.disconnectedTicks = 0;
     this.playerOne = pOneId;
     this.playerTwo = pTwoId;
     this.paddleIncrement = 5;
@@ -62,6 +64,8 @@ export class Game {
   private socketService: WebsocketService;
   private maxDisconnectedTime: number;
   private disconnectedTicks: number;
+  private status: 'ok' | 'aborted';
+  private endtime: Date | null;
 
   private CheckIfItWasMadePointByThePlayers() {
     if (this.ballPosition.x <= 0 || this.ballPosition.x >= 100) {
@@ -244,7 +248,35 @@ export class Game {
       y: this.ballPosition.y + this.ballDirection.y,
     };
   }
-
+  private broadcastState() {
+    const gameData = this.getGameData();
+    this.socketService.emitToRoom(this.id, 'gameData', gameData);
+  }
+  private abortGame() { //a players that disconnects looses, if both disconnect, its a tie
+    if (this.connections[0] && !this.connections[1]) {
+      this.score = {
+        pOne: 1,
+        pTwo: 0
+      }
+    } else if (!this.connections[0] && this.connections[1]) {
+      this.score = {
+        pOne: 0,
+        pTwo: 1
+      }
+    } else {
+      this.score = {
+        pOne: 0,
+        pTwo: 0
+      }
+    }
+    this.endtime = new Date();
+    this.status = 'aborted';
+    this.stopGame();
+  }
+  private finishGame() {
+    this.endtime = new Date();
+    this.stopGame();
+  }
   private gameTick() {
     if (!this.paused && this.connections.every((e) => e)) {
       this.CheckIfItWasMadePointByThePlayers();
@@ -260,10 +292,12 @@ export class Game {
       this.disconnectedTicks = 0;
     }
     if (this.disconnectedTicks * this.tickInterval > this.maxDisconnectedTime) {
-      //end game!
+      this.abortGame();
     }
+    if (this.score.pOne > 5 || this.score.pTwo > 5)
+      this.finishGame();
     //disconnection handler -end
-    this.socketService.emitToRoom(this.id, 'gameData', this.getGameData());
+    this.broadcastState();
   }
 
   public getGameData(): GameState {
@@ -279,6 +313,8 @@ export class Game {
         pTwo: this.pTwoPaddleY,
       },
       score: this.score,
+      ended: this.endtime,
+      status: this.status
     };
   }
 
@@ -339,6 +375,8 @@ export class Game {
     try {
       const parsedAction = playerActionPayload.parse(action);
       const whoIs = this.evalPlayerId(userId);
+      if (this.endtime !== null || this.status === 'aborted')
+        return
       switch (parsedAction.type) {
         case 'movePaddle':
           this.movePlayerPaddle(whoIs, parsedAction.dir);

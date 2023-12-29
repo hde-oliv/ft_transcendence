@@ -22,7 +22,9 @@ export default function PingPongTable() {
     },
     ballData: { x: 50, y: 50 },
     paddles: { pOne: 50, pTwo: 50 },
-    score: { pOne: 0, pTwo: 0 }
+    score: { pOne: 0, pTwo: 0 },
+    ended: null,
+    status: 'ok'
   })
   const [winner, setWinner] = useState('');
   const [gameOver, setGameOver] = useState(false);

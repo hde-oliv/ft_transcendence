@@ -155,7 +155,6 @@ export class SocketGateway
     @MessageBody() data: PlayerActionPayload
   ) {
     const user = await this.chatService.getUserFromSocket(socket)
-    this.logger.log(data);
     this.gameService.gameAction(user.intra_login, data);
   }
 
