@@ -322,13 +322,13 @@ export class Game {
   }
 
   private movePlayerOne(direction: number) {
-    if (direction > 0) this.pOnePaddleY += this.paddleIncrement;
-    else this.pOnePaddleY -= this.paddleIncrement;
+    if (direction > 0 && this.pOnePaddleY < 90 ) this.pOnePaddleY += this.paddleIncrement;
+    else if (direction < 0 && this.pOnePaddleY > 10) this.pOnePaddleY -= this.paddleIncrement;
   }
 
   private movePlayerTwo(direction: number) {
-    if (direction > 0) this.pTwoPaddleY += this.paddleIncrement;
-    else this.pTwoPaddleY -= this.paddleIncrement;
+    if (direction > 0 && this.pTwoPaddleY < 90) this.pTwoPaddleY += this.paddleIncrement;
+    else if (direction < 0 && this.pTwoPaddleY > 10) this.pTwoPaddleY -= this.paddleIncrement;
   }
 
   private movePlayerPaddle(
