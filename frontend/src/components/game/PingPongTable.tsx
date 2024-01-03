@@ -33,7 +33,8 @@ const PingPongTable: React.FC<GameState> = (props) => {
         <Score side={{ right: '30%', }} counter={props.score.pTwo} />
         {props.status !== 'running' ? <CentralMsg value={props.status} /> : undefined}
         <Paddle
-          position={props.paddles.pOne}
+          position={props.paddles.pOne.pos}
+          length={props.paddles.pOne.length}
           side={{ left: '1.6%', }}
           color='blue'
         />
@@ -46,7 +47,8 @@ const PingPongTable: React.FC<GameState> = (props) => {
         />
 
         <Paddle
-          position={props.paddles.pTwo}
+          position={props.paddles.pTwo.pos}
+          length={props.paddles.pTwo.length}
           side={{ right: '1.6%', }}
           color='red'
         />
