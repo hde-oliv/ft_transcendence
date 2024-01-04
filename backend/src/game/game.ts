@@ -126,7 +126,7 @@ export class Game {
       const end = this.paddleOne.pos + this.paddleOne.length
       if (y >= start && y <= end) {
         this.ballDirection.x *= -1;
-        const by = x - start;
+        const by = y - start;
         const piy = 0;
         const pey = end - start;
         const sections = 13; //This number should be always odd
@@ -150,10 +150,10 @@ export class Game {
       const end = this.paddleTwo.pos + this.paddleTwo.length
       if (y >= start && y <= end) {
         this.ballDirection.x *= -1;
-        const by = x - start;
+        const by = y - start;
         const piy = 0;
         const pey = end - start;
-        const sections = 13; //This number should be always odd
+        const sections = 13; //This number should be always odd, so that the middle section reflects the ball normal to the paddle
         const middleSectionIndex = Math.floor(sections / 2); //this is the index of the center section, also the total section for each direction
         const yVector = 4.5;
         const negativeYvecs = generateUniformRanges(-yVector, 0, middleSectionIndex + 1);
