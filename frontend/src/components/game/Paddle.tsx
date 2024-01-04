@@ -12,7 +12,7 @@ export default function Paddle({ position, side, color, length }: Readonly<Paddl
   return (
     <Box
       position={'absolute'}
-      w={'2%'}
+      w={'1%'}
       h={`${length}%`}
       bgColor={'white'}
       {...side}

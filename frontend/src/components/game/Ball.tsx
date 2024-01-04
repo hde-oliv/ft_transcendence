@@ -21,8 +21,8 @@ export default function Ball({ x, y }: BallProps) {
   return (
     <Box
       position="absolute"
-      w={'1vw'}
-      h={'1vw'}
+      w={'1vh'}
+      h={'1vh'}
       bgColor="white"
       left={`${x}%`}
       top={`${y}%`}

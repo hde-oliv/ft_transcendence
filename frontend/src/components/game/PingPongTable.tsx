@@ -35,7 +35,7 @@ const PingPongTable: React.FC<GameState> = (props) => {
         <Paddle
           position={props.paddles.pOne.pos}
           length={props.paddles.pOne.length}
-          side={{ left: '1.6%', }}
+          side={{ left: '0%', }}
           color='blue'
         />
 
@@ -49,7 +49,7 @@ const PingPongTable: React.FC<GameState> = (props) => {
         <Paddle
           position={props.paddles.pTwo.pos}
           length={props.paddles.pTwo.length}
-          side={{ right: '1.6%', }}
+          side={{ right: '0%', }}
           color='red'
         />
         {/* {gameOver && <h2>{winner} is the winner!</h2>} */}

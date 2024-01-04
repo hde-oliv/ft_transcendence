@@ -39,15 +39,13 @@ export class Game {
     this.playerOne = { ...pOneId, connected: false };
     this.playerTwo = { ...pTwoId, connected: false };
     this.paddleIncrement = 5;
-    this.xAxisSpeed = 1.5;
-    this.yAxisSpeed = 1.5;
+    this.xAxisSpeed = 0.4;
+    this.yAxisSpeed = 0.2;
     this.ballPosition = { x: 50, y: 50 };
     this.ballDirection = {
       x: Math.random() < 0.5 ? +this.xAxisSpeed : -this.xAxisSpeed,
       y: Math.random() < 0.5 ? +this.yAxisSpeed : -this.yAxisSpeed,
     };
-    this.yAxisDir = YAxisDirection.UP;
-    this.directCrossedBall = false;
     this.paddleOne = {
       pos: 40,
       length: 20
@@ -56,14 +54,13 @@ export class Game {
       pos: 40,
       length: 20
     }
-    this.pOnePaddleY = 50;
-    this.pTwoPaddleY = 50;
+    this.yPowerVector = 2
     this.score = {
       pOne: 0,
       pTwo: 0,
     };
     this.paused = true;
-    this.tickInterval = 75;
+    this.tickInterval = 10;
     this.socketService = socketService;
   }
   private id: string;
@@ -74,12 +71,8 @@ export class Game {
   private yAxisSpeed: number;
   private ballPosition: { x: number; y: number };
   private ballDirection: { x: number; y: number };
-  private yAxisDir: number;
-  private directCrossedBall: boolean;
   private paddleOne: GameState['paddles']['pOne']
   private paddleTwo: GameState['paddles']['pTwo']
-  private pOnePaddleY: number;
-  private pTwoPaddleY: number;
   private score: { pOne: number; pTwo: number };
   private paused: boolean;
   private tickInterval: number;
@@ -89,6 +82,7 @@ export class Game {
   private disconnectedTicks: number;
   private status: GameState['status'];
   private endtime: Date | null;
+  private yPowerVector
 
   private CheckIfItWasMadePointByThePlayers() {
     if (this.ballPosition.x <= 0 || this.ballPosition.x >= 100) {
@@ -105,23 +99,9 @@ export class Game {
     }
   }
 
-  private checkIfTheBallHitTheSidelines() {
-    if (this.ballPosition.y <= 3.5) {
-      this.ballDirection = { ...this.ballDirection, y: +this.yAxisSpeed };
-      this.yAxisDir = YAxisDirection.DOWN;
-      this.directCrossedBall = false;
-    }
-
-    if (this.ballPosition.y >= 96.5) {
-      this.ballDirection = { ...this.ballDirection, y: -this.yAxisSpeed };
-      this.yAxisDir = YAxisDirection.UP;
-      this.directCrossedBall = false;
-    }
-  }
-
   private checkIfTheBallHitsTheLeftPaddle() {
     const { x, y } = this.ballPosition;
-    if (x <= 5) {
+    if (x <= 2) {
       const start = this.paddleOne.pos;
       const end = this.paddleOne.pos + this.paddleOne.length
       if (y >= start && y <= end) {
@@ -129,9 +109,9 @@ export class Game {
         const by = y - start;
         const piy = 0;
         const pey = end - start;
-        const sections = 13; //This number should be always odd
+        const sections = 31; //This number should be always odd
         const middleSectionIndex = Math.floor(sections / 2); //this is the index of the center section, also the total section for each direction
-        const yVector = 4.5;
+        const yVector = this.yPowerVector;
         const negativeYvecs = generateUniformRanges(-yVector, 0, middleSectionIndex + 1);
         const positiveYVecs = generateUniformRanges(0, yVector, middleSectionIndex + 1);
         positiveYVecs.shift();
@@ -145,7 +125,7 @@ export class Game {
 
   private checkIfTheBallHitsTheRightPaddle() {
     const { x, y } = this.ballPosition;
-    if (x >= 95) {
+    if (x >= 98) {
       const start = this.paddleTwo.pos;
       const end = this.paddleTwo.pos + this.paddleTwo.length
       if (y >= start && y <= end) {
@@ -153,9 +133,9 @@ export class Game {
         const by = y - start;
         const piy = 0;
         const pey = end - start;
-        const sections = 13; //This number should be always odd, so that the middle section reflects the ball normal to the paddle
+        const sections = 31; //This number should be always odd, so that the middle section reflects the ball normal to the paddle
         const middleSectionIndex = Math.floor(sections / 2); //this is the index of the center section, also the total section for each direction
-        const yVector = 4.5;
+        const yVector = this.yPowerVector;
         const negativeYvecs = generateUniformRanges(-yVector, 0, middleSectionIndex + 1);
         const positiveYVecs = generateUniformRanges(0, yVector, middleSectionIndex + 1);
         positiveYVecs.shift();
@@ -168,17 +148,24 @@ export class Game {
   }
 
   private updatePosition() {
-    if (this.directCrossedBall) {
-      return {
-        ...this.ballPosition,
-        x: this.ballPosition.x + this.ballDirection.x,
-      };
+    let { x: nX, y: nY } = this.ballPosition;
+    let { x: vX, y: vY } = this.ballDirection;
+
+    //Here its possible to implement logic for fun games!
+    nX += vX;
+    nY += vY;
+    if (nY > 100 || nY < 0) {
+      if (nY > 100) {
+        nY = 100 - (nY % 100);
+      }
+      if (nY < 0) {
+        nY *= -1;
+      }
+      this.ballDirection.y = -this.ballDirection.y;
     }
-    return {
-      x: this.ballPosition.x + this.ballDirection.x,
-      y: this.ballPosition.y + this.ballDirection.y,
-    };
+    this.ballPosition = { x: nX, y: nY };
   }
+
   private broadcastState() {
     const gameData = this.getGameData();
     this.socketService.emitToRoom(this.id, 'gameData', gameData);
@@ -216,10 +203,9 @@ export class Game {
   private gameTick() {
     if (!this.paused && this.playerOne.connected && this.playerTwo.connected) {
       this.CheckIfItWasMadePointByThePlayers();
-      this.checkIfTheBallHitTheSidelines();
       this.checkIfTheBallHitsTheLeftPaddle();
       this.checkIfTheBallHitsTheRightPaddle();
-      this.ballPosition = this.updatePosition();
+      this.updatePosition();
     }
     this.checkConnections();
     this.broadcastState();
