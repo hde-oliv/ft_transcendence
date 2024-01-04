@@ -49,11 +49,11 @@ export class Game {
     this.yAxisDir = YAxisDirection.UP;
     this.directCrossedBall = false;
     this.paddleOne = {
-      pos: 0,
+      pos: 40,
       length: 20
     }
     this.paddleTwo = {
-      pos: 0,
+      pos: 40,
       length: 20
     }
     this.pOnePaddleY = 50;
