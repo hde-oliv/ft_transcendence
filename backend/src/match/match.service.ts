@@ -11,6 +11,7 @@ import { CreateInviteDto } from './dto/create-invite-dto';
 import { GameService } from 'src/game/game.service';
 import { PrismaClient } from '@prisma/client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { GameRepository } from 'src/game/game.reposotory';
 
 @Injectable()
 export class MatchService {
@@ -20,7 +21,8 @@ export class MatchService {
     private readonly queueService: QueueService,
     private readonly matchRepository: MatchRepository,
     private readonly userRepository: UsersRepository,
-    private readonly gameService: GameService
+    private readonly gameService: GameService,
+    private readonly gameRepository: GameRepository
   ) {
     this.startQueue();
   }
@@ -80,7 +82,7 @@ export class MatchService {
   }
   private async createGame(p_one: string, p_two: string) {
     const match = await this.matchRepository.createMatch(p_one, p_two);
-    await this.gameService.buildGame(match.id, p_one, p_two, this.websocketService);
+    await this.gameService.buildGame(match.id, p_one, p_two, this.websocketService, this.gameRepository);
     this.websocketService.addUserToRoom(p_one, match.id);
     this.websocketService.addUserToRoom(p_two, match.id);
     this.websocketService.emitToRoom(match.id, 'goToGame', { gameId: match.id })

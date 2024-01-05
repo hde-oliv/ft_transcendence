@@ -19,12 +19,12 @@ export class GameService {
   private readonly logger = new Logger(GameService.name);
   private watcher: NodeJS.Timeout
 
-  async buildGame(gameId: string, pOneId: string, pTwoId: string, socketService: WebsocketService) {
+  async buildGame(gameId: string, pOneId: string, pTwoId: string, socketService: WebsocketService, gameRepository: GameRepository) {
     const game = this.games.get(gameId)
     if (game === undefined) {
       const pOne = await this.userReposotory.getUserByIntra(pOneId);
       const pTwo = await this.userReposotory.getUserByIntra(pTwoId);
-      const newGame = new Game(gameId, { id: pOne.intra_login, nickname: pOne.nickname }, { id: pTwo.intra_login, nickname: pTwo.nickname }, socketService)
+      const newGame = new Game(gameId, { id: pOne.intra_login, nickname: pOne.nickname }, { id: pTwo.intra_login, nickname: pTwo.nickname }, socketService, gameRepository)
       this.games.set(gameId, newGame);
     }
     return (gameId)
@@ -68,7 +68,7 @@ export class GameService {
       const gameData = this.games.get(gameId)?.getGameData();
       if (gameData) {
         try {
-          await this.gameRepository.setGameFinished(gameData)
+          await this.gameRepository.updateGameData(gameData)
           this.games.delete(gameId);
         } catch (e) {
           this.logger.warn(`Could not remove game from runtime id: ${gameId}`)
