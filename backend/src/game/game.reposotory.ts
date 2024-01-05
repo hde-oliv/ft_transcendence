@@ -1,6 +1,6 @@
 import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Matches } from '@prisma/client';
+import { Matches, PrismaPromise } from '@prisma/client';
 import { GameState } from './dto/game.dto';
 
 @Injectable()
@@ -10,7 +10,8 @@ export class GameRepository {
   private readonly logger = new Logger(GameRepository.name);
   async updateGameData(gameData: GameState) {
     try {
-      return this.prismaService.matches.update({
+      const queries: PrismaPromise<any>[] = [];
+      queries.push(this.prismaService.matches.update({
         where: {
           id: gameData.gameId
         },
@@ -20,7 +21,39 @@ export class GameRepository {
           end: gameData.ended,
           status: gameData.status
         }
-      })
+      }))
+      if (['aborted', 'finished'].includes(gameData.status) && gameData.score.pOne !== gameData.score.pTwo) {
+        let pOneIncrement = 0;
+        let pTwoIncrement = 0;
+        if (gameData.score.pOne > gameData.score.pTwo) {
+          pOneIncrement = 10;
+          pTwoIncrement = gameData.status === 'finished' ? -10 : -20
+        } else {
+          pTwoIncrement = 10;
+          pOneIncrement = gameData.status === 'finished' ? -10 : -20
+        }
+        queries.push(this.prismaService.users.update({
+          where: {
+            id: gameData.playerOne.id
+          },
+          data: {
+            elo: {
+              increment: pOneIncrement
+            }
+          }
+        }))
+        queries.push(this.prismaService.users.update({
+          where: {
+            id: gameData.playerTwo.id
+          },
+          data: {
+            elo: {
+              increment: pTwoIncrement
+            }
+          }
+        }))
+      }
+      return this.prismaService.$transaction(queries);
     } catch (e) {
       this.logger.warn(`Error updating game ${gameData.gameId}`)
     }
