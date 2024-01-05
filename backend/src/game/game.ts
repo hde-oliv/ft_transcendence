@@ -9,6 +9,7 @@ import {
 } from './dto/game.dto';
 import { WebsocketService } from 'src/chat/websocket.service';
 import _ from 'lodash'
+import { GameRepository } from './game.reposotory';
 
 function generateUniformRanges(x1: number, x2: number, s: number): Array<number> {
   const ranges: number[] = [];
@@ -30,6 +31,7 @@ export class Game {
     pOneId: { id: string, nickname: string },
     pTwoId: { id: string, nickname: string },
     socketService: WebsocketService,
+    gameRepository: GameRepository
   ) {
     this.id = gameId;
     this.endtime = null;
@@ -62,6 +64,7 @@ export class Game {
     this.paused = true;
     this.tickInterval = 10;
     this.socketService = socketService;
+    this.gameRepository = gameRepository;
   }
   private id: string;
   private playerOne: GameState['playerOne'];
@@ -78,6 +81,7 @@ export class Game {
   private tickInterval: number;
   private intervalObject: NodeJS.Timeout;
   private socketService: WebsocketService;
+  private gameRepository: GameRepository;
   private maxDisconnectedTime: number;
   private disconnectedTicks: number;
   private status: GameState['status'];
@@ -96,6 +100,7 @@ export class Game {
         x: Math.random() < 0.5 ? +this.xAxisSpeed : -this.xAxisSpeed,
         y: Math.random() < 0.5 ? +this.yAxisSpeed : -this.yAxisSpeed,
       };
+      this.gameRepository.updateGameData(this.getGameData()).then((e) => { }).catch(e => { });
     }
   }
 
@@ -285,6 +290,7 @@ export class Game {
   private setPaused(newValue: boolean) {
     this.paused = newValue;
     this.status = newValue ? 'paused' : 'running'
+    this.gameRepository.updateGameData(this.getGameData()).then((e) => { }).catch(e => { });
   }
 
   private setPlayerOneConnected(newState: boolean) {

@@ -8,7 +8,7 @@ export class GameRepository {
   constructor(private readonly prismaService: PrismaService) {
   }
   private readonly logger = new Logger(GameRepository.name);
-  async setGameFinished(gameData: GameState) { //TODO: if matches status is added, here it should be changed
+  async updateGameData(gameData: GameState) {
     try {
       return this.prismaService.matches.update({
         where: {
@@ -17,7 +17,8 @@ export class GameRepository {
         data: {
           p_one_score: gameData.score.pOne,
           p_two_score: gameData.score.pTwo,
-          end: gameData.ended
+          end: gameData.ended,
+          status: gameData.status
         }
       })
     } catch (e) {

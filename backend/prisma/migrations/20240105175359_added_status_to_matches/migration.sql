@@ -1,3 +1,6 @@
+-- CreateEnum
+CREATE TYPE "MatchStatus" AS ENUM ('paused', 'running', 'finished', 'aborted');
+
 -- CreateTable
 CREATE TABLE "users" (
     "id" TEXT NOT NULL,
@@ -53,7 +56,7 @@ CREATE TABLE "channels" (
 CREATE TABLE "blocked_users" (
     "id" TEXT NOT NULL,
     "issuer_id" TEXT NOT NULL,
-    "targer_id" TEXT NOT NULL,
+    "target_id" TEXT NOT NULL,
 
     CONSTRAINT "blocked_users_pkey" PRIMARY KEY ("id")
 );
@@ -63,6 +66,7 @@ CREATE TABLE "invites" (
     "id" TEXT NOT NULL,
     "user_id" TEXT NOT NULL,
     "target_id" TEXT NOT NULL,
+    "fulfilled" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "invites_pkey" PRIMARY KEY ("id")
 );
@@ -86,7 +90,8 @@ CREATE TABLE "matches" (
     "p_one_score" INTEGER NOT NULL,
     "p_two_score" INTEGER NOT NULL,
     "start" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "end" TIMESTAMP(3) NOT NULL,
+    "end" TIMESTAMP(3),
+    "status" "MatchStatus" NOT NULL DEFAULT 'paused',
 
     CONSTRAINT "matches_pkey" PRIMARY KEY ("id")
 );
@@ -128,7 +133,7 @@ CREATE UNIQUE INDEX "channels_id_key" ON "channels"("id");
 CREATE UNIQUE INDEX "channels_name_key" ON "channels"("name");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "blocked_users_issuer_id_targer_id_key" ON "blocked_users"("issuer_id", "targer_id");
+CREATE UNIQUE INDEX "blocked_users_issuer_id_target_id_key" ON "blocked_users"("issuer_id", "target_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "invites_user_id_target_id_key" ON "invites"("user_id", "target_id");
@@ -152,7 +157,7 @@ ALTER TABLE "memberships" ADD CONSTRAINT "memberships_userId_fkey" FOREIGN KEY (
 ALTER TABLE "blocked_users" ADD CONSTRAINT "blocked_users_issuer_id_fkey" FOREIGN KEY ("issuer_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "blocked_users" ADD CONSTRAINT "blocked_users_targer_id_fkey" FOREIGN KEY ("targer_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "blocked_users" ADD CONSTRAINT "blocked_users_target_id_fkey" FOREIGN KEY ("target_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "invites" ADD CONSTRAINT "invites_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

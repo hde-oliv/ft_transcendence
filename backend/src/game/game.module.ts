@@ -11,7 +11,7 @@ import { GameRepository } from './game.reposotory';
 @Module({
   providers: [GameService, GameRepository],
   imports: [UsersModule, AuthModule, JwtModule, forwardRef(() => ChatModule), PrismaModule],
-  exports: [GameService],
+  exports: [GameService, GameRepository],
   controllers: [GameController],
 })
 export class GameModule { }

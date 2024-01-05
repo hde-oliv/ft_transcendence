@@ -13,7 +13,7 @@ datasource db {
 model Users {
   id          String  @id @unique(sort: Asc)
   nickname    String  @unique(sort: Asc)
-  avatar      String  @db.Text
+  avatar      String  @default("https://i.imgur.com/YrZrRz0.jpg") @db.Text
   intra_login String  @unique(sort: Asc)
   status      String  @default("offline")
   elo         Int     @default(1000)
@@ -122,16 +122,24 @@ model Messages {
 }
 
 model Matches {
-  id          String    @id @unique @default(uuid())
+  id          String      @id @unique @default(uuid())
   p_one       String
   p_two       String
   p_one_score Int
   p_two_score Int
-  start       DateTime  @default(now())
+  start       DateTime    @default(now())
   end         DateTime?
+  status      MatchStatus @default(paused)
 
   player_one Users @relation("matches_one", fields: [p_one], references: [id])
   player_two Users @relation("matches_two", fields: [p_two], references: [id])
 
   @@map("matches")
+}
+
+enum MatchStatus {
+  paused
+  running
+  finished
+  aborted
 }
