@@ -8,7 +8,22 @@ import {
   playerActionPayload,
 } from './dto/game.dto';
 import { WebsocketService } from 'src/chat/websocket.service';
+import _ from 'lodash'
 
+function generateUniformRanges(x1: number, x2: number, s: number): Array<number> {
+  const ranges: number[] = [];
+
+  if (s <= 1) {
+    ranges.push(x2);
+  } else {
+    const step = (x2 - x1) / (s - 1);
+    for (let i = 0; i < s; i++) {
+      ranges.push(x1 + step * i);
+    }
+  }
+
+  return ranges;
+}
 export class Game {
   constructor(
     gameId: string,
@@ -24,23 +39,28 @@ export class Game {
     this.playerOne = { ...pOneId, connected: false };
     this.playerTwo = { ...pTwoId, connected: false };
     this.paddleIncrement = 5;
-    this.xAxisSpeed = 1.5;
-    this.yAxisSpeed = 1.5;
+    this.xAxisSpeed = 0.4;
+    this.yAxisSpeed = 0.2;
     this.ballPosition = { x: 50, y: 50 };
     this.ballDirection = {
       x: Math.random() < 0.5 ? +this.xAxisSpeed : -this.xAxisSpeed,
       y: Math.random() < 0.5 ? +this.yAxisSpeed : -this.yAxisSpeed,
     };
-    this.yAxisDir = YAxisDirection.UP;
-    this.directCrossedBall = false;
-    this.pOnePaddleY = 50;
-    this.pTwoPaddleY = 50;
+    this.paddleOne = {
+      pos: 40,
+      length: 20
+    }
+    this.paddleTwo = {
+      pos: 40,
+      length: 20
+    }
+    this.yPowerVector = 2
     this.score = {
       pOne: 0,
       pTwo: 0,
     };
     this.paused = true;
-    this.tickInterval = 50;
+    this.tickInterval = 10;
     this.socketService = socketService;
   }
   private id: string;
@@ -51,10 +71,8 @@ export class Game {
   private yAxisSpeed: number;
   private ballPosition: { x: number; y: number };
   private ballDirection: { x: number; y: number };
-  private yAxisDir: number;
-  private directCrossedBall: boolean;
-  private pOnePaddleY: number;
-  private pTwoPaddleY: number;
+  private paddleOne: GameState['paddles']['pOne']
+  private paddleTwo: GameState['paddles']['pTwo']
   private score: { pOne: number; pTwo: number };
   private paused: boolean;
   private tickInterval: number;
@@ -64,6 +82,7 @@ export class Game {
   private disconnectedTicks: number;
   private status: GameState['status'];
   private endtime: Date | null;
+  private yPowerVector
 
   private CheckIfItWasMadePointByThePlayers() {
     if (this.ballPosition.x <= 0 || this.ballPosition.x >= 100) {
@@ -80,172 +99,73 @@ export class Game {
     }
   }
 
-  private checkIfTheBallHitTheSidelines() {
-    if (this.ballPosition.y <= 3.5) {
-      this.ballDirection = { ...this.ballDirection, y: +this.yAxisSpeed };
-      this.yAxisDir = YAxisDirection.DOWN;
-      this.directCrossedBall = false;
-    }
-
-    if (this.ballPosition.y >= 96.5) {
-      this.ballDirection = { ...this.ballDirection, y: -this.yAxisSpeed };
-      this.yAxisDir = YAxisDirection.UP;
-      this.directCrossedBall = false;
-    }
-  }
-
   private checkIfTheBallHitsTheLeftPaddle() {
-    const biggerPos =
-      this.ballPosition.y > this.pOnePaddleY
-        ? this.ballPosition.y
-        : this.pOnePaddleY;
-    const smallerPos =
-      this.ballPosition.y < this.pOnePaddleY
-        ? this.ballPosition.y
-        : this.pOnePaddleY;
-    if (this.ballPosition.x <= 5 && biggerPos - smallerPos < 10) {
-      if (this.ballPosition.x <= 2.5) {
-        this.ballDirection = {
-          x: -this.xAxisSpeed,
-          y:
-            this.yAxisDir == YAxisDirection.UP
-              ? +this.ballPosition.y
-              : -this.ballPosition.y,
-        };
-        this.ballPosition = {
-          x: this.ballPosition.x - this.xAxisSpeed,
-          y:
-            this.yAxisDir == YAxisDirection.UP
-              ? +this.ballPosition.y
-              : -this.ballPosition.y,
-        };
-        this.ballPosition = {
-          x: this.ballPosition.x + this.ballDirection.x,
-          y: this.ballPosition.y + this.ballDirection.y,
-        };
-        this.ballPosition = {
-          x: this.ballPosition.x + this.ballDirection.x,
-          y: this.ballPosition.y + this.ballDirection.y,
-        };
-        return;
-      }
-      const racketDir: RacketDirection = Math.floor(Math.random() * 3) + 1;
-      if (racketDir == RacketDirection.DEFAULT) {
-        this.ballDirection = { ...this.ballDirection, x: +this.xAxisSpeed };
-        this.ballPosition = {
-          ...this.ballPosition,
-          x: this.ballPosition.x + this.xAxisSpeed,
-        };
-        this.directCrossedBall = false;
-      } else if (racketDir == RacketDirection.STRAIGHT) {
-        this.ballDirection = { ...this.ballDirection, x: +this.xAxisSpeed };
-        this.ballPosition = {
-          ...this.ballPosition,
-          x: this.ballPosition.x + this.xAxisSpeed,
-        };
-        this.directCrossedBall = true;
-      } else {
-        this.ballDirection = {
-          x: +this.xAxisSpeed,
-          y:
-            this.yAxisDir == YAxisDirection.UP
-              ? +this.yAxisSpeed
-              : -this.yAxisSpeed,
-        };
-        this.ballPosition = {
-          x: this.ballPosition.x + this.xAxisSpeed,
-          y:
-            this.yAxisDir == YAxisDirection.UP
-              ? this.ballPosition.y + this.yAxisSpeed
-              : this.ballPosition.y - this.yAxisSpeed,
-        };
-        this.directCrossedBall = false;
+    const { x, y } = this.ballPosition;
+    if (x <= 2) {
+      const start = this.paddleOne.pos;
+      const end = this.paddleOne.pos + this.paddleOne.length
+      if (y >= start && y <= end) {
+        this.ballDirection.x *= -1;
+        const by = y - start;
+        const piy = 0;
+        const pey = end - start;
+        const sections = 31; //This number should be always odd
+        const middleSectionIndex = Math.floor(sections / 2); //this is the index of the center section, also the total section for each direction
+        const yVector = this.yPowerVector;
+        const negativeYvecs = generateUniformRanges(-yVector, 0, middleSectionIndex + 1);
+        const positiveYVecs = generateUniformRanges(0, yVector, middleSectionIndex + 1);
+        positiveYVecs.shift();
+        const yVectors = [...negativeYvecs, ...positiveYVecs];
+        const upperBounds = generateUniformRanges(piy, pey, sections);
+        const bHitIndex = upperBounds.findIndex((uBound) => by <= uBound)
+        this.ballDirection.y = yVectors[bHitIndex];
       }
     }
   }
 
   private checkIfTheBallHitsTheRightPaddle() {
-    const biggerPos =
-      this.ballPosition.y > this.pTwoPaddleY
-        ? this.ballPosition.y
-        : this.pTwoPaddleY;
-    const smallerPos =
-      this.ballPosition.y < this.pTwoPaddleY
-        ? this.ballPosition.y
-        : this.pTwoPaddleY;
-    if (this.ballPosition.x >= 95 && biggerPos - smallerPos < 10) {
-      if (this.ballPosition.x >= 97.5) {
-        this.ballDirection = {
-          x: +this.xAxisSpeed,
-          y:
-            this.yAxisDir == YAxisDirection.UP
-              ? +this.ballPosition.y
-              : -this.ballPosition.y,
-        };
-        this.ballPosition = {
-          x: this.ballPosition.x + this.xAxisSpeed,
-          y:
-            this.yAxisDir == YAxisDirection.UP
-              ? +this.ballPosition.y
-              : -this.ballPosition.y,
-        };
-        this.ballPosition = {
-          x: this.ballPosition.x + this.ballDirection.x,
-          y: this.ballPosition.y + this.ballDirection.y,
-        };
-        this.ballPosition = {
-          x: this.ballPosition.x + this.ballDirection.x,
-          y: this.ballPosition.y + this.ballDirection.y,
-        };
-        return;
-      }
-      const racketDir: RacketDirection = Math.floor(Math.random() * 3) + 1;
-      if (racketDir == RacketDirection.DEFAULT) {
-        this.ballDirection = { ...this.ballDirection, x: -this.xAxisSpeed };
-        this.ballPosition = {
-          ...this.ballPosition,
-          x: this.ballPosition.x - this.xAxisSpeed,
-        };
-        this.directCrossedBall = false;
-      } else if (racketDir == RacketDirection.STRAIGHT) {
-        this.ballDirection = { ...this.ballDirection, x: -this.xAxisSpeed };
-        this.ballPosition = {
-          ...this.ballPosition,
-          x: this.ballPosition.x - this.xAxisSpeed,
-        };
-        this.directCrossedBall = true;
-      } else {
-        this.ballDirection = {
-          x: -this.xAxisSpeed,
-          y:
-            this.yAxisDir == YAxisDirection.UP
-              ? +this.yAxisSpeed
-              : -this.yAxisSpeed,
-        };
-        this.ballPosition = {
-          x: this.ballPosition.x - this.xAxisSpeed,
-          y:
-            this.yAxisDir == YAxisDirection.UP
-              ? this.ballPosition.y + this.yAxisSpeed
-              : this.ballPosition.y - this.yAxisSpeed,
-        };
-        this.directCrossedBall = false;
+    const { x, y } = this.ballPosition;
+    if (x >= 98) {
+      const start = this.paddleTwo.pos;
+      const end = this.paddleTwo.pos + this.paddleTwo.length
+      if (y >= start && y <= end) {
+        this.ballDirection.x *= -1;
+        const by = y - start;
+        const piy = 0;
+        const pey = end - start;
+        const sections = 31; //This number should be always odd, so that the middle section reflects the ball normal to the paddle
+        const middleSectionIndex = Math.floor(sections / 2); //this is the index of the center section, also the total section for each direction
+        const yVector = this.yPowerVector;
+        const negativeYvecs = generateUniformRanges(-yVector, 0, middleSectionIndex + 1);
+        const positiveYVecs = generateUniformRanges(0, yVector, middleSectionIndex + 1);
+        positiveYVecs.shift();
+        const yVectors = [...negativeYvecs, ...positiveYVecs];
+        const upperBounds = generateUniformRanges(piy, pey, sections);
+        const bHitIndex = upperBounds.findIndex((uBound) => by <= uBound)
+        this.ballDirection.y = yVectors[bHitIndex];
       }
     }
   }
 
   private updatePosition() {
-    if (this.directCrossedBall) {
-      return {
-        ...this.ballPosition,
-        x: this.ballPosition.x + this.ballDirection.x,
-      };
+    let { x: nX, y: nY } = this.ballPosition;
+    let { x: vX, y: vY } = this.ballDirection;
+
+    //Here its possible to implement logic for fun games!
+    nX += vX;
+    nY += vY;
+    if (nY > 100 || nY < 0) {
+      if (nY > 100) {
+        nY = 100 - (nY % 100);
+      }
+      if (nY < 0) {
+        nY *= -1;
+      }
+      this.ballDirection.y = -this.ballDirection.y;
     }
-    return {
-      x: this.ballPosition.x + this.ballDirection.x,
-      y: this.ballPosition.y + this.ballDirection.y,
-    };
+    this.ballPosition = { x: nX, y: nY };
   }
+
   private broadcastState() {
     const gameData = this.getGameData();
     this.socketService.emitToRoom(this.id, 'gameData', gameData);
@@ -283,10 +203,9 @@ export class Game {
   private gameTick() {
     if (!this.paused && this.playerOne.connected && this.playerTwo.connected) {
       this.CheckIfItWasMadePointByThePlayers();
-      this.checkIfTheBallHitTheSidelines();
       this.checkIfTheBallHitsTheLeftPaddle();
       this.checkIfTheBallHitsTheRightPaddle();
-      this.ballPosition = this.updatePosition();
+      this.updatePosition();
     }
     this.checkConnections();
     this.broadcastState();
@@ -312,8 +231,8 @@ export class Game {
       playerTwo: this.playerTwo,
       ballData: this.ballPosition,
       paddles: {
-        pOne: this.pOnePaddleY,
-        pTwo: this.pTwoPaddleY,
+        pOne: this.paddleOne,
+        pTwo: this.paddleTwo,
       },
       score: this.score,
       ended: this.endtime,
@@ -322,13 +241,29 @@ export class Game {
   }
 
   private movePlayerOne(direction: number) {
-    if (direction > 0 && this.pOnePaddleY < 90 ) this.pOnePaddleY += this.paddleIncrement;
-    else if (direction < 0 && this.pOnePaddleY > 10) this.pOnePaddleY -= this.paddleIncrement;
+    if (direction > 0) {
+      this.paddleOne.pos += this.paddleIncrement;
+      if (this.paddleOne.pos + this.paddleOne.length > 100) {
+        this.paddleOne.pos = 100 - this.paddleOne.length;
+      }
+    } else {
+      this.paddleOne.pos -= this.paddleIncrement;
+      if (this.paddleOne.pos < 0)
+        this.paddleOne.pos = 0;
+    }
   }
 
   private movePlayerTwo(direction: number) {
-    if (direction > 0 && this.pTwoPaddleY < 90) this.pTwoPaddleY += this.paddleIncrement;
-    else if (direction < 0 && this.pTwoPaddleY > 10) this.pTwoPaddleY -= this.paddleIncrement;
+    if (direction > 0) {
+      this.paddleTwo.pos += this.paddleIncrement;
+      if (this.paddleTwo.pos + this.paddleTwo.length > 100) {
+        this.paddleTwo.pos = 100 - this.paddleTwo.length;
+      }
+    } else {
+      this.paddleTwo.pos -= this.paddleIncrement;
+      if (this.paddleTwo.pos < 0)
+        this.paddleTwo.pos = 0;
+    }
   }
 
   private movePlayerPaddle(

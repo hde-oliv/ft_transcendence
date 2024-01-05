@@ -9,9 +9,13 @@ const score = z.object({
   pOne: z.number().int(),
   pTwo: z.number().int()
 })
+const paddle = z.object({
+  pos: z.number().int(),
+  length: z.number().int()
+})
 const paddles = z.object({
-  pOne: z.number(),
-  pTwo: z.number()
+  pOne: paddle,
+  pTwo: paddle
 })
 const playerdata = z.object({
   id: z.string(),
