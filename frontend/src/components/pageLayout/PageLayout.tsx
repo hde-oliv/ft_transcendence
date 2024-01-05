@@ -109,7 +109,7 @@ export default function PageLayout({ children }: { children: ReactElement }) {
             alignItems="center"
             colorScheme='blue'
             size='lg'
-            onClick={() => acceptInvite(data.id)}>
+            onClick={() => { acceptInvite(data.id).finally(props.onClose) }}>
             Clique para aceitar partida de {data.issuer.nickname}
           </Button>
           <IconButton onClick={props.onClose} icon={<CloseIcon />} aria-label='reject invite' />
