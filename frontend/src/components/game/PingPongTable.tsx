@@ -24,52 +24,50 @@ const PingPongTable: React.FC<GameState> = (props) => {
   const totalWidth = '47%';
   const [selectedMap, setSelectedMap] = useState('');
 
-  const handleMapSelect = (map: string) => {
-    setSelectedMap(map);
-  }
-
   return (
     <>
       <Flex
         w={totalWidth}
         justifyContent={'space-between'}>
         <Heading size='md' mb={5}>{props.playerOne.nickname}</Heading>
-        <Heading size='md'mb={5}>{props.playerTwo.nickname}</Heading>
+        <Heading size='md' mb={5}>{props.playerTwo.nickname}</Heading>
       </Flex>
-      <Flex justifyContent={'space-between'} mb={5}>
-        <Box >
-          <IconButton
-            icon={<Img src={Maps.CLASSIC} w={'9vw'} m={2} />}
-            aria-label={"Select tennis map"}
-            onClick={() => setSelectedMap('')}
-            colorScheme={selectedMap === '' ? Colors.ON : Colors.OFF}
-            isActive={selectedMap === ''}
-          />
+      <Flex >
+        <Img
+          src={Maps.CLASSIC} w={'9vw'} m={2}
+          onClick={() => setSelectedMap('')}
+          aria-label="Select tennis map"
+          borderStyle={'solid'}
+          borderWidth={3}
+          borderColor={selectedMap === '' ? 'yellow.400' : 'transparent'}
+        />
 
-          <IconButton
-            icon={<Img src={Maps.BASKET} w={'9.5vw'} m={2}/>}
-            aria-label={"Select basketball map"}
-            onClick={() => handleMapSelect(Maps.BASKET)}
-            colorScheme={selectedMap === Maps.BASKET ? Colors.ON : Colors.OFF}
-            isActive={selectedMap === Maps.BASKET}
-          />
+        <Img
+          src={Maps.BASKET} w={'9.5vw'} m={2}
+          aria-label={"Select basketball map"}
+          onClick={() => setSelectedMap(Maps.BASKET)}
+          borderStyle={'solid'}
+          borderWidth={3}
+          borderColor={selectedMap === Maps.BASKET ? 'yellow.400' : 'transparent'}
+        />
 
-          <IconButton
-            icon={<Img src={Maps.SOCCER} w={'9.5vw'} m={2} />}
-            aria-label={"Select soccer map"}
-            onClick={() => handleMapSelect(Maps.SOCCER)}
-            colorScheme={selectedMap === Maps.SOCCER ? Colors.ON : Colors.OFF}
-            isActive={selectedMap === Maps.SOCCER}
-          />
+        <Img
+          src={Maps.SOCCER} w={'9.5vw'} m={2}
+          aria-label={"Select soccer map"}
+          onClick={() => setSelectedMap(Maps.SOCCER)}
+          borderStyle={'solid'}
+          borderWidth={3}
+          borderColor={selectedMap === Maps.SOCCER ? 'yellow.400' : 'transparent'}
+        />
 
-          <IconButton
-            icon={<Img src={Maps.TENNIS} w={'19vh'} m={2} />}
-            aria-label={"Select tennis map"}
-            onClick={() => handleMapSelect(Maps.TENNIS)}
-            colorScheme={selectedMap === Maps.TENNIS ? Colors.ON : Colors.OFF}
-            isActive={selectedMap === Maps.TENNIS}
-          />
-        </Box>
+        <Img
+          src={Maps.TENNIS} w={'19vh'} m={2}
+          aria-label={"Select tennis map"}
+          onClick={() => setSelectedMap(Maps.TENNIS)}
+          borderStyle={'solid'}
+          borderWidth={3}
+          borderColor={selectedMap === Maps.TENNIS ? 'yellow.400' : 'transparent'}
+        />
       </Flex>
       <Box
         position={'relative'}
