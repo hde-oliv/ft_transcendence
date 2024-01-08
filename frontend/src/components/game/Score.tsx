@@ -10,7 +10,7 @@ export default function Score({ side, counter }: ScoreProps) {
     <Text
       userSelect={'none'}
       position="absolute"
-      top="3%"
+      top="1%"
       {...side}
       fontSize="3vw"
       color="white"
