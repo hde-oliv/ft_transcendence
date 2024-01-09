@@ -167,6 +167,7 @@ export class ChatService {
   // throws
   async deleteChannel(token: TokenClaims, id: number) {
     const channel = await this.chatRepository.getChannel(id);
+    const users = await this.chatRepository.getUsersByChannel(channel.id);
 
     const memberships = await this.chatRepository.getMembershipsbyChannel(
       channel.id,
@@ -178,6 +179,11 @@ export class ChatService {
     await this.chatRepository.deleteMembershipsbyChannel(channel.id);
     const deletedChannel = await this.chatRepository.deleteChannel(channel.id);
     this.socketService.server.sockets.socketsLeave(channel.id.toString()); //TODO verify if working properly
+    users.forEach(user => {
+      this.socketService.removeUserFromRoom(user.id, channel.id.toString());
+      this.socketService.emitToUser(user.id, 'deleteChannel', { channelId: channel.id });
+      this.socketService.emitToRoom(channel.id.toString(), 'syncChannel', { channelId: channel.id });
+    });
     return deletedChannel;
   }
 
@@ -212,7 +218,7 @@ export class ChatService {
   }
 
   // throws
-  async leaveChannel(token: TokenClaims, channelId: number) {
+  async leaveChannel(token: TokenClaims, channelId: number, userId: string) {
     const channel = await this.chatRepository.getChannel(channelId);
 
     const memberships = await this.chatRepository.getMembershipsbyChannel(
@@ -225,9 +231,11 @@ export class ChatService {
       channel.id,
     );
     this.socketService.removeUserFromRoom(token.intra_login, channelId.toString());
+    this.socketService.emitToUser(userId, 'leaveChannel', { channelId: channelId });
     this.socketService.emitToRoom(channelId.toString(), 'syncChannel', { channelId: channelId });
     return deletedMembership;
   }
+
   private getIssuerTargetMemberships(memberships: Memberships[], token: TokenClaims, userId: string, channel: Channels) {
     if (userId === token.intra_login)
       throw new BadRequestException('You cannot perform this action on yourself.');

@@ -13,6 +13,8 @@ import {
   unbanFromChannel,
   unmuteInChannel,
   demoteChannelAdmin,
+  leaveChannel,
+  deleteChannel,
 } from "@/lib/fetchers/chat";
 import {
   AddIcon,
@@ -73,7 +75,15 @@ import {
   Text,
   Tooltip,
   VStack,
-  useDisclosure
+  useDisclosure,
+  Spacer,
+  Modal,
+  ModalOverlay,
+  ModalBody,
+  ModalHeader,
+  ModalFooter,
+  ModalContent,
+  ModalCloseButton,
 } from "@chakra-ui/react";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import {
@@ -268,12 +278,14 @@ function GroupSettings(props: {
   syncAll: () => void;
 }) {
   const { isOpen, onClose, onOpen } = useDisclosure();
+  const { isOpen: isOpenTwo, onClose: onCloseTwo, onOpen: onOpenTwo } = useDisclosure();
   const [editingPsw, setEditinPsw] = useState(false);
   const [pswOne, setPswOne] = useState("");
   const [pswTwo, setPswTwo] = useState("");
   const [channelType, setChannelType] = useState(props.channel.type);
   const [channelName, setChannelName] = useState(props.channel.name);
   const { updateChannels: updateChats } = useContext(ChatContext);
+  const { syncChannel } = useContext(ChatContext);
   const router = useRouter();
 
   const [me, setMe] = useContext(MeStateContext);
@@ -516,24 +528,56 @@ function GroupSettings(props: {
             </Tabs>
           </DrawerBody>
           <DrawerFooter>
-            <HStack>
-              <IconButton
-                size="lg"
-                colorScheme="red"
-                icon={<DeleteIcon />}
-                isDisabled={!props.membership.owner}
-                aria-label="delete channel"
-              />
-              {/* TODO: Implement channel delete only by owner */}
-              <IconButton
-                size="lg"
-                colorScheme="yellow"
-                icon={<CloseIcon />}
-                onClick={onClose}
-                aria-label="close channel settings"
-              />
-            </HStack>
-          </DrawerFooter>
+          <HStack width="full">
+            <Button
+              size="lg"
+              colorScheme="green"
+              onClick={() => {
+                fetchWrapper(router, leaveChannel, props.channel.id, props.membership.userId).then(e => {
+                  syncChannel({ channelId: props.channel.id });
+                }).catch(e => console.error(e))
+              }}
+            >
+              Leave
+            </Button>
+            <Spacer />
+            <IconButton
+              size="lg"
+              colorScheme="red"
+              icon={<DeleteIcon />}
+              isDisabled={!props.membership.owner}
+              aria-label="delete channel"
+              onClick={onOpenTwo}
+            />
+              <Modal isOpen={isOpenTwo} onClose={onCloseTwo}>
+                  <ModalOverlay />
+                  <ModalContent bg="pongBlue.500">
+                    <ModalHeader color="red.300">Delete {props.channel.name}?</ModalHeader>
+                    <ModalCloseButton />
+                    <ModalBody>
+                      Are you sure you want to delete this channel?
+                    </ModalBody>
+                    <ModalFooter>
+                      <Button colorScheme="red" mr={3} onClick={() => {
+                          fetchWrapper(router, deleteChannel, props.channel.id).then(e => {
+                            syncChannel({ channelId: props.channel.id });
+                          }).catch(e => console.error(e))
+                        }}>
+                        Yes
+                      </Button>
+                      <Button colorScheme="yellow" onClick={onCloseTwo}>No</Button>
+                    </ModalFooter>
+                  </ModalContent>
+                </Modal>
+            <IconButton
+              size="lg"
+              colorScheme="yellow"
+              icon={<CloseIcon />}
+              onClick={onClose}
+              aria-label="close channel settings"
+            />
+          </HStack>
+        </DrawerFooter>
         </DrawerContent>
       </Drawer>
     </Center>
