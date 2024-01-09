@@ -3,31 +3,15 @@ import {
   PropsWithChildren,
   ReactElement,
   useEffect,
-  useRef,
   useState,
 } from "react";
-import PongPageMenu from "../../components/nav/PongNavBar";
 import {
-  Avatar,
-  AvatarBadge,
-  Box,
-  Card,
-  CardBody,
-  CardFooter,
-  CardHeader,
   Center,
-  Flex,
   Heading,
-  Icon,
   Skeleton,
   Text,
   Wrap,
   WrapItem,
-  Tabs,
-  TabList,
-  TabPanels,
-  Tab,
-  TabPanel,
 } from "@chakra-ui/react";
 import {
   Stat,
@@ -35,28 +19,16 @@ import {
   StatNumber,
   StatHelpText,
   StatArrow,
-  StatGroup,
-} from "@chakra-ui/react";
-import { Grid, GridItem, Container } from "@chakra-ui/react";
-import {
-  Table,
-  Thead,
-  Tbody,
-  Tfoot,
-  Tr,
-  Th,
-  Td,
-  TableCaption,
-  TableContainer,
 } from "@chakra-ui/react";
 import { useRouter } from "next/router";
-import { CheckIcon } from "@chakra-ui/icons";
 import PageLayout from "@/components/pageLayout/PageLayout";
 import { NextPageWithLayout } from "../_app";
-import { FriendTab } from "../../components/pageComponents/dashboard/FriendTab";
 import { ChannelCard } from "../../components/pageComponents/dashboard/PublicChannelCard";
 import PlayCard from "../../components/pageComponents/dashboard/PlayCard";
 import FriendCard from "@/components/pageComponents/dashboard/FriendCard";
+import { fetchWrapper } from "@/lib/fetchers/SafeAuthWrapper";
+import { HistoryRecord, myHistory } from "@/lib/fetchers/matches";
+import { HistoryCard } from "@/components/pageComponents/dashboard/HistoryCard";
 
 function RankCard(props: PropsWithChildren) {
   const [loading, setLoading] = useState(true);
@@ -96,68 +68,6 @@ function RankCard(props: PropsWithChildren) {
   );
 }
 
-function HistoryCard(props: PropsWithChildren) {
-  //limitar historico a 5 registros
-  return (
-    <Center flexDir="column" h="370px" w="370px">
-      <Heading mb="1vh">History</Heading>
-      <TableContainer>
-        <Table size="sm">
-          <Thead>
-            <Tr bgColor="gray">
-              <Th color="yellow.300">Won</Th>
-              <Th color="yellow.300">Date</Th>
-              <Th color="yellow.300">Adversary</Th>
-              <Th color="yellow.300">Score</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            <Tr>
-              <Td>
-                <CheckIcon />
-              </Td>
-              <Td>01/01/2010</Td>
-              <Td>hde-camp</Td>
-              <Td>8 | 0</Td>
-            </Tr>
-            <Tr>
-              <Td>
-                <CheckIcon />
-              </Td>
-              <Td>01/01/2010</Td>
-              <Td>hde-camp</Td>
-              <Td>8 | 0</Td>
-            </Tr>
-            <Tr>
-              <Td>
-                <CheckIcon />
-              </Td>
-              <Td>01/01/2010</Td>
-              <Td>hde-camp</Td>
-              <Td>8 | 0</Td>
-            </Tr>
-            <Tr>
-              <Td>
-                <CheckIcon />
-              </Td>
-              <Td>01/01/2010</Td>
-              <Td>hde-camp</Td>
-              <Td>8 | 0</Td>
-            </Tr>
-            <Tr>
-              <Td>
-                <CheckIcon />
-              </Td>
-              <Td>01/01/2010</Td>
-              <Td>hde-camp</Td>
-              <Td>8 | 0</Td>
-            </Tr>
-          </Tbody>
-        </Table>
-      </TableContainer>
-    </Center>
-  );
-}
 function StatsCard(props: PropsWithChildren) {
   return (
     <Center flexDir="column" h="370px" w="370px">
@@ -210,6 +120,10 @@ function ConfigsCard(props: PropsWithChildren) {
 
 const Dashboard: NextPageWithLayout = () => {
   const router = useRouter();
+  const [history, setHistory] = useState<HistoryRecord[]>([]);
+  useEffect(() => {
+    fetchWrapper(router, myHistory).then(e => setHistory(e)).catch(e => console.error(e));
+  }, [])
   return (
     <Wrap p="5vh 5vw" spacing="30px" justify="center">
       <WrapItem borderRadius="30" borderWidth="2px" borderColor="yellow.400">
@@ -219,7 +133,7 @@ const Dashboard: NextPageWithLayout = () => {
         <RankCard />
       </WrapItem>
       <WrapItem borderRadius="30" borderWidth="2px" borderColor="yellow.400">
-        <HistoryCard />
+        <HistoryCard matches={history} />
       </WrapItem>
       <WrapItem borderRadius="30" borderWidth="2px" borderColor="yellow.400">
         <StatsCard />

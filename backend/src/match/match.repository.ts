@@ -65,7 +65,6 @@ export class MatchRepository {
     })
   }
 
-
   async createMatch(pOneId: string, ptwoId: string) {
     return this.prismaService.matches.create({
       data: {
@@ -124,6 +123,24 @@ export class MatchRepository {
   }
   async getMatchesByUser(intra_tag: string) {
     return this.prismaService.matches.findMany({
+      select: {
+        id: true,
+        p_one_score: true,
+        p_two_score: true,
+        start: true,
+        end: true,
+        status: true,
+        player_one: {
+          select: {
+            id: true, nickname: true
+          }
+        },
+        player_two: {
+          select: {
+            id: true, nickname: true
+          }
+        }
+      },
       where: {
         OR: [
           {
@@ -132,7 +149,8 @@ export class MatchRepository {
           {
             p_two: intra_tag
           }
-        ]
+        ],
+        NOT: { end: null }
       },
       orderBy: {
         start: "desc"

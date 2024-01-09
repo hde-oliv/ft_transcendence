@@ -9,7 +9,7 @@ import { TokenClaims } from 'src/auth/auth.model';
 import { UsersService } from 'src/users/users.service';
 import { CreateInviteDto } from './dto/create-invite-dto';
 import { GameService } from 'src/game/game.service';
-import { PrismaClient } from '@prisma/client';
+import { $Enums, PrismaClient } from '@prisma/client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { GameRepository } from 'src/game/game.reposotory';
 
@@ -188,5 +188,33 @@ export class MatchService {
   }
   acceptQueueInvite(user: TokenClaims) {
     this.queueService.acceptQueueInvite(user.intra_login);
+  }
+  async getUserHistory(userId: string) {
+    try {
+      const matches = await this.matchRepository.getMatchesByUser(userId);
+      const polished = matches.map(match => {
+        let newRec: {
+          id: string,
+          target: { id: string, nickname: string, score: number },
+          adversary: { id: string, nickname: string, score: number },
+          start: Date,
+          status: $Enums.MatchStatus
+        } = {
+          id: match.id,
+          target: { ...match.player_one, score: match.p_one_score },
+          adversary: { ...match.player_two, score: match.p_two_score },
+          start: match.start,
+          status: match.status
+        };
+        if (match.player_two.id === userId) {
+          newRec.target = { ...match.player_two, score: match.p_two_score }
+          newRec.adversary = { ...match.player_one, score: match.p_one_score }
+        };
+        return newRec;
+      })
+      return polished;
+    } catch (e) {
+      throw new BadRequestException('User not found');
+    }
   }
 }

@@ -62,4 +62,16 @@ export class MatchController {
   acceptInvite(@Request() req, @Param('inviteId') inviteId: string) {
     return this.matchService.acceptP2P(req.user.intra_login, inviteId);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/history/:userId')
+  history(@Request() req, @Param('userId') userId: string) {
+    return this.matchService.getUserHistory(userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/history')
+  myHistory(@Request() req, @Param('userId') userId: string) {
+    return this.matchService.getUserHistory(req.user.intra_login);
+  }
 }
