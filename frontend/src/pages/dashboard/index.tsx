@@ -1,5 +1,6 @@
 "use client";
 import {
+  FC,
   PropsWithChildren,
   ReactElement,
   useEffect,
@@ -27,7 +28,7 @@ import { ChannelCard } from "../../components/pageComponents/dashboard/PublicCha
 import PlayCard from "../../components/pageComponents/dashboard/PlayCard";
 import FriendCard from "@/components/pageComponents/dashboard/FriendCard";
 import { fetchWrapper } from "@/lib/fetchers/SafeAuthWrapper";
-import { HistoryRecord, myHistory } from "@/lib/fetchers/matches";
+import { HistoryRecord, UserStats, myHistory, myStats } from "@/lib/fetchers/matches";
 import { HistoryCard } from "@/components/pageComponents/dashboard/HistoryCard";
 
 function RankCard(props: PropsWithChildren) {
@@ -68,9 +69,9 @@ function RankCard(props: PropsWithChildren) {
   );
 }
 
-function StatsCard(props: PropsWithChildren) {
+const StatsCard: FC<UserStats> = (props) => {
   return (
-    <Center flexDir="column" h="370px" w="370px">
+    <Center flexDir="column" h="370px" w="370px" justifyContent={'flex-start'}>
       <Heading pb="2vw">Stats</Heading>
       <Wrap spacing="1vw">
         <Stat
@@ -79,20 +80,9 @@ function StatsCard(props: PropsWithChildren) {
           p="1vw 1vw"
           borderColor="yellow.200"
         >
-          <StatLabel>Games</StatLabel>
-          <StatNumber textAlign="center" color="yellow.300">
-            20
-          </StatNumber>
-        </Stat>
-        <Stat
-          borderWidth="2px"
-          borderRadius="lg"
-          p="1vw 1vw"
-          borderColor="yellow.200"
-        >
           <StatLabel>Victories</StatLabel>
           <StatNumber textAlign="center" color="green.400">
-            10
+            {props.win}
           </StatNumber>
         </Stat>
         <Stat
@@ -103,7 +93,18 @@ function StatsCard(props: PropsWithChildren) {
         >
           <StatLabel>Loses</StatLabel>
           <StatNumber textAlign="center" color="red.400">
-            10
+            {props.loss}
+          </StatNumber>
+        </Stat>
+        <Stat
+          borderWidth="2px"
+          borderRadius="lg"
+          p="1vw 1vw"
+          borderColor="yellow.200"
+        >
+          <StatLabel>Games</StatLabel>
+          <StatNumber textAlign="center" color="yellow.300">
+            {(props.loss + props.tie + props.win).toFixed(0)}
           </StatNumber>
         </Stat>
       </Wrap>
@@ -121,8 +122,10 @@ function ConfigsCard(props: PropsWithChildren) {
 const Dashboard: NextPageWithLayout = () => {
   const router = useRouter();
   const [history, setHistory] = useState<HistoryRecord[]>([]);
+  const [stats, setStats] = useState<any>();
   useEffect(() => {
     fetchWrapper(router, myHistory).then(e => setHistory(e)).catch(e => console.error(e));
+    fetchWrapper(router, myStats).then(e => setStats(e)).catch(e => console.error(e));
   }, [])
   return (
     <Wrap p="5vh 5vw" spacing="30px" justify="center">
@@ -136,7 +139,7 @@ const Dashboard: NextPageWithLayout = () => {
         <HistoryCard matches={history} />
       </WrapItem>
       <WrapItem borderRadius="30" borderWidth="2px" borderColor="yellow.400">
-        <StatsCard />
+        <StatsCard {...stats} />
       </WrapItem>
       <WrapItem borderRadius="30" borderWidth="2px" borderColor="yellow.400">
         <FriendCard />

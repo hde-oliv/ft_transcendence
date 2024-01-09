@@ -74,4 +74,16 @@ export class MatchController {
   myHistory(@Request() req, @Param('userId') userId: string) {
     return this.matchService.getUserHistory(req.user.intra_login);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/myStats')
+  stats(@Request() req) {
+    return this.matchService.getUserStats(req.user.intra_login);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/stats/:userId')
+  userStats(@Request() req, @Param('userId') userId: string) {
+    return this.matchService.getUserStats(userId);
+  }
 }

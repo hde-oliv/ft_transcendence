@@ -21,6 +21,15 @@ const historyRecord = z.object(
 )
 export type HistoryRecord = z.infer<typeof historyRecord>;
 
+const statsResponse = z.object({
+  win: z.number().int(),
+  loss: z.number().int(),
+  tie: z.number().int(),
+  indeterminate: z.number().int()
+})
+
+export type UserStats = z.infer<typeof statsResponse>;
+
 export async function joinQueue() {
   const fetcher = pongAxios();
   const response = await fetcher.post("match/joinQueue");
@@ -61,5 +70,18 @@ export async function myHistory() {
   const fetcher = pongAxios();
   const response = await fetcher.get(`match/history`);
   const parsedResponse = z.array(historyRecord).parse(response.data);
+  return parsedResponse;
+}
+
+export async function myStats() {
+  const fetcher = pongAxios();
+  const response = await fetcher.get(`match/myStats`);
+  const parsedResponse = statsResponse.parse(response.data);
+  return parsedResponse;
+}
+export async function userStats(userId: string) {
+  const fetcher = pongAxios();
+  const response = await fetcher.get(`match/stats/${userId}`);
+  const parsedResponse = statsResponse.parse(response.data);
   return parsedResponse;
 }

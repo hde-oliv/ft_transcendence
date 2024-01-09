@@ -40,9 +40,9 @@ export const HistoryCard: FC<{ matches: HistoryRecord[]; }> = (props) => {
   return (
     <Center flexDir="column" h="370px" w="370px">
       <Heading mb="1vh">History</Heading>
-      <TableContainer>
+      <TableContainer style={{ overflowY: 'auto' }} mb='1em'>
         <Table size="sm">
-          <Thead>
+          <Thead position='sticky' top={0}>
             <Tr bgColor="gray">
               <Th color="yellow.300" textAlign={'center'}>Won</Th>
               <Th color="yellow.300">Date</Th>

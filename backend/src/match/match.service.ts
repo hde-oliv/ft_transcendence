@@ -217,4 +217,12 @@ export class MatchService {
       throw new BadRequestException('User not found');
     }
   }
+  async getUserStats(userId: string) {
+    try {
+      const response = await this.matchRepository.getStatsByUser(userId);
+      return response;
+    } catch (e) {
+      throw new InternalServerErrorException();
+    }
+  }
 }
