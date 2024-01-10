@@ -119,7 +119,6 @@ function membershipsFromChannel(channel: ChannelData["channel"]): ChannelData["c
   });
 }
 
-// TODO: add Membership type
 function MemberRow(props: {
   owner: boolean, admin: boolean,
   membership: Omit<ChannelComponentProps, "channel"> & { user: Omit<ReturnUserSchema, 'elo'> };
@@ -309,7 +308,6 @@ function GroupSettings(props: {
       });
       await fetchWrapper(router, patchChannel, props.channel.id, updatedChannelConfig);
       updateChats();
-      // props.syncAll();
     } catch (e) {
       if (e instanceof ZodError)
         console.warn("Error build patchChannel object");
@@ -714,15 +712,6 @@ export function MessageSection(
   );
 }
 
-// function ProfilePopover(props: {
-//   cardData: {
-//     avatar: string;
-//     intra_login: string;
-//     nickname: string;
-//     statusColor: string;
-//   };
-//   channel: ChannelData['channel'];
-// } & { onClick?: (() => void) | undefined; lastMessage?: string | undefined; } & { syncAll: () => void; }) {
 const ProfilePopover: FC<{
   cardData: {
     avatar: string;
