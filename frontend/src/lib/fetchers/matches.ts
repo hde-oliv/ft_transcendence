@@ -2,31 +2,29 @@ import axios from "axios";
 import z, { ZodError } from "zod";
 import { pongAxios } from "./pongAxios";
 
-const historyRecord = z.object(
-  {
-    id: z.string().uuid(),
-    target: z.object({
-      id: z.string(),
-      nickname: z.string(),
-      score: z.number().int()
-    }),
-    adversary: z.object({
-      id: z.string(),
-      nickname: z.string(),
-      score: z.number().int()
-    }),
-    start: z.coerce.date(),
-    status: z.enum(['paused', 'running', 'finished', 'aborted'])
-  }
-)
+const historyRecord = z.object({
+  id: z.string().uuid(),
+  target: z.object({
+    id: z.string(),
+    nickname: z.string(),
+    score: z.number().int(),
+  }),
+  adversary: z.object({
+    id: z.string(),
+    nickname: z.string(),
+    score: z.number().int(),
+  }),
+  start: z.coerce.date(),
+  status: z.enum(["paused", "running", "finished", "aborted"]),
+});
 export type HistoryRecord = z.infer<typeof historyRecord>;
 
 const statsResponse = z.object({
   win: z.number().int(),
   loss: z.number().int(),
   tie: z.number().int(),
-  indeterminate: z.number().int()
-})
+  indeterminate: z.number().int(),
+});
 
 export type UserStats = z.infer<typeof statsResponse>;
 
@@ -38,32 +36,30 @@ export async function joinQueue() {
 
 export async function leaveQueue() {
   const fetcher = pongAxios();
-  const response = await fetcher.delete("match/leaveQueue")
-  if (response.status === 200)
-    return true;
+  const response = await fetcher.delete("match/leaveQueue");
+  if (response.status === 200) return true;
   return false;
 }
 
 export async function acceptMatch() {
   const fetcher = pongAxios();
-  const response = await fetcher.patch("match/accept")
-  if (response.status === 200)
-    return true;
+  const response = await fetcher.patch("match/accept");
+  if (response.status === 200) return true;
   return false;
 }
 
 export async function acceptP2P(inviteId: string) {
   const fetcher = pongAxios();
-  const response = await fetcher.post(`match/P2P/${inviteId}`)
-  if (response.status === 200)
-    return true;
+  const response = await fetcher.post(`match/P2P/${inviteId}`);
+  if (response.status === 200) return true;
   return false;
 }
 
 export async function userHistory(userId: string) {
   const fetcher = pongAxios();
   const response = await fetcher.get(`match/history/${userId}`);
-  return response;
+  const parsedResponse = z.array(historyRecord).parse(response.data);
+  return parsedResponse;
 }
 
 export async function myHistory() {

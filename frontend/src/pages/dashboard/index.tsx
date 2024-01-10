@@ -28,7 +28,12 @@ import { ChannelCard } from "../../components/pageComponents/dashboard/PublicCha
 import PlayCard from "../../components/pageComponents/dashboard/PlayCard";
 import FriendCard from "@/components/pageComponents/dashboard/FriendCard";
 import { fetchWrapper } from "@/lib/fetchers/SafeAuthWrapper";
-import { HistoryRecord, UserStats, myHistory, myStats } from "@/lib/fetchers/matches";
+import {
+  HistoryRecord,
+  UserStats,
+  myHistory,
+  myStats,
+} from "@/lib/fetchers/matches";
 import { HistoryCard } from "@/components/pageComponents/dashboard/HistoryCard";
 
 function RankCard(props: PropsWithChildren) {
@@ -69,10 +74,10 @@ function RankCard(props: PropsWithChildren) {
   );
 }
 
-const StatsCard: FC<UserStats> = (props) => {
+export const StatsCard: FC<UserStats> = (props) => {
   return (
-    <Center flexDir="column" h="370px" w="370px" justifyContent={'flex-start'}>
-      <Heading pb="2vw">Stats</Heading>
+    <Center flexDir="column" h="370px" w="370px">
+      <Heading mb="1vw">Stats</Heading>
       <Wrap spacing="1vw">
         <Stat
           borderWidth="2px"
@@ -110,7 +115,7 @@ const StatsCard: FC<UserStats> = (props) => {
       </Wrap>
     </Center>
   );
-}
+};
 function ConfigsCard(props: PropsWithChildren) {
   return (
     <Center flexDir="column" h="370px" w="370px">
@@ -124,9 +129,13 @@ const Dashboard: NextPageWithLayout = () => {
   const [history, setHistory] = useState<HistoryRecord[]>([]);
   const [stats, setStats] = useState<any>();
   useEffect(() => {
-    fetchWrapper(router, myHistory).then(e => setHistory(e)).catch(e => console.error(e));
-    fetchWrapper(router, myStats).then(e => setStats(e)).catch(e => console.error(e));
-  }, [])
+    fetchWrapper(router, myHistory)
+      .then((e) => setHistory(e))
+      .catch((e) => console.error(e));
+    fetchWrapper(router, myStats)
+      .then((e) => setStats(e))
+      .catch((e) => console.error(e));
+  }, []);
   return (
     <Wrap p="5vh 5vw" spacing="30px" justify="center">
       <WrapItem borderRadius="30" borderWidth="2px" borderColor="yellow.400">

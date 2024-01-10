@@ -1,4 +1,4 @@
-'use client'
+"use client";
 import {
   ChannelData,
   promoteChannelAdmin,
@@ -38,7 +38,7 @@ import {
   Stat,
   StatLabel,
   StatNumber,
-} from '@chakra-ui/react'
+} from "@chakra-ui/react";
 
 import {
   Avatar,
@@ -73,9 +73,16 @@ import {
   Text,
   Tooltip,
   VStack,
-  useDisclosure
+  useDisclosure,
 } from "@chakra-ui/react";
-import { FC, useCallback, useContext, useEffect, useRef, useState } from "react";
+import {
+  FC,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   ChannelComponentProps,
   MessageCardProps,
@@ -86,7 +93,10 @@ import z, { ZodError } from "zod";
 import { ReturnUserSchema } from "@/lib/fetchers/users";
 import diacriticalNormalize from "@/lib/diacriticalNormalize";
 import { getAllFriends } from "@/lib/fetchers/friends";
-import { MeStateContext, SocketContext } from "@/components/pageLayout/PageLayout";
+import {
+  MeStateContext,
+  SocketContext,
+} from "@/components/pageLayout/PageLayout";
 import KickIcon from "@/components/icons/KickIcon";
 import MuteIcon from "@/components/icons/MuteIcon";
 import BanIcon from "@/components/icons/BanIcon";
@@ -94,10 +104,9 @@ import CrownIcon from "@/components/icons/CrownIcon";
 import UndoIcon from "@/components/icons/UndoIcon";
 import DowngradeIcon from "@/components/icons/DowngradeIcon";
 import { inviteToPlay } from "@/lib/fetchers/invite";
-import { fetchWrapper } from '@/lib/fetchers/SafeAuthWrapper';
+import { fetchWrapper } from "@/lib/fetchers/SafeAuthWrapper";
 import { useRouter } from "next/router";
 import { UserStats, getUserStats } from "@/lib/fetchers/matches";
-
 
 function membersFromChannel(
   channel: ChannelData["channel"]
@@ -111,17 +120,22 @@ function membersFromChannel(
     };
   });
 }
-function membershipsFromChannel(channel: ChannelData["channel"]): ChannelData["channel"]["Memberships"] {
+function membershipsFromChannel(
+  channel: ChannelData["channel"]
+): ChannelData["channel"]["Memberships"] {
   return channel.Memberships.map((e) => {
     return {
-      ...e
+      ...e,
     };
   });
 }
 
 function MemberRow(props: {
-  owner: boolean, admin: boolean,
-  membership: Omit<ChannelComponentProps, "channel"> & { user: Omit<ReturnUserSchema, 'elo'> };
+  owner: boolean;
+  admin: boolean;
+  membership: Omit<ChannelComponentProps, "channel"> & {
+    user: Omit<ReturnUserSchema, "elo">;
+  };
   channel: ChannelData["channel"];
 }) {
   const { membership, channel, owner, admin } = props;
@@ -130,7 +144,6 @@ function MemberRow(props: {
   const { syncChannel } = useContext(ChatContext);
   const router = useRouter();
   const color = user.status === "online" ? "green.300" : "gray.300";
-
 
   return (
     <>
@@ -169,39 +182,66 @@ function MemberRow(props: {
           <Center>
             <VStack mr="4">
               <Button
-                rightIcon={membership.banned ? <UndoIcon boxSize={'1.5em'} /> : <BanIcon boxSize={'1.5em'} />}
+                rightIcon={
+                  membership.banned ? (
+                    <UndoIcon boxSize={"1.5em"} />
+                  ) : (
+                    <BanIcon boxSize={"1.5em"} />
+                  )
+                }
                 isDisabled={!(admin || owner)}
                 colorScheme="red"
                 size="sm"
                 aria-label="ban user"
-                minW={'8em'}
-                maxW={'8em'}
+                minW={"8em"}
+                maxW={"8em"}
                 onClick={() => {
                   if (membership.banned) {
-                    fetchWrapper(router, unbanFromChannel, props.channel.id, props.membership.userId).then(e => {
-                      syncChannel({ channelId: props.channel.id });
-                    }).catch(e => console.error(e))
+                    fetchWrapper(
+                      router,
+                      unbanFromChannel,
+                      props.channel.id,
+                      props.membership.userId
+                    )
+                      .then((e) => {
+                        syncChannel({ channelId: props.channel.id });
+                      })
+                      .catch((e) => console.error(e));
                   } else {
-                    fetchWrapper(router, banFromChannel, props.channel.id, props.membership.userId).then(e => {
-                      syncChannel({ channelId: props.channel.id });
-                    }).catch(e => console.error(e))
+                    fetchWrapper(
+                      router,
+                      banFromChannel,
+                      props.channel.id,
+                      props.membership.userId
+                    )
+                      .then((e) => {
+                        syncChannel({ channelId: props.channel.id });
+                      })
+                      .catch((e) => console.error(e));
                   }
                 }}
               >
-                {membership.banned ? 'Unban' : 'Ban'}
+                {membership.banned ? "Unban" : "Ban"}
               </Button>
               <Button
-                rightIcon={<KickIcon boxSize={'2em'} />}
-                minW={'8em'}
-                maxW={'8em'}
+                rightIcon={<KickIcon boxSize={"2em"} />}
+                minW={"8em"}
+                maxW={"8em"}
                 isDisabled={!(admin || owner) || membership.banned}
                 colorScheme="green"
                 size="sm"
                 aria-label="kick user"
                 onClick={() => {
-                  fetchWrapper(router, kickFromChannel, props.channel.id, props.membership.userId).then(e => {
-                    syncChannel({ channelId: props.channel.id });
-                  }).catch(e => console.error(e))
+                  fetchWrapper(
+                    router,
+                    kickFromChannel,
+                    props.channel.id,
+                    props.membership.userId
+                  )
+                    .then((e) => {
+                      syncChannel({ channelId: props.channel.id });
+                    })
+                    .catch((e) => console.error(e));
                 }}
               >
                 Kick
@@ -209,49 +249,83 @@ function MemberRow(props: {
             </VStack>
             <VStack>
               <Button
-                rightIcon={<MuteIcon boxSize={'1.5em'} />}
-                minW={'8em'}
-                maxW={'8em'}
+                rightIcon={<MuteIcon boxSize={"1.5em"} />}
+                minW={"8em"}
+                maxW={"8em"}
                 isDisabled={!(admin || owner) || membership.banned}
                 colorScheme="yellow"
                 size="sm"
                 aria-label="mute user"
                 onClick={() => {
                   if (membership.muted) {
-                    fetchWrapper(router, unmuteInChannel, props.channel.id, props.membership.userId).then(e => {
-                      syncChannel({ channelId: props.channel.id });
-                    }).catch(e => console.error(e))
+                    fetchWrapper(
+                      router,
+                      unmuteInChannel,
+                      props.channel.id,
+                      props.membership.userId
+                    )
+                      .then((e) => {
+                        syncChannel({ channelId: props.channel.id });
+                      })
+                      .catch((e) => console.error(e));
                   } else {
-                    fetchWrapper(router, muteInChannel, props.channel.id, props.membership.userId).then(e => {
-                      syncChannel({ channelId: props.channel.id });
-                    }).catch(e => console.error(e))
+                    fetchWrapper(
+                      router,
+                      muteInChannel,
+                      props.channel.id,
+                      props.membership.userId
+                    )
+                      .then((e) => {
+                        syncChannel({ channelId: props.channel.id });
+                      })
+                      .catch((e) => console.error(e));
                   }
                 }}
               >
-                {membership.muted ? 'Unmute' : 'Mute'}
+                {membership.muted ? "Unmute" : "Mute"}
               </Button>
               <Tooltip label="Give Administrator powers to user">
                 <Button
-                  rightIcon={membership.administrator ? <DowngradeIcon boxSize={'1.8em'} /> : <CrownIcon boxSize={'1.8em'} />}
-                  minW={'8em'}
-                  maxW={'8em'}
+                  rightIcon={
+                    membership.administrator ? (
+                      <DowngradeIcon boxSize={"1.8em"} />
+                    ) : (
+                      <CrownIcon boxSize={"1.8em"} />
+                    )
+                  }
+                  minW={"8em"}
+                  maxW={"8em"}
                   isDisabled={!(admin || owner) || membership.banned}
                   colorScheme="blue"
                   size="sm"
                   aria-label="admin user"
                   onClick={() => {
                     if (membership.administrator) {
-                      fetchWrapper(router, demoteChannelAdmin, props.channel.id, props.membership.userId).then(e => {
-                        syncChannel({ channelId: props.channel.id });
-                      }).catch(e => console.error(e))
+                      fetchWrapper(
+                        router,
+                        demoteChannelAdmin,
+                        props.channel.id,
+                        props.membership.userId
+                      )
+                        .then((e) => {
+                          syncChannel({ channelId: props.channel.id });
+                        })
+                        .catch((e) => console.error(e));
                     } else {
-                      fetchWrapper(router, promoteChannelAdmin, props.channel.id, props.membership.userId).then(e => {
-                        syncChannel({ channelId: props.channel.id });
-                      }).catch(e => console.error(e))
+                      fetchWrapper(
+                        router,
+                        promoteChannelAdmin,
+                        props.channel.id,
+                        props.membership.userId
+                      )
+                        .then((e) => {
+                          syncChannel({ channelId: props.channel.id });
+                        })
+                        .catch((e) => console.error(e));
                     }
                   }}
                 >
-                  {membership.administrator ? 'Demote' : 'Admin'}
+                  {membership.administrator ? "Demote" : "Admin"}
                 </Button>
               </Tooltip>
             </VStack>
@@ -306,7 +380,12 @@ function GroupSettings(props: {
         password: pswDone ? pswOne : "",
         protected: pswDone,
       });
-      await fetchWrapper(router, patchChannel, props.channel.id, updatedChannelConfig);
+      await fetchWrapper(
+        router,
+        patchChannel,
+        props.channel.id,
+        updatedChannelConfig
+      );
       updateChats();
     } catch (e) {
       if (e instanceof ZodError)
@@ -431,14 +510,11 @@ function GroupSettings(props: {
                   intra_login: me.intra_login,
                   nickname: me.nickname,
                   status: "online",
-                }
+                },
               }}
               channel={props.channel}
             />
-            <Tabs
-              isLazy={true}
-              variant='solid-rounded'
-              colorScheme="yellow">
+            <Tabs isLazy={true} variant="solid-rounded" colorScheme="yellow">
               <TabList>
                 <Tab>Members</Tab>
                 <Tab>Admins</Tab>
@@ -446,70 +522,76 @@ function GroupSettings(props: {
               </TabList>
               <TabPanels>
                 <TabPanel>
-                  {memberships.filter(e => !e.administrator && !e.owner && !e.banned).map((e) => {
-                    let user = e.user
-                    return (
-                      <MemberRow
-                        owner={props.membership.administrator}
-                        admin={props.membership.owner}
-                        key={`ch${props.channel.id}-${user.intra_login}`}
-                        membership={{
-                          administrator: e.administrator,
-                          banned: e.banned,
-                          channelId: e.channelId,
-                          muted: e.muted,
-                          owner: e.owner,
-                          userId: e.userId,
-                          user: e.user
-                        }}
-                        channel={props.channel}
-                      />
-                    )
-                  })}
+                  {memberships
+                    .filter((e) => !e.administrator && !e.owner && !e.banned)
+                    .map((e) => {
+                      let user = e.user;
+                      return (
+                        <MemberRow
+                          owner={props.membership.administrator}
+                          admin={props.membership.owner}
+                          key={`ch${props.channel.id}-${user.intra_login}`}
+                          membership={{
+                            administrator: e.administrator,
+                            banned: e.banned,
+                            channelId: e.channelId,
+                            muted: e.muted,
+                            owner: e.owner,
+                            userId: e.userId,
+                            user: e.user,
+                          }}
+                          channel={props.channel}
+                        />
+                      );
+                    })}
                 </TabPanel>
                 <TabPanel>
-                  {memberships.filter(e => e.administrator || e.owner && !e.banned).map((e) => {
-                    let user = e.user
-                    return (
-                      <MemberRow
-                        owner={props.membership.administrator}
-                        admin={props.membership.owner}
-                        key={`ch${props.channel.id}-${user.intra_login}`}
-                        membership={{
-                          administrator: e.administrator,
-                          banned: e.banned,
-                          channelId: e.channelId,
-                          muted: e.muted,
-                          owner: e.owner,
-                          userId: e.userId,
-                          user: e.user
-                        }}
-                        channel={props.channel}
-                      />
-                    )
-                  })}
+                  {memberships
+                    .filter((e) => e.administrator || (e.owner && !e.banned))
+                    .map((e) => {
+                      let user = e.user;
+                      return (
+                        <MemberRow
+                          owner={props.membership.administrator}
+                          admin={props.membership.owner}
+                          key={`ch${props.channel.id}-${user.intra_login}`}
+                          membership={{
+                            administrator: e.administrator,
+                            banned: e.banned,
+                            channelId: e.channelId,
+                            muted: e.muted,
+                            owner: e.owner,
+                            userId: e.userId,
+                            user: e.user,
+                          }}
+                          channel={props.channel}
+                        />
+                      );
+                    })}
                 </TabPanel>
                 <TabPanel>
-                  {memberships.filter(e => e.banned).map((e) => {
-                    let user = e.user
-                    return (
-                      <MemberRow
-                        owner={props.membership.administrator}
-                        admin={props.membership.owner}
-                        key={`ch${props.channel.id}-${user.intra_login}`}
-                        membership={{
-                          administrator: e.administrator,
-                          banned: e.banned,
-                          channelId: e.channelId,
-                          muted: e.muted,
-                          owner: e.owner,
-                          userId: e.userId,
-                          user: e.user
-                        }}
-                        channel={props.channel}
-                      />
-                    )
-                  })}
+                  {memberships
+                    .filter((e) => e.banned)
+                    .map((e) => {
+                      let user = e.user;
+                      return (
+                        <MemberRow
+                          owner={props.membership.administrator}
+                          admin={props.membership.owner}
+                          key={`ch${props.channel.id}-${user.intra_login}`}
+                          membership={{
+                            administrator: e.administrator,
+                            banned: e.banned,
+                            channelId: e.channelId,
+                            muted: e.muted,
+                            owner: e.owner,
+                            userId: e.userId,
+                            user: e.user,
+                          }}
+                          channel={props.channel}
+                        />
+                      );
+                    })}
                 </TabPanel>
               </TabPanels>
             </Tabs>
@@ -540,29 +622,29 @@ function GroupSettings(props: {
 }
 
 export function MessageSection(
-  props: ChannelComponentProps & { syncAll: () => void },
+  props: ChannelComponentProps & { syncAll: () => void }
 ): JSX.Element {
   const [messages, setMessages] = useState<Array<MessageCardProps>>([]);
-  const [stats, setStats] = useState<null | UserStats>(null)
-  const router = useRouter()
+  const [stats, setStats] = useState<null | UserStats>(null);
+  const router = useRouter();
   const socket = useContext(SocketContext);
 
   const dataFromProps = useCallback(() => {
     if (props.channel.user2user) {
-      const isOnline = props.channel.Memberships[0].user.status === 'online';
+      const isOnline = props.channel.Memberships[0].user.status === "online";
       if (props.channel.Memberships.length > 0) {
         return {
           avatar: props.channel.Memberships[0].user.avatar,
           intra_login: props.channel.Memberships[0].user.intra_login,
           nickname: props.channel.Memberships[0].user.nickname,
-          statusColor: isOnline ? 'green.300' : 'gray',
+          statusColor: isOnline ? "green.300" : "gray",
         };
       } else {
         return {
           avatar: "",
           intra_login: "",
           nickname: props.channel.name,
-          statusColor: 'gray',
+          statusColor: "gray",
         };
       }
     } else {
@@ -570,10 +652,10 @@ export function MessageSection(
         avatar: "",
         intra_login: "",
         nickname: props.channel.name,
-        statusColor: 'yellow',
+        statusColor: "yellow",
       };
     }
-  }, [props.channelId])
+  }, [props.channelId]);
   const cardData = dataFromProps();
   const [text, setText] = useState("");
   const messagesRef = useRef<HTMLDivElement>(null);
@@ -590,10 +672,7 @@ export function MessageSection(
     if (socket) {
       if (socket.connected) {
         try {
-          const response = await socket.emitWithAck(
-            "channel_message",
-            message,
-          );
+          const response = await socket.emitWithAck("channel_message", message);
           setText("");
         } catch (e) {
           console.log(e); //TODO: make some king of popUp
@@ -609,15 +688,17 @@ export function MessageSection(
     }
   }
   const loadStats = useCallback(() => {
-    if (cardData.intra_login !== '') {
+    if (cardData.intra_login !== "") {
       fetchWrapper(router, getUserStats, cardData.intra_login)
-        .then((e) => { setStats(e) })
-        .catch(e => {
-          setStats(null);
-          console.error('could not fetch user stats')
+        .then((e) => {
+          setStats(e);
         })
+        .catch((e) => {
+          setStats(null);
+          console.error("could not fetch user stats");
+        });
     }
-  }, [props.channelId])
+  }, [props.channelId]);
   useEffect(loadStats, [loadStats]);
 
   useEffect(() => {
@@ -632,7 +713,7 @@ export function MessageSection(
         setMessages(
           e.map((e) => {
             return { ...e, me: props.userId };
-          }),
+          })
         );
       })
       .catch();
@@ -720,26 +801,32 @@ const ProfilePopover: FC<{
     statusColor: string;
   };
   stats: UserStats | null;
-  channel: ChannelData['channel'];
+  channel: ChannelData["channel"];
   onClick?: (() => void) | undefined;
   lastMessage?: string | undefined;
   syncAll: () => void;
 }> = (props) => {
   const { channel } = props;
-  const channelName = channel.user2user ? channel.Memberships[0].user.nickname : channel.name;
+  const channelName = channel.user2user
+    ? channel.Memberships[0].user.nickname
+    : channel.name;
   const router = useRouter();
 
   const inviteUserToPlay = async () => {
     try {
       if (channel.Memberships.length !== 0) {
-        await fetchWrapper(router, inviteToPlay, channel.Memberships[0].user.intra_login);
+        await fetchWrapper(
+          router,
+          inviteToPlay,
+          channel.Memberships[0].user.intra_login
+        );
       }
     } catch (e) {
       console.log(e);
     }
   };
   if (!props.channel.user2user || props.channel.Memberships.length === 0) {
-    return (<Avatar mr="2vw" name={channelName} bg="yellow.300" />)
+    return <Avatar mr="2vw" name={channelName} bg="yellow.300" />;
   }
   return (
     <Popover>
@@ -747,37 +834,69 @@ const ProfilePopover: FC<{
         <Avatar
           mr="2vw"
           name={channelName}
-          src={props.channel.Memberships[0].user.avatar} />
+          src={props.channel.Memberships[0].user.avatar}
+        />
       </PopoverTrigger>
       <Portal>
-        <PopoverContent bg='pongBlue.500'>
-          <PopoverArrow bg='pongBlue.500' />
+        <PopoverContent bg="pongBlue.500">
+          <PopoverArrow bg="pongBlue.500" />
           <HStack>
             <Avatar
-              m='0.5em'
+              m="0.5em"
               name={channelName}
-              src={props.channel.Memberships[0].user.avatar}>
-              <AvatarBadge bg={props.cardData.statusColor} boxSize={'1em'} borderWidth={'0.1em'} />
+              src={props.channel.Memberships[0].user.avatar}
+            >
+              <AvatarBadge
+                bg={props.cardData.statusColor}
+                boxSize={"1em"}
+                borderWidth={"0.1em"}
+              />
             </Avatar>
-            <PopoverHeader>
-              <Heading textAlign="center" fontWeight="medium" size="md" pl="1vw">
+            <PopoverHeader borderStyle="none">
+              <Heading
+                textAlign="center"
+                fontWeight="medium"
+                size="md"
+                pl="1vw"
+              >
                 {channelName}
               </Heading>
             </PopoverHeader>
           </HStack>
           <PopoverCloseButton />
-          <PopoverBody justifyContent={'center'} display={'flex'}>
+          <PopoverBody justifyContent={"center"} display={"flex"}>
             <Button
               alignItems="center"
-              colorScheme='green'
+              colorScheme="green"
               onClick={inviteUserToPlay}
-              isDisabled={props.channel.Memberships[0].user.status === 'offline'}
-            >Invite to play
+              isDisabled={
+                props.channel.Memberships[0].user.status === "offline"
+              }
+            >
+              Invite to play
+            </Button>
+            <Button
+              ml="2"
+              alignItems="center"
+              colorScheme="yellow"
+              onClick={() => {
+                router.push(`/profile/${props.channel.Memberships[0].user.id}`);
+              }}
+            >
+              Profile
             </Button>
           </PopoverBody>
           <PopoverFooter>
             <Center flexDir="column" h="20%" w="100%">
-              <Heading textAlign="center" fontWeight="medium" size="md" pl="1vw"> Stats of {channelName}</Heading>
+              <Heading
+                textAlign="center"
+                fontWeight="medium"
+                size="md"
+                pl="1vw"
+              >
+                {" "}
+                Stats of {channelName}
+              </Heading>
               <Wrap spacing="1vw">
                 <Stat
                   borderWidth="2px"
@@ -787,7 +906,13 @@ const ProfilePopover: FC<{
                 >
                   <StatLabel>Games</StatLabel>
                   <StatNumber textAlign="center" color="yellow.300">
-                    {props.stats !== null ? (props.stats.loss + props.stats.win + props.stats.tie).toFixed(0) : ''}
+                    {props.stats !== null
+                      ? (
+                          props.stats.loss +
+                          props.stats.win +
+                          props.stats.tie
+                        ).toFixed(0)
+                      : ""}
                   </StatNumber>
                 </Stat>
                 <Stat
@@ -798,7 +923,7 @@ const ProfilePopover: FC<{
                 >
                   <StatLabel>Victories</StatLabel>
                   <StatNumber textAlign="center" color="green.400">
-                    {props.stats !== null ? props.stats.win : ''}
+                    {props.stats !== null ? props.stats.win : ""}
                   </StatNumber>
                 </Stat>
                 <Stat
@@ -809,7 +934,7 @@ const ProfilePopover: FC<{
                 >
                   <StatLabel>Loses</StatLabel>
                   <StatNumber textAlign="center" color="red.400">
-                    {props.stats !== null ? props.stats.loss : ''}
+                    {props.stats !== null ? props.stats.loss : ""}
                   </StatNumber>
                 </Stat>
               </Wrap>
@@ -819,7 +944,7 @@ const ProfilePopover: FC<{
       </Portal>
     </Popover>
   );
-}
+};
 
 export function InviteMembers(props: {
   membership: Omit<ChannelComponentProps, "channel">;
@@ -841,7 +966,7 @@ export function InviteMembers(props: {
     if (isOpen) {
       fetchWrapper(router, getAllFriends)
         .then((e) =>
-          setFriends(e.filter((e) => e.intra_login !== me.intra_login)),
+          setFriends(e.filter((e) => e.intra_login !== me.intra_login))
         )
         .catch((e) => console.log(e));
     }
@@ -859,10 +984,10 @@ export function InviteMembers(props: {
           let filter = diacriticalNormalize(text.toLocaleLowerCase());
           return (
             diacriticalNormalize(e.nickname.toLocaleLowerCase()).includes(
-              filter,
+              filter
             ) ||
             diacriticalNormalize(e.intra_login.toLocaleLowerCase()).includes(
-              filter,
+              filter
             )
           );
         });

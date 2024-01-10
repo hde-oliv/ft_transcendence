@@ -70,7 +70,7 @@ interface PongMenuItemProps {
   text: "Dashboard" | "Game" | "Chat" | "History" | "Rank";
 }
 function PongMenuItem(
-  props: React.PropsWithoutRef<PongMenuItemProps>,
+  props: React.PropsWithoutRef<PongMenuItemProps>
 ): JSX.Element {
   const { text, route } = props;
   const router = useRouter();
@@ -183,8 +183,16 @@ function UserClickableAvatar(props: { isWide: boolean }) {
           <Container
             _hover={{ bg: "whiteAlpha.200" }}
             cursor="pointer"
-            onClick={() => router.push('/account')}>
+            onClick={() => router.push("/account")}
+          >
             Account
+          </Container>
+          <Container
+            _hover={{ bg: "whiteAlpha.200" }}
+            cursor="pointer"
+            onClick={() => router.push(`/profile/${me.intra_login}`)}
+          >
+            Profile
           </Container>
           <Container
             _hover={{ bg: "whiteAlpha.200" }}

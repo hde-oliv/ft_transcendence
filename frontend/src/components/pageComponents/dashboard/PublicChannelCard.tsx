@@ -18,12 +18,12 @@ import {
   Text,
 } from "@chakra-ui/react";
 import { useCallback, useEffect, useState } from "react";
-import { userData } from '../../../pages/account/index';
+import { userData } from "../../../pages/account/index";
 import {
   PublicChannelResponse,
   fetchAllPublicChannels,
   joinPublicChannel,
-  fetchUserCheckInChannel
+  fetchUserCheckInChannel,
 } from "@/lib/fetchers/chat";
 import { fetchWrapper } from "@/lib/fetchers/SafeAuthWrapper";
 import { useRouter } from "next/router";
@@ -32,13 +32,17 @@ function ChannelRow(props: PublicChannelResponse) {
   const [loading, setLoading] = useState(false);
   const [isUserInChannel, setIsUserInChannel] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [password, setPassword] = useState('');
+  const [password, setPassword] = useState("");
   const [passwordError, setPasswordError] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     const fetchUserStatus = async () => {
-      const userCheckIn = await fetchWrapper(router, fetchUserCheckInChannel, props.id);
+      const userCheckIn = await fetchWrapper(
+        router,
+        fetchUserCheckInChannel,
+        props.id
+      );
       setIsUserInChannel(userCheckIn);
     };
     fetchUserStatus();
@@ -52,8 +56,8 @@ function ChannelRow(props: PublicChannelResponse) {
       try {
         await fetchWrapper(router, joinPublicChannel, {
           channelId: props.id,
-          password: password
-        })
+          password: password,
+        });
         setIsUserInChannel(true);
       } catch (e) {
         console.warn("Could not join channel :(");
@@ -78,16 +82,18 @@ function ChannelRow(props: PublicChannelResponse) {
       setShowPasswordModal(true);
     }
     setLoading(false);
-    setPassword('');
+    setPassword("");
   }, [props.id, password, router]);
 
   return (
-    <Flex w="100%"
+    <Flex
+      w="100%"
       p="1vh 1vw"
       justifyContent="space-between"
       borderRadius={10}
       borderColor={"yellow.300"}
-      borderWidth={2}>
+      borderWidth={2}
+    >
       <Box>
         <Avatar name={props.name} />
         <Box display="inline-block">
@@ -124,14 +130,15 @@ function ChannelRow(props: PublicChannelResponse) {
               bg="pongBlue.300"
               placeholder="channel password"
             />
-            {passwordError && <Text color="red">Invalid password. Please try again.</Text>}
+            {passwordError && (
+              <Text color="red">Invalid password. Please try again.</Text>
+            )}
           </ModalBody>
           <ModalFooter>
             <Center>
-              <Button
-                colorScheme="yellow"
-                onClick={handlePasswordSubmit}
-              >OK</Button>
+              <Button colorScheme="yellow" onClick={handlePasswordSubmit}>
+                OK
+              </Button>
             </Center>
           </ModalFooter>
         </ModalContent>
@@ -146,28 +153,26 @@ export function ChannelCard() {
   useEffect(() => {
     fetchWrapper(router, fetchAllPublicChannels)
       .then((e) => setChannels(e))
-      .catch((e) => { });
+      .catch((e) => {});
   }, [router]);
 
   return (
-    <>
-      <Flex
-        flexDir="column"
-        h="370px"
-        w="370px"
-        alignItems="stretch"
-        pl="1vw"
-        pr="1vw"
-      >
-        <Heading textAlign="center" pt="1vh">
-          Channels
-        </Heading>
-        <VStack overflow={"auto"}>
-          {channels.map((c) => (
-            <ChannelRow {...c} key={`ChannelLine-${c.id}`} />
-          ))}
-        </VStack>
-      </Flex>
-    </>
+    <Center
+      flexDir="column"
+      h="370px"
+      w="370px"
+      alignItems="stretch"
+      pl="1vw"
+      pr="1vw"
+    >
+      <Heading textAlign="center" pt="1vh">
+        Channels
+      </Heading>
+      <VStack overflow={"auto"}>
+        {channels.map((c) => (
+          <ChannelRow {...c} key={`ChannelLine-${c.id}`} />
+        ))}
+      </VStack>
+    </Center>
   );
 }

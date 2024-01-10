@@ -9,6 +9,14 @@ import {
   UnlockIcon,
 } from "@chakra-ui/icons";
 import {
+  HistoryRecord,
+  UserStats,
+  getUserStats,
+  myHistory,
+  myStats,
+  userHistory,
+} from "@/lib/fetchers/matches";
+import {
   Button,
   Card,
   CardBody,
@@ -45,6 +53,8 @@ import { UserNickSegment } from "../../components/pageComponents/account/UserNic
 import { fetchWrapper } from "@/lib/fetchers/SafeAuthWrapper";
 import { useRouter } from "next/router";
 import { fetchUserById } from "@/lib/fetchers/users";
+import { HistoryCard } from "@/components/pageComponents/dashboard/HistoryCard";
+import { StatsCard } from "../dashboard";
 
 export const ModalContext = createContext<() => void>(() => {}); //used by Modals of this page
 
@@ -83,6 +93,20 @@ export default function Profile(props: any) {
   const [userAvatar, setUserAvatar] = useState(base64Image);
   const userId = router.query.id ?? undefined;
 
+  const [history, setHistory] = useState<HistoryRecord[]>([]);
+  const [stats, setStats] = useState<any>();
+
+  useEffect(() => {
+    if (typeof userId === "string") {
+      fetchWrapper(router, userHistory, userId)
+        .then((e) => setHistory(e))
+        .catch((e) => console.error(e));
+      fetchWrapper(router, getUserStats, userId)
+        .then((e) => setStats(e))
+        .catch((e) => console.error(e));
+    }
+  }, [router, userId]);
+
   useEffect(() => {
     (async () => {
       if (typeof userId === "string") {
@@ -106,7 +130,7 @@ export default function Profile(props: any) {
     })();
   }, [userId, router]);
 
-  if (!userData) return <Center>User not found.</Center>;
+  if (!userData) return <Center></Center>;
 
   return (
     <Center pt="2vh">
@@ -133,19 +157,13 @@ export default function Profile(props: any) {
                   <Heading pl="1vw" size="sm">
                     Nickname{" "}
                   </Heading>
-                  <Text pl="2vw">{userId}</Text>
+                  <Text pl="2vw">{userData.nickname}</Text>
                 </Box>
               </Flex>
-              <Box>
-                <Heading pl="1vw" size="sm">
-                  Match History
-                </Heading>
-              </Box>
-              <Box>
-                <Heading pl="1vw" size="sm">
-                  Status
-                </Heading>
-              </Box>
+              <Center>
+                <HistoryCard matches={history} />
+                <StatsCard {...stats} />
+              </Center>
             </Stack>
           </CardBody>
         </Card>
