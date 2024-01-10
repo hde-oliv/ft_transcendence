@@ -55,19 +55,11 @@ const availableRoutes: Array<PongMenuItemProps> = [
     text: "Chat",
     route: "/chat",
   },
-  {
-    text: "History",
-    route: "/history",
-  },
-  {
-    text: "Rank",
-    route: "/rank",
-  },
 ];
 
 interface PongMenuItemProps {
-  route: "/dashboard" | "/game" | "/chat" | "/history" | "/rank";
-  text: "Dashboard" | "Game" | "Chat" | "History" | "Rank";
+  route: "/dashboard" | "/game" | "/chat";
+  text: "Dashboard" | "Game" | "Chat";
 }
 function PongMenuItem(
   props: React.PropsWithoutRef<PongMenuItemProps>
