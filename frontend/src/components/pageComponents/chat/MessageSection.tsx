@@ -327,6 +327,16 @@ function GroupSettings(props: {
     }
   }
 
+  const sendDeleteChannel = useCallback(() => {
+    fetchWrapper(router, deleteChannel, props.channel.id)
+      .then(e => {
+        onCloseTwo();
+      }).catch(e => {
+        console.error(e);
+        onCloseTwo();
+      })
+  }, [])
+
   return (
     <Center>
       <IconButton
@@ -528,56 +538,52 @@ function GroupSettings(props: {
             </Tabs>
           </DrawerBody>
           <DrawerFooter>
-          <HStack width="full">
-            <Button
-              size="lg"
-              colorScheme="green"
-              onClick={() => {
-                fetchWrapper(router, leaveChannel, props.channel.id, props.membership.userId).then(e => {
-                  syncChannel({ channelId: props.channel.id });
-                }).catch(e => console.error(e))
-              }}
-            >
-              Leave
-            </Button>
-            <Spacer />
-            <IconButton
-              size="lg"
-              colorScheme="red"
-              icon={<DeleteIcon />}
-              isDisabled={!props.membership.owner}
-              aria-label="delete channel"
-              onClick={onOpenTwo}
-            />
+            <HStack width="full">
+              <Button
+                size="lg"
+                colorScheme="green"
+                onClick={() => {
+                  fetchWrapper(router, leaveChannel, props.channel.id, props.membership.userId).then(e => {
+                    syncChannel({ channelId: props.channel.id });
+                  }).catch(e => console.error(e))
+                }}
+              >
+                Leave
+              </Button>
+              <Spacer />
+              <IconButton
+                size="lg"
+                colorScheme="red"
+                icon={<DeleteIcon />}
+                isDisabled={!props.membership.owner}
+                aria-label="delete channel"
+                onClick={onOpenTwo}
+              />
               <Modal isOpen={isOpenTwo} onClose={onCloseTwo}>
-                  <ModalOverlay />
-                  <ModalContent bg="pongBlue.500">
-                    <ModalHeader color="red.300">Delete {props.channel.name}?</ModalHeader>
-                    <ModalCloseButton />
-                    <ModalBody>
-                      Are you sure you want to delete this channel?
-                    </ModalBody>
-                    <ModalFooter>
-                      <Button colorScheme="red" mr={3} onClick={() => {
-                          fetchWrapper(router, deleteChannel, props.channel.id).then(e => {
-                            syncChannel({ channelId: props.channel.id });
-                          }).catch(e => console.error(e))
-                        }}>
-                        Yes
-                      </Button>
-                      <Button colorScheme="yellow" onClick={onCloseTwo}>No</Button>
-                    </ModalFooter>
-                  </ModalContent>
-                </Modal>
-            <IconButton
-              size="lg"
-              colorScheme="yellow"
-              icon={<CloseIcon />}
-              onClick={onClose}
-              aria-label="close channel settings"
-            />
-          </HStack>
-        </DrawerFooter>
+                <ModalOverlay />
+                <ModalContent bg="pongBlue.500">
+                  <ModalHeader color="red.300">Delete {props.channel.name}?</ModalHeader>
+                  <ModalCloseButton />
+                  <ModalBody>
+                    Are you sure you want to delete this channel?
+                  </ModalBody>
+                  <ModalFooter>
+                    <Button colorScheme="red" mr={3} onClick={sendDeleteChannel}>
+                      Yes
+                    </Button>
+                    <Button colorScheme="yellow" onClick={onCloseTwo}>No</Button>
+                  </ModalFooter>
+                </ModalContent>
+              </Modal>
+              <IconButton
+                size="lg"
+                colorScheme="yellow"
+                icon={<CloseIcon />}
+                onClick={onClose}
+                aria-label="close channel settings"
+              />
+            </HStack>
+          </DrawerFooter>
         </DrawerContent>
       </Drawer>
     </Center>
@@ -767,7 +773,6 @@ function ProfilePopover(props: {
     }
   };
   if (!props.channel.user2user || props.channel.Memberships.length === 0) {
-    console.log('rendered simple avatar');
     return (<Avatar mr="2vw" name={channelName} bg="yellow.300" />)
   }
   return (

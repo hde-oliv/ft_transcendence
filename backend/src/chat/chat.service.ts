@@ -166,25 +166,33 @@ export class ChatService {
   // NOTE: Only the owner can delete channel
   // throws
   async deleteChannel(token: TokenClaims, id: number) {
-    const channel = await this.chatRepository.getChannel(id);
-    const users = await this.chatRepository.getUsersByChannel(channel.id);
+    try {
+      const channel = await this.chatRepository.getChannel(id);
+      const users = await this.chatRepository.getUsersByChannel(channel.id);
 
-    const memberships = await this.chatRepository.getMembershipsbyChannel(
-      channel.id,
-    );
+      const memberships = await this.chatRepository.getMembershipsbyChannel(
+        channel.id,
+      );
 
-    this.checkOwner(token.intra_login, memberships);
+      this.checkOwner(token.intra_login, memberships);
 
-    // Not checking for throws 'cause I already got the channel
-    await this.chatRepository.deleteMembershipsbyChannel(channel.id);
-    const deletedChannel = await this.chatRepository.deleteChannel(channel.id);
-    this.socketService.server.sockets.socketsLeave(channel.id.toString()); //TODO verify if working properly
-    users.forEach(user => {
-      this.socketService.removeUserFromRoom(user.id, channel.id.toString());
-      this.socketService.emitToUser(user.id, 'deleteChannel', { channelId: channel.id });
-      this.socketService.emitToRoom(channel.id.toString(), 'syncChannel', { channelId: channel.id });
-    });
-    return deletedChannel;
+      // Not checking for throws 'cause I already got the channel
+      await this.chatRepository.deleteMembershipsbyChannel(channel.id);
+      await this.chatRepository.deleteChannel(channel.id);
+      this.socketService.emitToRoom(id.toString(), 'deleteChannel', { channelId: id });
+      this.socketService.emitToUser(token.intra_login, 'deleteChannel', { channelId: id });
+      this.socketService.server.sockets.socketsLeave(channel.id.toString()); //TODO verify if working properly
+      users.forEach(user => {
+        this.socketService.removeUserFromRoom(user.id, channel.id.toString());
+      });
+      return true;
+    } catch (e) {
+      if (e instanceof PrismaClientKnownRequestError) {
+        this.logger.log(e.message);
+        throw new NotFoundException('Prisma client error')
+      }
+      throw e;
+    }
   }
 
   // throws

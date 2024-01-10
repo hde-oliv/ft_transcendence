@@ -97,7 +97,7 @@ export class ChatController {
   @UseGuards(JwtAuthGuard)
   @Delete('/channel/:id')
   async deleteChannel(@Request() req, @Param('id', ParseIntPipe) id: number) {
-    return this.chatService.deleteChannel(req.user, id);
+    return await this.chatService.deleteChannel(req.user, id);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -106,14 +106,14 @@ export class ChatController {
   async joinChannel(@Request() req, @Body() body: JoinChannelDto) {
     return this.chatService.joinChannel(req.user, body);
   }
-  
+
   @UseGuards(JwtAuthGuard)
   @UsePipes(new ZodValidationPipe(createMembershipSchema))
   @Post('/channel/user/invite')
   async inviteUser(@Request() req, @Body() body: CreateMembershipDto) {
     return this.chatService.inviteUser(req.user, body);
   }
-  
+
   // NOTE: Administrator can only kick/ban/mute
   @UseGuards(JwtAuthGuard)
   @UsePipes(new ZodValidationPipe(membershipSchema))
@@ -121,7 +121,7 @@ export class ChatController {
   async kickUser(@Request() req, @Body() body: MembershipDto) {
     return this.chatService.kickUser(req.user, body.channelId, body.userId);
   }
-  
+
   @UseGuards(JwtAuthGuard)
   @Post('/channel/user/leave')
   async leaveChannel(@Request() req, @Body() body: MembershipDto) {
