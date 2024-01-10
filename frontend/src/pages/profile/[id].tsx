@@ -46,7 +46,6 @@ import {
   useState,
 } from "react";
 import { ActivateTPOModal } from "../../components/pageComponents/account/ActivateTPOModal";
-import pinkGuy from "../../components/pageComponents/account/pinkGuy";
 import { getMe, updateMe } from "@/lib/fetchers/me";
 import { DisableTPOModal } from "../../components/pageComponents/account/DisableTPOModal";
 import { UserNickSegment } from "../../components/pageComponents/account/UserNickSegment";
@@ -57,8 +56,6 @@ import { HistoryCard } from "@/components/pageComponents/dashboard/HistoryCard";
 import { StatsCard } from "../dashboard";
 
 export const ModalContext = createContext<() => void>(() => {}); //used by Modals of this page
-
-const base64Image = pinkGuy;
 
 export type userData = {
   nickname: string;
@@ -76,21 +73,12 @@ function ProfileAvatar(props: AvatarEditProps): JSX.Element {
   const { avatar, updateAvatar: setAvatar, intra_login: intraTag } = props;
   const [tempAvatar, setTempAvatar] = useState(avatar);
 
-  return (
-    <>
-      <Flex justify="center" pb="2vh">
-        <Avatar size="2xl" src={tempAvatar}>
-          <AvatarBadge border="none" bg="transparent"></AvatarBadge>
-        </Avatar>
-      </Flex>
-    </>
-  );
+  return <></>;
 }
 
 export default function Profile(props: any) {
   const router = useRouter();
   const [userData, setUserData] = useState<undefined | userData>(undefined);
-  const [userAvatar, setUserAvatar] = useState(base64Image);
   const userId = router.query.id ?? undefined;
 
   const [history, setHistory] = useState<HistoryRecord[]>([]);
@@ -105,7 +93,7 @@ export default function Profile(props: any) {
         .then((e) => setStats(e))
         .catch((e) => console.error(e));
     }
-  }, [router, userId]);
+  }, [router, userId, router.query.id]);
 
   useEffect(() => {
     (async () => {
@@ -120,7 +108,6 @@ export default function Profile(props: any) {
             elo: ftData.elo,
           };
           setUserData(tmp);
-          setUserAvatar(tmp.avatar);
         } catch (e) {
           console.log(e);
         }
@@ -128,7 +115,7 @@ export default function Profile(props: any) {
         setUserData(undefined);
       }
     })();
-  }, [userId, router]);
+  }, [userId, router, router.query.id]);
 
   if (!userData) return <Center></Center>;
 
@@ -141,11 +128,11 @@ export default function Profile(props: any) {
           </CardHeader>
           <CardBody>
             <Stack divider={<StackDivider />} pl="20%" pr="20%">
-              <ProfileAvatar
-                {...userData}
-                avatar={userAvatar}
-                updateAvatar={setUserAvatar}
-              />
+              <Flex justify="center" pb="2vh">
+                <Avatar size="2xl" src={userData.avatar}>
+                  <AvatarBadge border="none" bg="transparent"></AvatarBadge>
+                </Avatar>
+              </Flex>
               <Box>
                 <Heading pl="1vw" size="sm">
                   Intra Tag{" "}
