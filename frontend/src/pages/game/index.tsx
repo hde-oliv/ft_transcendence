@@ -16,36 +16,35 @@ function Game() {
     playerOne: { id: '', nickname: '', connected: false },
     playerTwo: { id: '', nickname: '', connected: false },
     ballData: { x: 50, y: 50 },
-    paddles: { pOne: 50, pTwo: 50 },
+    paddles: { pOne: { length: 20, pos: 40 }, pTwo: { length: 20, pos: 40 } },
     score: { pOne: 0, pTwo: 0 },
     ended: null,
     status: 'paused'
   })
   const gameId = useSearchParams().get('id') as string;
 
-  const movePaddle = (dir: number) => {
+  const movePaddle = useCallback((dir: number) => {
     const payload: PlayerActionPayload = {
       type: 'movePaddle',
       dir,
       gameId
     }
     socket.emit('playerAction', payload)
-  }
-  const pauseAction = (pause: boolean) => {
+  }, [socket, gameId]);
+
+  const pauseAction = useCallback((pause: boolean) => {
     const action: PlayerActionPayload = {
       type: 'pause',
       gameId: gameId,
       paused: pause
     }
     socket.emit('playerAction', action);
-  }
+  }, [socket, gameId])
 
   const onGameData = useCallback((payload: GameState) => {
     if (payload.gameId === gameId)
       setGameData(cloneDeep(payload));
-    if (payload.ended !== null)
-      console.log(payload)
-  }, []);
+  }, [gameId]);
   useEffect(() => {
     socket.on('gameData', onGameData);
     return () => {
@@ -57,7 +56,7 @@ function Game() {
     return () => {
       socket.emit('playerAction', { type: 'connected', gameId, connected: false })
     }
-  }, [])
+  }, [gameId, socket])
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       switch (event.key) {
@@ -77,7 +76,7 @@ function Game() {
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => { document.removeEventListener('keydown', handleKeyDown) }
-  }, [movePaddle])
+  }, [movePaddle, pauseAction])
   return (
     <Box className="App"
       display={'flex'}

@@ -135,7 +135,7 @@ const Dashboard: NextPageWithLayout = () => {
     fetchWrapper(router, myStats)
       .then((e) => setStats(e))
       .catch((e) => console.error(e));
-  }, []);
+  }, [router]);
   return (
     <Wrap p="5vh 5vw" spacing="30px" justify="center">
       <WrapItem borderRadius="30" borderWidth="2px" borderColor="yellow.400">

@@ -655,7 +655,7 @@ export function MessageSection(
         statusColor: "yellow",
       };
     }
-  }, [props.channelId]);
+  }, [props.channel.Memberships, props.channel.name, props.channel.user2user]);
   const cardData = dataFromProps();
   const [text, setText] = useState("");
   const messagesRef = useRef<HTMLDivElement>(null);
@@ -680,13 +680,14 @@ export function MessageSection(
       } else console.log("Socket offline");
     }
   }
-  function serverMessage(data: any) {
+  const onServerMessage = useCallback((data: any) => {
     const parsedData = messageResponseSchema.element.parse(data);
     if (parsedData.channel_id === props.channelId) {
       const tempMessages = [...messages, { ...parsedData, me: props.userId }];
       setMessages(tempMessages);
     }
-  }
+  }, [props.channelId, messages, props.userId])
+
   const loadStats = useCallback(() => {
     if (cardData.intra_login !== "") {
       fetchWrapper(router, getUserStats, cardData.intra_login)
@@ -698,15 +699,15 @@ export function MessageSection(
           console.error("could not fetch user stats");
         });
     }
-  }, [props.channelId]);
+  }, [cardData.intra_login, router]);
   useEffect(loadStats, [loadStats]);
 
   useEffect(() => {
-    socket.on("server_message", serverMessage);
+    socket.on("server_message", onServerMessage);
     return () => {
-      socket.off("server_message", serverMessage);
+      socket.off("server_message", onServerMessage);
     };
-  }, [props]);
+  }, [props, onServerMessage, socket]);
   useEffect(() => {
     fetchWrapper(router, fetchMessagesFromChannel, props.channelId)
       .then((e) => {
@@ -908,10 +909,10 @@ const ProfilePopover: FC<{
                   <StatNumber textAlign="center" color="yellow.300">
                     {props.stats !== null
                       ? (
-                          props.stats.loss +
-                          props.stats.win +
-                          props.stats.tie
-                        ).toFixed(0)
+                        props.stats.loss +
+                        props.stats.win +
+                        props.stats.tie
+                      ).toFixed(0)
                       : ""}
                   </StatNumber>
                 </Stat>
