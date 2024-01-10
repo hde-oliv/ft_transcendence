@@ -75,7 +75,7 @@ import {
   VStack,
   useDisclosure
 } from "@chakra-ui/react";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { FC, useCallback, useContext, useEffect, useRef, useState } from "react";
 import {
   ChannelComponentProps,
   MessageCardProps,
@@ -96,6 +96,7 @@ import DowngradeIcon from "@/components/icons/DowngradeIcon";
 import { inviteToPlay } from "@/lib/fetchers/invite";
 import { fetchWrapper } from '@/lib/fetchers/SafeAuthWrapper';
 import { useRouter } from "next/router";
+import { UserStats, getUserStats } from "@/lib/fetchers/matches";
 
 
 function membersFromChannel(
@@ -544,9 +545,38 @@ export function MessageSection(
   props: ChannelComponentProps & { syncAll: () => void },
 ): JSX.Element {
   const [messages, setMessages] = useState<Array<MessageCardProps>>([]);
+  const [stats, setStats] = useState<null | UserStats>(null)
   const router = useRouter()
   const socket = useContext(SocketContext);
 
+  const dataFromProps = useCallback(() => {
+    if (props.channel.user2user) {
+      const isOnline = props.channel.Memberships[0].user.status === 'online';
+      if (props.channel.Memberships.length > 0) {
+        return {
+          avatar: props.channel.Memberships[0].user.avatar,
+          intra_login: props.channel.Memberships[0].user.intra_login,
+          nickname: props.channel.Memberships[0].user.nickname,
+          statusColor: isOnline ? 'green.300' : 'gray',
+        };
+      } else {
+        return {
+          avatar: "",
+          intra_login: "",
+          nickname: props.channel.name,
+          statusColor: 'gray',
+        };
+      }
+    } else {
+      return {
+        avatar: "",
+        intra_login: "",
+        nickname: props.channel.name,
+        statusColor: 'yellow',
+      };
+    }
+  }, [props.channelId])
+  const cardData = dataFromProps();
   const [text, setText] = useState("");
   const messagesRef = useRef<HTMLDivElement>(null);
   const channelName = props.channel.user2user
@@ -580,12 +610,24 @@ export function MessageSection(
       setMessages(tempMessages);
     }
   }
+  const loadStats = useCallback(() => {
+    if (cardData.intra_login !== '') {
+      fetchWrapper(router, getUserStats, cardData.intra_login)
+        .then((e) => { setStats(e) })
+        .catch(e => {
+          setStats(null);
+          console.error('could not fetch user stats')
+        })
+    }
+  }, [props.channelId])
+  useEffect(loadStats, [loadStats]);
+
   useEffect(() => {
     socket.on("server_message", serverMessage);
     return () => {
       socket.off("server_message", serverMessage);
     };
-  });
+  }, [props]);
   useEffect(() => {
     fetchWrapper(router, fetchMessagesFromChannel, props.channelId)
       .then((e) => {
@@ -605,40 +647,12 @@ export function MessageSection(
       });
     }
   }, [messages]);
-  const cardData = dataFromProps();
-  function dataFromProps() {
-    if (props.channel.user2user) {
-      const isOnline = props.channel.Memberships[0].user.status === 'online';
-      if (props.channel.Memberships.length > 0) {
-        return {
-          avatar: props.channel.Memberships[0].user.avatar,
-          intra_login: props.channel.Memberships[0].user.intra_login,
-          nickname: props.channel.Memberships[0].user.nickname,
-          statusColor: isOnline ? 'green.300' : 'gray',
-        };
-      } else {
-        return {
-          avatar: "",
-          intra_login: "",
-          nickname: props.channel.name,
-          statusColor: 'gray',
-        };
-      }
-    } else {
-      return {
-        avatar: "",
-        intra_login: "",
-        nickname: props.channel.name,
-        statusColor: 'yellow',
-      };
-    }
-  }
 
   return (
     <>
       <Flex bg="pongBlue.300" p="2vh 1vw" justify={"space-between"}>
         <Flex>
-          <ProfilePopover {...props} cardData={cardData} />
+          <ProfilePopover {...props} cardData={cardData} stats={stats} />
           <Heading>{channelName}</Heading>
         </Flex>
         {props.channel.user2user ? (
@@ -700,15 +714,28 @@ export function MessageSection(
   );
 }
 
-function ProfilePopover(props: {
+// function ProfilePopover(props: {
+//   cardData: {
+//     avatar: string;
+//     intra_login: string;
+//     nickname: string;
+//     statusColor: string;
+//   };
+//   channel: ChannelData['channel'];
+// } & { onClick?: (() => void) | undefined; lastMessage?: string | undefined; } & { syncAll: () => void; }) {
+const ProfilePopover: FC<{
   cardData: {
     avatar: string;
     intra_login: string;
     nickname: string;
     statusColor: string;
   };
+  stats: UserStats | null;
   channel: ChannelData['channel'];
-} & { onClick?: (() => void) | undefined; lastMessage?: string | undefined; } & { syncAll: () => void; }) {
+  onClick?: (() => void) | undefined;
+  lastMessage?: string | undefined;
+  syncAll: () => void;
+}> = (props) => {
   const { channel } = props;
   const channelName = channel.user2user ? channel.Memberships[0].user.nickname : channel.name;
   const router = useRouter();
@@ -723,7 +750,6 @@ function ProfilePopover(props: {
     }
   };
   if (!props.channel.user2user || props.channel.Memberships.length === 0) {
-    console.log('rendered simple avatar');
     return (<Avatar mr="2vw" name={channelName} bg="yellow.300" />)
   }
   return (
@@ -772,7 +798,7 @@ function ProfilePopover(props: {
                 >
                   <StatLabel>Games</StatLabel>
                   <StatNumber textAlign="center" color="yellow.300">
-                    20
+                    {props.stats !== null ? (props.stats.loss + props.stats.win + props.stats.tie).toFixed(0) : ''}
                   </StatNumber>
                 </Stat>
                 <Stat
@@ -783,7 +809,7 @@ function ProfilePopover(props: {
                 >
                   <StatLabel>Victories</StatLabel>
                   <StatNumber textAlign="center" color="green.400">
-                    10
+                    {props.stats !== null ? props.stats.win : ''}
                   </StatNumber>
                 </Stat>
                 <Stat
@@ -794,7 +820,7 @@ function ProfilePopover(props: {
                 >
                   <StatLabel>Loses</StatLabel>
                   <StatNumber textAlign="center" color="red.400">
-                    10
+                    {props.stats !== null ? props.stats.loss : ''}
                   </StatNumber>
                 </Stat>
               </Wrap>
@@ -987,80 +1013,80 @@ function InviteUserCard(props: {
 }
 /*
    <Popover>
-     <>{ Profile PopOver }</>
-     <PopoverTrigger>
+   <>{ Profile PopOver }</>
+   <PopoverTrigger>
+   <Avatar
+   mr="2vw"
+   name={channelName}
+   src={props.channel.Memberships[0].user.avatar}
+   />
+   </PopoverTrigger>
+   <Portal>
+   <PopoverContent bg='pongBlue.500'>
+   <PopoverArrow bg='pongBlue.500' />
+   <HStack>
      <Avatar
      mr="2vw"
      name={channelName}
-     src={props.channel.Memberships[0].user.avatar}
-     />
-     </PopoverTrigger>
-     <Portal>
-     <PopoverContent bg='pongBlue.500'>
-     <PopoverArrow bg='pongBlue.500' />
-     <HStack>
-       <Avatar
-       mr="2vw"
-       name={channelName}
-       src={props.channel.Memberships[0].user.avatar}>
-       <AvatarBadge bgprops.={cardData.statusColor} boxSize={'1em'} borderWidth={'0.1em'} />
-       </Avatar>
-       <PopoverHeader>
-       <Heading textAlign="center" fontWeight="medium" size="md" pl="1vw">
-       {channelName}
-       </Heading>
-       </PopoverHeader>
-     </HStack>
-     <PopoverCloseButton />
-     <PopoverBody>
-       <Button
-       colorScheme='green'
-       isDisabled={props.channel.Memberships[0].user.status === 'offline'}
-       >{props.channel.Memberships[0].user.status === 'offline' ? "Wait to invite" : "Invite to play"}
-       </Button>
-     </PopoverBody>
-     <PopoverFooter>
-     <Center flexDir="column" h="20%" w="100%">
-       <Heading textAlign="center" fontWeight="medium" size="md" pl="1vw" > Stats of {channelName}</Heading>
-       <Wrap spacing="1vw">
-       <Stat
-       borderWidth="2px"
-       borderRadius="md"
-       p="1vw 1vw"
-       borderColor="yellow.200"
-       >
-       <StatLabel>Games</StatLabel>
-       <StatNumber textAlign="center" color="yellow.300">
-       20
-       </StatNumber>
-       </Stat>
-       <Stat
-       borderWidth="2px"
-       borderRadius="md"
-       p="1vw 1vw"
-       borderColor="yellow.200"
-       >
-       <StatLabel>Victories</StatLabel>
-       <StatNumber textAlign="center" color="green.400">
-       10
-       </StatNumber>
-       </Stat>
-       <Stat
-       borderWidth="2px"
-       borderRadius="md"
-       p="1vw 1vw"
-       borderColor="yellow.200"
-       >
-       <StatLabel>Loses</StatLabel>
-       <StatNumber textAlign="center" color="red.400">
-       10
-       </StatNumber>
-       </Stat>
-       </Wrap>
-     </Center>
-     </PopoverFooter>
-     </PopoverContent>
-     </Portal>
+     src={props.channel.Memberships[0].user.avatar}>
+     <AvatarBadge bgprops.={cardData.statusColor} boxSize={'1em'} borderWidth={'0.1em'} />
+     </Avatar>
+     <PopoverHeader>
+     <Heading textAlign="center" fontWeight="medium" size="md" pl="1vw">
+     {channelName}
+     </Heading>
+     </PopoverHeader>
+   </HStack>
+   <PopoverCloseButton />
+   <PopoverBody>
+     <Button
+     colorScheme='green'
+     isDisabled={props.channel.Memberships[0].user.status === 'offline'}
+     >{props.channel.Memberships[0].user.status === 'offline' ? "Wait to invite" : "Invite to play"}
+     </Button>
+   </PopoverBody>
+   <PopoverFooter>
+   <Center flexDir="column" h="20%" w="100%">
+     <Heading textAlign="center" fontWeight="medium" size="md" pl="1vw" > Stats of {channelName}</Heading>
+     <Wrap spacing="1vw">
+     <Stat
+     borderWidth="2px"
+     borderRadius="md"
+     p="1vw 1vw"
+     borderColor="yellow.200"
+     >
+     <StatLabel>Games</StatLabel>
+     <StatNumber textAlign="center" color="yellow.300">
+     20
+     </StatNumber>
+     </Stat>
+     <Stat
+     borderWidth="2px"
+     borderRadius="md"
+     p="1vw 1vw"
+     borderColor="yellow.200"
+     >
+     <StatLabel>Victories</StatLabel>
+     <StatNumber textAlign="center" color="green.400">
+     10
+     </StatNumber>
+     </Stat>
+     <Stat
+     borderWidth="2px"
+     borderRadius="md"
+     p="1vw 1vw"
+     borderColor="yellow.200"
+     >
+     <StatLabel>Loses</StatLabel>
+     <StatNumber textAlign="center" color="red.400">
+     10
+     </StatNumber>
+     </Stat>
+     </Wrap>
+   </Center>
+   </PopoverFooter>
+   </PopoverContent>
+   </Portal>
    </Popover>
 
 */

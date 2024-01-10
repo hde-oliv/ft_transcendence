@@ -79,7 +79,7 @@ export async function myStats() {
   const parsedResponse = statsResponse.parse(response.data);
   return parsedResponse;
 }
-export async function userStats(userId: string) {
+export async function getUserStats(userId: string) {
   const fetcher = pongAxios();
   const response = await fetcher.get(`match/stats/${userId}`);
   const parsedResponse = statsResponse.parse(response.data);
