@@ -127,6 +127,14 @@ export class ChatRepository {
     return this.prismaService.channels.findUniqueOrThrow({ where: { id } });
   }
 
+  async getChannelWithMemberShips(id: number) {
+    return this.prismaService.channels.findUniqueOrThrow({
+      include: {
+        Memberships: true
+      },
+      where: { id }
+    });
+  }
   async getChannelsByUser(user: TokenClaims) {
     const userId = user.intra_login;
     const data = this.prismaService.users.findUnique({
@@ -316,18 +324,29 @@ export class ChatRepository {
           select: {
             nickname: true
           }
+        },
+        channel: {
+          select: {
+            user2user: true
+          }
         }
       }
     });
     const blockedUsers = (await this.prismaService.blockedUsers.findMany({
       select: {
-        target_id: true
+        target_id: true,
+        issue_time: true
       },
       where: {
         issuer_id: user.intra_login
       }
-    })).map(e => e.target_id);
-    const validMessages = messages.filter(e => !blockedUsers.includes(e.user_id)).map(e => {
+    })).map(e => { return { targetId: e.target_id, at: e.issue_time } })
+    const validMessages = messages.filter(msg => {
+      if (!msg.channel.user2user)
+        return true;
+      const bi = blockedUsers.findIndex(b => (b.targetId === msg.user_id) && (b.at <= msg.time))
+      return bi === -1;
+    }).map(e => {
       return {
         id: e.id,
         channel_id: e.channel_id,
@@ -368,17 +387,6 @@ export class ChatRepository {
     })
   }
 
-  // async getBlockUserStatus(token: TokenClaims, targetId: string) {
-  //   const issuerId = token.intra_login;
-  //   const data = await this.prismaService.blockedUsers.findFirst({
-  //     where: {
-  //       issuer_id: issuerId,
-  //       target_id: targetId
-  //     }
-  //   })
-  //   return data;
-  // }
-
   async getAllBlockedUsers(token: TokenClaims) {
     const issuerId = token.intra_login;
     const data = await this.prismaService.blockedUsers.findMany({
@@ -400,6 +408,16 @@ export class ChatRepository {
     return data;
   }
 
+  async getWhoBlocked(user_id: string) {
+    return this.prismaService.blockedUsers.findMany({
+      select: {
+        issuer_id: true
+      },
+      where: {
+        target_id: user_id
+      }
+    })
+  }
   async deleteBlock(
     issuer_id: string, target_id: string) {
     return this.prismaService.blockedUsers.delete({

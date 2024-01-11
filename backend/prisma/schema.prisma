@@ -84,9 +84,10 @@ model Channels {
 }
 
 model BlockedUsers {
-  id        String @id @default(uuid())
-  issuer_id String
-  target_id String @map("target_id")
+  id         String   @id @default(uuid())
+  issuer_id  String
+  target_id  String   @map("target_id")
+  issue_time DateTime @default(now())
 
   issuer_user Users @relation("block_issuer", fields: [issuer_id], references: [id])
   target_user Users @relation("block_target", fields: [target_id], references: [id])

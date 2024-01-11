@@ -114,10 +114,10 @@ export class ChatService {
   }
   // throws
   async getChannel(id: number) {
-    let channel: Channels;
+    let channel: Channels & { Memberships: Memberships[] };
 
     try {
-      channel = await this.chatRepository.getChannel(id);
+      channel = await this.chatRepository.getChannelWithMemberShips(id);
     } catch (e) {
       throw new NotFoundException('Channel does not exist.');
     }
@@ -564,6 +564,16 @@ export class ChatService {
       return {};
     } catch (e) {
       throw new BadRequestException('Failed to delete block');
+    }
+  }
+  async shouldSendMessage(issuer_id: string, target_id: string) {
+    try {
+      const blockedBy = (await this.chatRepository.getWhoBlocked(issuer_id)).map(e => e.issuer_id);
+      if (blockedBy.length === 0)
+        return true;
+      return !blockedBy.includes(target_id);
+    } catch (e) {
+      throw new WsException('Error verifying if message should be delivered')
     }
   }
 }

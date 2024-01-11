@@ -131,8 +131,16 @@ export class SocketGateway
       },
       user,
     );
-    socket.to(channel.id.toString()).emit('server_message', { ...message, nickname: user.nickname });
-    socket.emit('server_message', { ...message, nickname: user.nickname });
+    socket.emit('server_message', { ...message, nickname: user.nickname }); //sends message to emitter!
+    if (channel.user2user) {
+      const target = channel.Memberships.find(member => member.userId !== user.intra_login);
+      if (target) {
+        if (await this.chatService.shouldSendMessage(user.intra_login, target.userId))
+          socket.to(channel.id.toString()).emit('server_message', { ...message, nickname: user.nickname });
+      }
+    } else {
+      socket.to(channel.id.toString()).emit('server_message', { ...message, nickname: user.nickname });
+    }
     return message;
   }
 
