@@ -3,6 +3,7 @@ docker run -d --restart=always -p 5432:5432 -e "POSTGRES_PASSWORD=mysecretpasswo
 backend start: cd ./backend && yarn start:dev
 frontend start: cd ./frontend && yarn dev
 npx prisma generate
+ngrok http --domain=transcendence.ngrok.io 7000
 /backend :
 	.env.docker
  		DATABASE_URL=postgresql://postgres:mysecretpassword@postgres:5432/postgres

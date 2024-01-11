@@ -11,6 +11,7 @@ import {
   UseGuards,
   Request,
   Res,
+  BadRequestException,
 } from '@nestjs/common';
 import { ZodValidationPipe } from 'src/zodPipe';
 import { ChatService } from './chat.service';
@@ -20,6 +21,8 @@ import {
 } from './dto/create-channel-dto';
 import {
   UpdateChannelDto,
+  updateChannelData,
+  updateChannelPassword,
   updateChannelSchema,
 } from './dto/update-channel-dto';
 import {
@@ -84,14 +87,19 @@ export class ChatController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @UsePipes(new ZodValidationPipe(updateChannelSchema))
+  // @UsePipes(new ZodValidationPipe(updateChannelSchema))
   @Patch('/channel/:id')
   async updateChannel(
     @Request() req,
     @Body() body: UpdateChannelDto,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    return this.chatService.updateChannel(id, req.user, body);
+    const channelDataSchema = updateChannelData;
+    const channelPswSchema = updateChannelPassword;
+    if (channelDataSchema.safeParse(body).success || channelPswSchema.safeParse(body).success)
+      return this.chatService.updateChannel(id, req.user, body);
+    else
+      throw new BadRequestException('Data provided is invalid');
   }
 
   @UseGuards(JwtAuthGuard)

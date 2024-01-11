@@ -222,7 +222,7 @@ export class ChatRepository {
 
   async updateChannel(
     id: number,
-    updateChannel: UpdateChannelDto,
+    updateChannel: Partial<Omit<Channels, 'id'>>,
   ): Promise<Channels> {
     return this.prismaService.channels.update({
       where: { id },

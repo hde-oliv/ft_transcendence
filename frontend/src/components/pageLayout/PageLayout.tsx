@@ -44,7 +44,7 @@ export default function PageLayout({ children }: { children: ReactElement }) {
   }, [router])
   const onChannelKick = useCallback((data: { name: string }) => {
     toast({
-      title: `Kiked`,
+      title: `Kicked`,
       description: `You were kicked from "${data.name}" channel.`,
       status: 'info',
       duration: 3000,

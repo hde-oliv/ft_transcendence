@@ -129,6 +129,13 @@ function ChannelRow(props: PublicChannelResponse) {
               onChange={(e) => setPassword(e.target.value)}
               bg="pongBlue.300"
               placeholder="channel password"
+              type="password"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handlePasswordSubmit();
+                }
+              }}
             />
             {passwordError && (
               <Text color="red">Invalid password. Please try again.</Text>
@@ -153,15 +160,14 @@ export function ChannelCard() {
   useEffect(() => {
     fetchWrapper(router, fetchAllPublicChannels)
       .then((e) => setChannels(e))
-      .catch((e) => {});
+      .catch((e) => { });
   }, [router]);
 
   return (
-    <Center
+    <Flex
       flexDir="column"
       h="370px"
       w="370px"
-      alignItems="stretch"
       pl="1vw"
       pr="1vw"
     >
@@ -173,6 +179,6 @@ export function ChannelCard() {
           <ChannelRow {...c} key={`ChannelLine-${c.id}`} />
         ))}
       </VStack>
-    </Center>
+    </Flex>
   );
 }

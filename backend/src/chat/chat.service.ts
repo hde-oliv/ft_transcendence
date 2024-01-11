@@ -142,8 +142,8 @@ export class ChatService {
   async updateChannel(
     id: number,
     token: TokenClaims,
-    UpdateChannelDto: UpdateChannelDto,
-  ): Promise<Channels> {
+    updateChannelParam: UpdateChannelDto,
+  ): Promise<Omit<Channels, 'password'>> {
     const channel = await this.chatRepository.getChannel(id);
 
     const memberships = await this.chatRepository.getMembershipsbyChannel(
@@ -152,15 +152,33 @@ export class ChatService {
 
     this.checkOwner(token.intra_login, memberships);
 
-    const saltOrRounds = 0;
-    const hash = await bcrypt.hash(UpdateChannelDto.password, saltOrRounds);
-    UpdateChannelDto.password = hash;
+    let updateObject: Partial<Omit<Channels, 'id'>> = {};
+    if ('protected' in updateChannelParam) {
+      if (updateChannelParam.protected) {
+        const saltOrRounds = 0;
+        const hash = await bcrypt.hash(updateChannelParam.password, saltOrRounds);
+        updateChannelParam.password = hash;
+        updateObject.password = hash;
+        updateObject.protected = true;
+      } else {
+        updateObject.password = ''
+        updateObject.protected = false;
+      }
+    } else {
+      for (let key in updateChannelParam) {
+        if (key in updateChannelParam) {
+          updateObject[key] = updateChannelParam[key];
+        }
+      }
+    }
+
     const updatedChannel = await this.chatRepository.updateChannel(
       channel.id,
-      UpdateChannelDto,
+      updateObject,
     );
-    this.socketService.emitToRoom(updatedChannel.id.toString(), 'syncChannel', { channelId: updatedChannel.id })
-    return updatedChannel;
+    const { password, ...safeChannelData } = updatedChannel;
+    this.socketService.emitToRoom(channel.id.toString(), 'syncChannel', { channelId: channel.id })
+    return safeChannelData
   }
 
   // NOTE: Only the owner can delete channel

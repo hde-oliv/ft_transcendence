@@ -150,13 +150,25 @@ const createMembershipSchema = z.object({
   muted: z.boolean().optional(),
 });
 
-export const updateChannelSchema = z.object({
+const enableChannelPassword = z.object({
+  password: z.string(),
+  protected: z.literal(true)
+})
+const disableChannelPassword = z.object({
+  protected: z.literal(false)
+})
+export const updateChannelPassword = z.discriminatedUnion('protected', [enableChannelPassword, disableChannelPassword]);
+
+
+export const updateChannelData = z.object({
   name: z.string().optional(),
   type: z.string().optional(),
-  password: z.string().optional(),
-  protected: z.boolean().optional(),
-});
+})
 
+export const updateChannelSchema = updateChannelData.or(updateChannelPassword);
+export type Prettify<T> = {
+  [K in keyof T]: T[K];
+} & {};
 export const channelData = myChannelResponse.element;
 
 export type FetchChannelUsers = Array<user>;
@@ -166,7 +178,7 @@ export type MyChannels = z.infer<typeof myChannelResponse>;
 export type ChannelData = z.infer<typeof channelData>;
 export type myChannel = z.infer<typeof myChannelsSchema>;
 export type createChannelParams = z.infer<typeof newChannel>
-export type UpdateChannelSchemma = z.infer<typeof updateChannelSchema>;
+export type UpdateChannelSchema = Prettify<z.infer<typeof updateChannelSchema>>;
 type CreateMembershipSchema = z.infer<typeof createMembershipSchema>;
 
 
@@ -255,7 +267,7 @@ export async function inviteUserToChannel(data: CreateMembershipSchema) {
   const fetcher = pongAxios();
   return fetcher.post('/chat/channel/user/invite', data);
 }
-export async function patchChannel(channelId: number, data: UpdateChannelSchemma): Promise<any> {
+export async function patchChannel(channelId: number, data: UpdateChannelSchema): Promise<any> {
   const fetcher = pongAxios();
   return fetcher.patch(`/chat/channel/${channelId}`, data);
 }

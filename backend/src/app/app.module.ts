@@ -3,7 +3,6 @@ import { UsersModule } from '../users/users.module';
 import { AuthModule } from 'src/auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { LoggerModule } from 'nestjs-pino';
-import { CatsModule } from 'src/cats/cats.module';
 import { ChatModule } from 'src/chat/chat.module';
 import { MeModule } from 'src/me/me.module';
 import { GameModule } from 'src/game/game.module';
@@ -14,7 +13,6 @@ import { MatchModule } from 'src/match/match.module';
   imports: [
     UsersModule,
     AuthModule,
-    CatsModule,
     ChatModule,
     GameModule,
     MeModule,

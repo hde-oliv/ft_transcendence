@@ -9,10 +9,11 @@ import {
   messageResponseSchema,
   muteInChannel,
   patchChannel,
-  updateChannelSchema,
+  updateChannelSchema, UpdateChannelSchema,
   unbanFromChannel,
   unmuteInChannel,
   demoteChannelAdmin,
+  updateChannelPassword,
 } from "@/lib/fetchers/chat";
 import {
   AddIcon,
@@ -75,7 +76,7 @@ import {
   VStack,
   useDisclosure,
 } from "@chakra-ui/react";
-import {
+import React, {
   FC,
   useCallback,
   useContext,
@@ -360,26 +361,19 @@ function GroupSettings(props: {
     setChannelType(props.channel.type);
     setChannelName(props.channel.name);
   }, [props.channel.id, props.channel.type, props.channel.name]);
-
-  if (props.channel.user2user) return undefined; // NOTE: Holy shit
-
-  const pswError = pswOne !== "" && pswTwo !== "" && pswOne !== pswTwo;
-  const pswDone = pswOne !== "" && pswTwo !== "" && pswOne === pswTwo;
-  const pswDisable = props.channel.protected && !editingPsw;
-  const canSave =
-    channelName !== props.channel.name ||
-    channelType !== props.channel.type ||
-    pswDone ||
-    pswDisable;
-
-  async function saveConfig() {
+  async function syncNameType() {
     try {
-      const updatedChannelConfig = updateChannelSchema.parse({
-        name: channelName,
-        type: channelType,
-        password: pswDone ? pswOne : "",
-        protected: pswDone,
-      });
+      let updateChannelObj: {
+        name?: string,
+        type?: string
+      } = {};
+      if (props.channel.name !== channelName) {
+        updateChannelObj.name = channelName;
+      }
+      if (props.channel.type !== channelType) {
+        updateChannelObj.type = channelType;
+      }
+      const updatedChannelConfig = updateChannelSchema.parse(updateChannelObj);
       await fetchWrapper(
         router,
         patchChannel,
@@ -438,67 +432,19 @@ function GroupSettings(props: {
               <option value="public">Public</option>
               <option value="private">Private</option>
             </Select>
-            <FormLabel mt="2vh">Password</FormLabel>
-            <Checkbox
-              display={"block"}
-              ml="2vw"
-              size="lg"
-              isDisabled={!props.membership.owner}
-              colorScheme="yellow"
-              isChecked={editingPsw}
-              onChange={(e) => {
-                console.log(`value:${e.target.value}`);
-                console.log(`checked:${e.target.checked}`);
-                setEditinPsw(e.target.checked);
-              }}
-            />
-            <Collapse in={editingPsw}>
-              <Flex flexDir="column">
-                <Input
-                  isDisabled={!props.membership.owner}
-                  key="pswOneInput"
-                  placeholder="Type the new password"
-                  type="password"
-                  isInvalid={pswError}
-                  value={pswOne}
-                  onChange={(e) => setPswOne(e.target.value)}
-                  borderColor={pswDone ? "green.300" : undefined}
-                  mt="1vh"
-                />
-                <Input
-                  isDisabled={!props.membership.owner}
-                  key="pswTwoInput"
-                  placeholder="Confirm the above password"
-                  type="password"
-                  isInvalid={pswError}
-                  value={pswTwo}
-                  onChange={(e) => setPswTwo(e.target.value)}
-                  borderColor={pswDone ? "green.300" : undefined}
-                  mt="1vh"
-                />
-              </Flex>
-            </Collapse>
             <Flex justifyContent={"end"}>
-              {pswDisable ? (
-                <Heading
-                  mr="2vw"
-                  alignSelf={"center"}
-                  size="sm"
-                  color="red.300"
-                >
-                  This will disable password
-                </Heading>
-              ) : undefined}
               <Button
                 mt="1vh"
                 colorScheme="green"
-                isDisabled={!props.membership.owner || !canSave}
+                isDisabled={!props.membership.owner || (props.channel.name == channelName && props.channel.type === channelType)}
                 alignSelf={"end"}
-                onClick={saveConfig}
+                onClick={syncNameType}
               >
                 Save
               </Button>
             </Flex>
+            <Divider mt='1em' />
+            {props.membership.owner ? <PswChanger channelId={props.channel.id} protected={props.channel.protected} /> : undefined}
             <MemberRow
               owner={props.membership.administrator}
               admin={props.membership.owner}
@@ -619,6 +565,103 @@ function GroupSettings(props: {
       </Drawer>
     </Center>
   );
+}
+const PswChanger: React.FC<{ protected: boolean, channelId: number }> = (props) => {
+  const router = useRouter();
+  const [pswOne, setPswOne] = useState<string>('');
+  const [pswTwo, setPswTwo] = useState<string>('');
+  const [editingPsw, setEditingPsw] = useState<boolean>(props.protected);
+  const { updateChannels: updateChats } = useContext(ChatContext);
+
+  const emptyPsw = pswOne === '' && pswTwo === '';
+  const pswDone = pswOne !== "" && pswTwo !== "" && pswOne === pswTwo;
+  const pswMismatch = pswOne !== "" && pswTwo !== "" && pswOne !== pswTwo;
+
+
+  async function saveConfig() {
+    try {
+      let updateChannelObj: UpdateChannelSchema;
+      if (editingPsw) {
+        if (emptyPsw) {
+          updateChannelObj = { protected: false };
+        } else {
+          if (!pswDone)
+            throw new Error(`Passwords don't match`);
+          updateChannelObj = {
+            password: pswOne,
+            protected: true
+          }
+        }
+      } else {
+        updateChannelObj = { protected: false };
+      }
+      const updatedChannelConfig = updateChannelPassword.parse(updateChannelObj);
+      await fetchWrapper(
+        router,
+        patchChannel,
+        props.channelId,
+        updatedChannelConfig
+      );
+      updateChats();
+    } catch (e) {
+      if (e instanceof ZodError)
+        console.warn("Invalid updateSchema object");
+    }
+  }
+  return <Box mb='1em'>
+    <FormLabel mt="2vh">Password</FormLabel>
+    <Checkbox
+      display={"block"}
+      ml="2vw"
+      size="lg"
+      colorScheme="yellow"
+      isChecked={editingPsw}
+      onChange={(e) => {
+        setEditingPsw(e.target.checked);
+      }} />
+    <Collapse in={editingPsw}>
+      <Flex flexDir="column">
+        <Input
+          key="pswOneInput"
+          placeholder="Type the new password"
+          type="password"
+          isInvalid={pswMismatch}
+          value={pswOne}
+          onChange={(e) => setPswOne(e.target.value)}
+          borderColor={pswDone ? "green.300" : undefined}
+          mt="1vh" />
+        <Input
+          key="pswTwoInput"
+          placeholder="Confirm the above password"
+          type="password"
+          isInvalid={pswMismatch}
+          value={pswTwo}
+          onChange={(e) => setPswTwo(e.target.value)}
+          borderColor={pswDone ? "green.300" : undefined}
+          mt="1vh" />
+      </Flex>
+      <Flex justifyContent={"end"}>
+        <Button
+          mt="1vh"
+          mr='1em'
+          colorScheme="red"
+          alignSelf={"end"}
+          onClick={() => { setPswOne(''); setPswTwo(''); setEditingPsw(false); }}
+        >
+          Cancel
+        </Button>
+        <Button
+          mt="1vh"
+          colorScheme="green"
+          isDisabled={!props.protected && !pswDone}
+          alignSelf={"end"}
+          onClick={saveConfig}
+        >
+          {props.protected && (pswOne === '' && pswTwo === '') ? 'Disable' : 'Save'}
+        </Button>
+      </Flex>
+    </Collapse>
+  </Box>;
 }
 
 export function MessageSection(
@@ -751,18 +794,19 @@ export function MessageSection(
                 muted: props.muted,
               }}
             />
-            <GroupSettings
-              syncAll={props.syncAll}
-              channel={props.channel}
-              membership={{
-                channelId: props.channelId,
-                userId: props.userId,
-                owner: props.owner,
-                administrator: props.administrator,
-                banned: props.banned,
-                muted: props.muted,
-              }}
-            />
+            {!props.channel.user2user ?
+              <GroupSettings
+                syncAll={props.syncAll}
+                channel={props.channel}
+                membership={{
+                  channelId: props.channelId,
+                  userId: props.userId,
+                  owner: props.owner,
+                  administrator: props.administrator,
+                  banned: props.banned,
+                  muted: props.muted,
+                }}
+              /> : undefined}
           </HStack>
         )}
       </Flex>
@@ -1126,82 +1170,3 @@ function InviteUserCard(props: {
     </Flex>
   );
 }
-/*
-   <Popover>
-   <>{ Profile PopOver }</>
-   <PopoverTrigger>
-   <Avatar
-   mr="2vw"
-   name={channelName}
-   src={props.channel.Memberships[0].user.avatar}
-   />
-   </PopoverTrigger>
-   <Portal>
-   <PopoverContent bg='pongBlue.500'>
-   <PopoverArrow bg='pongBlue.500' />
-   <HStack>
-     <Avatar
-     mr="2vw"
-     name={channelName}
-     src={props.channel.Memberships[0].user.avatar}>
-     <AvatarBadge bgprops.={cardData.statusColor} boxSize={'1em'} borderWidth={'0.1em'} />
-     </Avatar>
-     <PopoverHeader>
-     <Heading textAlign="center" fontWeight="medium" size="md" pl="1vw">
-     {channelName}
-     </Heading>
-     </PopoverHeader>
-   </HStack>
-   <PopoverCloseButton />
-   <PopoverBody>
-     <Button
-     colorScheme='green'
-     isDisabled={props.channel.Memberships[0].user.status === 'offline'}
-     >{props.channel.Memberships[0].user.status === 'offline' ? "Wait to invite" : "Invite to play"}
-     </Button>
-   </PopoverBody>
-   <PopoverFooter>
-   <Center flexDir="column" h="20%" w="100%">
-     <Heading textAlign="center" fontWeight="medium" size="md" pl="1vw" > Stats of {channelName}</Heading>
-     <Wrap spacing="1vw">
-     <Stat
-     borderWidth="2px"
-     borderRadius="md"
-     p="1vw 1vw"
-     borderColor="yellow.200"
-     >
-     <StatLabel>Games</StatLabel>
-     <StatNumber textAlign="center" color="yellow.300">
-     20
-     </StatNumber>
-     </Stat>
-     <Stat
-     borderWidth="2px"
-     borderRadius="md"
-     p="1vw 1vw"
-     borderColor="yellow.200"
-     >
-     <StatLabel>Victories</StatLabel>
-     <StatNumber textAlign="center" color="green.400">
-     10
-     </StatNumber>
-     </Stat>
-     <Stat
-     borderWidth="2px"
-     borderRadius="md"
-     p="1vw 1vw"
-     borderColor="yellow.200"
-     >
-     <StatLabel>Loses</StatLabel>
-     <StatNumber textAlign="center" color="red.400">
-     10
-     </StatNumber>
-     </Stat>
-     </Wrap>
-   </Center>
-   </PopoverFooter>
-   </PopoverContent>
-   </Portal>
-   </Popover>
-
-*/
