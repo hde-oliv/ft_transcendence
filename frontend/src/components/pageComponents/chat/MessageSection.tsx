@@ -320,7 +320,6 @@ function GroupSettings(props: {
       });
       await fetchWrapper(router, patchChannel, props.channel.id, updatedChannelConfig);
       updateChats();
-      // props.syncAll();
     } catch (e) {
       if (e instanceof ZodError)
         console.warn("Error build patchChannel object");
@@ -335,7 +334,7 @@ function GroupSettings(props: {
         console.error(e);
         onCloseTwo();
       })
-  }, [])
+  }, [router, props.channel.id])
 
   return (
     <Center>
@@ -545,6 +544,7 @@ function GroupSettings(props: {
                 onClick={() => {
                   fetchWrapper(router, leaveChannel, props.channel.id, props.membership.userId).then(e => {
                     syncChannel({ channelId: props.channel.id });
+                    onClose();
                   }).catch(e => console.error(e))
                 }}
               >

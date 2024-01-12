@@ -414,7 +414,7 @@ export class ChatService {
       (m) => m.userId === userId && m.owner === true,
     );
 
-    if (!membership) {
+    if (membership === undefined) {
       throw new ForbiddenException('Not owner.');
     }
   }
