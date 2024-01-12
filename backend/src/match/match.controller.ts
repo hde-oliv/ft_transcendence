@@ -86,4 +86,16 @@ export class MatchController {
   userStats(@Request() req, @Param('userId') userId: string) {
     return this.matchService.getUserStats(userId);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/myRank')
+  rank(@Request() req) {
+    return this.matchService.getUserRank(req.user.intra_login);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/rank/:userId')
+  userRank(@Request() req, @Param('userId') userId: string) {
+    return this.matchService.getUserRank(userId);
+  }
 }

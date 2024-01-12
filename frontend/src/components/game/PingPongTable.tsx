@@ -20,17 +20,41 @@ enum Colors {
   OFF = 'orange',
 }
 
+const centerMsg = (status: GameState['status'], pOne: { id: string, nickname: string, connected: boolean }, pTwo: { id: string, nickname: string, connected: boolean }) => {
+  if (status === 'paused')
+    return 'Paused';
+  if (status === 'running') {
+    if (pOne.connected && pTwo.connected)
+      return ''
+    if (pOne.connected && !pTwo.connected)
+      return `Waiting ${pTwo.nickname}`
+    if (!pOne.connected && pTwo.connected)
+      return `Waiting ${pOne.nickname}`
+  }
+  if (status === 'finished')
+    return 'Finished';
+  if (status === 'aborted')
+    return 'Aborted'
+  return 'Error'
+}
 const PingPongTable: React.FC<GameState> = (props) => {
   const totalWidth = '47%';
   const [selectedMap, setSelectedMap] = useState('');
+
 
   return (
     <>
       <Flex
         w={totalWidth}
         justifyContent={'space-between'}>
-        <Heading size='md' mb={5}>{props.playerOne.nickname}</Heading>
-        <Heading size='md' mb={5}>{props.playerTwo.nickname}</Heading>
+        <Flex alignItems={'center'}>
+          <Heading size='md'>{props.playerOne.nickname}</Heading>
+          <Box borderRadius={'50%'} bg={props.playerOne.connected ? 'green.300' : 'red.300'} h='1em' w='1em' ml='1em' />
+        </Flex>
+        <Flex alignItems={'center'}>
+          <Box borderRadius={'50%'} bg={props.playerTwo.connected ? 'green.300' : 'red.300'} h='1em' w='1em' mr='1em' />
+          <Heading size='md'>{props.playerTwo.nickname}</Heading>
+        </Flex>
       </Flex>
       <Flex >
         <Img
@@ -86,7 +110,7 @@ const PingPongTable: React.FC<GameState> = (props) => {
       >
         <Score side={{ left: '30%', }} counter={props.score.pOne} />
         <Score side={{ right: '30%', }} counter={props.score.pTwo} />
-        {props.status !== 'running' ? <CentralMsg value={props.status} /> : undefined}
+        <CentralMsg value={centerMsg(props.status, props.playerOne, props.playerTwo)} />
         <Paddle
           position={props.paddles.pOne.pos}
           length={props.paddles.pOne.length}

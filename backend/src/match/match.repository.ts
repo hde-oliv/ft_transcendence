@@ -346,5 +346,76 @@ export class MatchRepository {
       }
     })
   }
+  async getUserRank(intra_tag: string) {
+    const users = await this.prismaService.users.findMany({
+      select: {
+        intra_login: true,
+        elo: true
+      },
+      orderBy: {
+        elo: 'desc'
+      }
+    })
+    const i = users.findIndex((user) => user.intra_login === intra_tag);
+    if (i === -1)
+      throw new NotFoundException(`User ${intra_tag} not found`);
+    const tenMinutesAgo = new Date(Date.now() - 10 * 60000);
+    const matches = await this.prismaService.matches.findMany({
+      select: {
+        id: true,
+        p_one_score: true,
+        p_two_score: true,
+        start: true,
+        end: true,
+        status: true,
+        player_one: {
+          select: {
+            id: true, nickname: true
+          }
+        },
+        player_two: {
+          select: {
+            id: true, nickname: true
+          }
+        }
+      },
+      where: {
+        OR: [
+          {
+            p_one: intra_tag
+          },
+          {
+            p_two: intra_tag
+          }
+        ],
+        end: {
+          gte: tenMinutesAgo
+        },
+        NOT: { end: null },
+        status: {
+          in: ['aborted', 'finished']
+        }
+      },
+      orderBy: {
+        start: "desc"
+      }
+    });
+    let variation = 0;
+    matches.forEach(m => {
+      const myScore = m.player_one.id === intra_tag ? m.p_one_score : m.p_two_score;
+      const adScore = m.player_one.id === intra_tag ? m.p_two_score : m.p_one_score;
+      const won = myScore > adScore;
+      if (m.status === 'finished') {
+        variation += won ? 10 : -10
+      } else if (m.status === 'aborted') {
+        variation += won ? 10 : -20
+      }
+    })
+    return {
+      rank: i + 1,
+      elo: users[i].elo,
+      variation
+    }
+  }
 }
 

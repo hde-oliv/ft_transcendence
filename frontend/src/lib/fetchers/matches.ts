@@ -19,6 +19,14 @@ const historyRecord = z.object({
 });
 export type HistoryRecord = z.infer<typeof historyRecord>;
 
+const rankResponse = z.object({
+  rank: z.number(),
+  elo: z.number(),
+  variation: z.number()
+})
+
+export type Rank = z.infer<typeof rankResponse>;
+
 const statsResponse = z.object({
   win: z.number().int(),
   loss: z.number().int(),
@@ -75,9 +83,24 @@ export async function myStats() {
   const parsedResponse = statsResponse.parse(response.data);
   return parsedResponse;
 }
+
 export async function getUserStats(userId: string) {
   const fetcher = pongAxios();
   const response = await fetcher.get(`match/stats/${userId}`);
   const parsedResponse = statsResponse.parse(response.data);
+  return parsedResponse;
+}
+
+export async function myRank() {
+  const fetcher = pongAxios();
+  const response = await fetcher.get(`match/myRank`);
+  const parsedResponse = rankResponse.parse(response.data);
+  return parsedResponse;
+}
+
+export async function getUserRank(userId: string) {
+  const fetcher = pongAxios();
+  const response = await fetcher.get(`match/rank/${userId}`);
+  const parsedResponse = rankResponse.parse(response.data);
   return parsedResponse;
 }

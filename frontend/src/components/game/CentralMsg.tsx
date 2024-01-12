@@ -8,6 +8,8 @@ interface ScoreProps {
 }
 
 const CentralMsg: FC<{ value: string }> = (props) => {
+  if (props.value === '')
+    return undefined
   return (
     <Heading size='lg'
       bg='pongBlue.400'

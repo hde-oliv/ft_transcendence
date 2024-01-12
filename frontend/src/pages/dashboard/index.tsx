@@ -8,6 +8,7 @@ import {
 } from "react";
 import {
   Center,
+  Flex,
   Heading,
   Skeleton,
   Text,
@@ -30,46 +31,43 @@ import FriendCard from "@/components/pageComponents/dashboard/FriendCard";
 import { fetchWrapper } from "@/lib/fetchers/SafeAuthWrapper";
 import {
   HistoryRecord,
+  Rank,
   UserStats,
   myHistory,
+  myRank,
   myStats,
 } from "@/lib/fetchers/matches";
 import { HistoryCard } from "@/components/pageComponents/dashboard/HistoryCard";
 
-function RankCard(props: PropsWithChildren) {
-  const [loading, setLoading] = useState(true);
+const RankCard: FC<Rank | undefined> = (props) => {
 
-  useEffect(() => {
-    let timer = setTimeout(() => {
-      setLoading(false);
-    }, 1000);
-    return () => {
-      clearTimeout(timer);
-    };
-  }, []);
+  if (props === undefined)
+    return (
+      <Skeleton borderRadius="30" isLoaded={false}>
+        <Center h="370px" w="370px"></Center>
+      </Skeleton>)
   return (
-    <Skeleton borderRadius="30" isLoaded={!loading}>
-      <Center h="370px" w="370px">
+    <Skeleton borderRadius="30" isLoaded={props !== undefined}>
+      <Flex h="370px" w="370px" flexDir={'column'} pt='2em'>
         <Stat pl="1vw">
-          <StatLabel fontSize="lg" fontWeight="bold">
+          <StatLabel fontSize="lg" fontWeight="bold" pl='2em'>
             Rank
           </StatLabel>
           <StatNumber fontSize="3xl" textAlign="center">
-            1
+            {props.rank}
           </StatNumber>
-          <StatHelpText textAlign="center" fontSize="md"></StatHelpText>
-          <StatLabel fontSize="lg" fontWeight="bold">
-            Points
+          <StatLabel fontSize="lg" fontWeight="bold" pl='2em'>
+            Elo Points
           </StatLabel>
           <StatNumber fontSize="3xl" textAlign="center">
-            50
+            {props.elo}
+            <StatHelpText textAlign="center" fontSize="md">
+              <StatArrow type={props.variation < 0 ? 'decrease' : 'increase'}></StatArrow>
+              {props.variation}&nbsp;pts (last 10 minutes)
+            </StatHelpText>
           </StatNumber>
-          <StatHelpText textAlign="center" fontSize="md">
-            <StatArrow type="increase"></StatArrow>
-            50
-          </StatHelpText>
         </Stat>
-      </Center>
+      </Flex>
     </Skeleton>
   );
 }
@@ -116,17 +114,11 @@ export const StatsCard: FC<UserStats> = (props) => {
     </Center>
   );
 };
-function ConfigsCard(props: PropsWithChildren) {
-  return (
-    <Center flexDir="column" h="370px" w="370px">
-      <Heading>Configs</Heading>
-    </Center>
-  );
-}
 
 const Dashboard: NextPageWithLayout = () => {
   const router = useRouter();
   const [history, setHistory] = useState<HistoryRecord[]>([]);
+  const [rank, setRank] = useState<Rank>();
   const [stats, setStats] = useState<any>();
   useEffect(() => {
     fetchWrapper(router, myHistory)
@@ -135,6 +127,9 @@ const Dashboard: NextPageWithLayout = () => {
     fetchWrapper(router, myStats)
       .then((e) => setStats(e))
       .catch((e) => console.error(e));
+    fetchWrapper(router, myRank)
+      .then((e) => setRank(e))
+      .catch((e) => console.error(e));
   }, [router]);
   return (
     <Wrap p="5vh 5vw" spacing="30px" justify="center">
@@ -142,7 +137,7 @@ const Dashboard: NextPageWithLayout = () => {
         <PlayCard />
       </WrapItem>
       <WrapItem borderRadius="30" borderWidth="2px" borderColor="yellow.400">
-        <RankCard />
+        <RankCard {...rank} />
       </WrapItem>
       <WrapItem borderRadius="30" borderWidth="2px" borderColor="yellow.400">
         <HistoryCard matches={history} />

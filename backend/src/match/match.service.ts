@@ -225,4 +225,13 @@ export class MatchService {
       throw new InternalServerErrorException();
     }
   }
+  async getUserRank(userId: string) {
+    try {
+      return await this.matchRepository.getUserRank(userId);
+    } catch (e) {
+      if (e instanceof PrismaClientKnownRequestError)
+        throw new InternalServerErrorException(`Prisma error: ${e.code}`)
+      throw e;
+    }
+  }
 }
