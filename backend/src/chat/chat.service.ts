@@ -245,7 +245,7 @@ export class ChatService {
 
   // throws
   async leaveChannel(token: TokenClaims, channelId: number, userId: string) {
-    const channel = await this.chatRepository.getChannel(channelId);
+    const channel = await this.chatRepository.getChannelWithMemberShips(channelId);
 
     const memberships = await this.chatRepository.getMembershipsbyChannel(
       channel.id,
@@ -256,6 +256,9 @@ export class ChatService {
       token.intra_login,
       channel.id,
     );
+    const channelPostDelete = await this.chatRepository.getChannelWithMemberShips(channelId);
+    if (channelPostDelete.Memberships.length === 0)
+      this.chatRepository.deleteChannel(channel.id).then(e => this.logger.log(`Channel ${channel.name} was deleted beacuse it's empty`)).catch(e => this.logger.log(`Channel ${channel.name} is empty but could not be deleted`));
     this.socketService.removeUserFromRoom(token.intra_login, channelId.toString());
     this.socketService.emitToUser(userId, 'leaveChannel', { channelId: channelId });
     this.socketService.emitToRoom(channelId.toString(), 'syncChannel', { channelId: channelId });
