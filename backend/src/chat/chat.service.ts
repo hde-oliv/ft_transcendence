@@ -184,19 +184,33 @@ export class ChatService {
   // NOTE: Only the owner can delete channel
   // throws
   async deleteChannel(token: TokenClaims, id: number) {
-    const channel = await this.chatRepository.getChannel(id);
+    try {
+      const channel = await this.chatRepository.getChannel(id);
+      const users = await this.chatRepository.getUsersByChannel(channel.id);
 
-    const memberships = await this.chatRepository.getMembershipsbyChannel(
-      channel.id,
-    );
+      const memberships = await this.chatRepository.getMembershipsbyChannel(
+        channel.id,
+      );
 
-    this.checkOwner(token.intra_login, memberships);
+      this.checkOwner(token.intra_login, memberships);
 
-    // Not checking for throws 'cause I already got the channel
-    await this.chatRepository.deleteMembershipsbyChannel(channel.id);
-    const deletedChannel = await this.chatRepository.deleteChannel(channel.id);
-    this.socketService.server.sockets.socketsLeave(channel.id.toString()); //TODO verify if working properly
-    return deletedChannel;
+      // Not checking for throws 'cause I already got the channel
+      await this.chatRepository.deleteMembershipsbyChannel(channel.id);
+      await this.chatRepository.deleteChannel(channel.id);
+      this.socketService.emitToRoom(id.toString(), 'deleteChannel', { channelId: id });
+      this.socketService.emitToUser(token.intra_login, 'deleteChannel', { channelId: id });
+      this.socketService.server.sockets.socketsLeave(channel.id.toString()); //TODO verify if working properly
+      users.forEach(user => {
+        this.socketService.removeUserFromRoom(user.id, channel.id.toString());
+      });
+      return true;
+    } catch (e) {
+      if (e instanceof PrismaClientKnownRequestError) {
+        this.logger.log(e.message);
+        throw new NotFoundException('Prisma client error')
+      }
+      throw e;
+    }
   }
 
   // throws
@@ -230,7 +244,7 @@ export class ChatService {
   }
 
   // throws
-  async leaveChannel(token: TokenClaims, channelId: number) {
+  async leaveChannel(token: TokenClaims, channelId: number, userId: string) {
     const channel = await this.chatRepository.getChannel(channelId);
 
     const memberships = await this.chatRepository.getMembershipsbyChannel(
@@ -243,9 +257,11 @@ export class ChatService {
       channel.id,
     );
     this.socketService.removeUserFromRoom(token.intra_login, channelId.toString());
+    this.socketService.emitToUser(userId, 'leaveChannel', { channelId: channelId });
     this.socketService.emitToRoom(channelId.toString(), 'syncChannel', { channelId: channelId });
     return deletedMembership;
   }
+
   private getIssuerTargetMemberships(memberships: Memberships[], token: TokenClaims, userId: string, channel: Channels) {
     if (userId === token.intra_login)
       throw new BadRequestException('You cannot perform this action on yourself.');
@@ -416,7 +432,7 @@ export class ChatService {
       (m) => m.userId === userId && m.owner === true,
     );
 
-    if (!membership) {
+    if (membership === undefined) {
       throw new ForbiddenException('Not owner.');
     }
   }

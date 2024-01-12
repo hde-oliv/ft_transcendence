@@ -275,6 +275,17 @@ export async function kickFromChannel(channelId: number, userId: string) {
   const fetcher = pongAxios();
   return fetcher.post(`/chat/channel/user/kick`, { channelId: channelId, userId: userId })
 }
+
+export async function leaveChannel(channelId: number, userId: string) {
+  const fetcher = pongAxios();
+  return fetcher.post(`/chat/channel/user/leave`, { channelId: channelId, userId: userId })
+}
+
+export async function deleteChannel(channelId: number) {
+  const fetcher = pongAxios();
+  return fetcher.delete(`/chat/channel/${channelId}`)
+}
+
 export async function banFromChannel(channelId: number, userId: string) {
   const fetcher = pongAxios();
   return fetcher.post(`/chat/channel/user/ban`, { channelId: channelId, userId: userId })

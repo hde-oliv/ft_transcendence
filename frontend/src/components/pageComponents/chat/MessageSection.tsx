@@ -14,6 +14,8 @@ import {
   unmuteInChannel,
   demoteChannelAdmin,
   updateChannelPassword,
+  leaveChannel,
+  deleteChannel,
 } from "@/lib/fetchers/chat";
 import {
   AddIcon,
@@ -75,6 +77,14 @@ import {
   Tooltip,
   VStack,
   useDisclosure,
+  Spacer,
+  Modal,
+  ModalOverlay,
+  ModalBody,
+  ModalHeader,
+  ModalFooter,
+  ModalContent,
+  ModalCloseButton,
 } from "@chakra-ui/react";
 import React, {
   FC,
@@ -343,12 +353,14 @@ function GroupSettings(props: {
   syncAll: () => void;
 }) {
   const { isOpen, onClose, onOpen } = useDisclosure();
+  const { isOpen: isOpenTwo, onClose: onCloseTwo, onOpen: onOpenTwo } = useDisclosure();
   const [editingPsw, setEditinPsw] = useState(false);
   const [pswOne, setPswOne] = useState("");
   const [pswTwo, setPswTwo] = useState("");
   const [channelType, setChannelType] = useState(props.channel.type);
   const [channelName, setChannelName] = useState(props.channel.name);
   const { updateChannels: updateChats } = useContext(ChatContext);
+  const { syncChannel } = useContext(ChatContext);
   const router = useRouter();
 
   const [me, setMe] = useContext(MeStateContext);
@@ -386,6 +398,16 @@ function GroupSettings(props: {
         console.warn("Error build patchChannel object");
     }
   }
+
+  const sendDeleteChannel = useCallback(() => {
+    fetchWrapper(router, deleteChannel, props.channel.id)
+      .then(e => {
+        onCloseTwo();
+      }).catch(e => {
+        console.error(e);
+        onCloseTwo();
+      })
+  }, [router, props.channel.id])
 
   return (
     <Center>
@@ -543,15 +565,44 @@ function GroupSettings(props: {
             </Tabs>
           </DrawerBody>
           <DrawerFooter>
-            <HStack>
+            <HStack width="full">
+              <Button
+                size="lg"
+                colorScheme="green"
+                onClick={() => {
+                  fetchWrapper(router, leaveChannel, props.channel.id, props.membership.userId).then(e => {
+                    syncChannel({ channelId: props.channel.id });
+                    onClose();
+                  }).catch(e => console.error(e))
+                }}
+              >
+                Leave
+              </Button>
+              <Spacer />
               <IconButton
                 size="lg"
                 colorScheme="red"
                 icon={<DeleteIcon />}
                 isDisabled={!props.membership.owner}
                 aria-label="delete channel"
+                onClick={onOpenTwo}
               />
-              {/* TODO: Implement channel delete only by owner */}
+              <Modal isOpen={isOpenTwo} onClose={onCloseTwo}>
+                <ModalOverlay />
+                <ModalContent bg="pongBlue.500">
+                  <ModalHeader color="red.300">Delete {props.channel.name}?</ModalHeader>
+                  <ModalCloseButton />
+                  <ModalBody>
+                    Are you sure you want to delete this channel?
+                  </ModalBody>
+                  <ModalFooter>
+                    <Button colorScheme="red" mr={3} onClick={sendDeleteChannel}>
+                      Yes
+                    </Button>
+                    <Button colorScheme="yellow" onClick={onCloseTwo}>No</Button>
+                  </ModalFooter>
+                </ModalContent>
+              </Modal>
               <IconButton
                 size="lg"
                 colorScheme="yellow"
@@ -871,7 +922,7 @@ const ProfilePopover: FC<{
     }
   };
   if (!props.channel.user2user || props.channel.Memberships.length === 0) {
-    return <Avatar mr="2vw" name={channelName} bg="yellow.300" />;
+    return (<Avatar mr="2vw" name={channelName} bg="yellow.300" />)
   }
   return (
     <Popover>

@@ -195,6 +195,7 @@ export default function Chat(props: any) {
     try {
       const channelData = await fetchWrapper(router, fetchSingleChannel, payload.channelId);
       updateSingleCard(channelData);
+      console.log('syncChannelReceived');
     } catch (e) {
       if (e instanceof ZodError) {
         console.warn(`Expected return of fetchSingleChannel was not met`);
@@ -231,6 +232,17 @@ export default function Chat(props: any) {
     setMyChannels(currentChannels)
   }, [myChannels]);
 
+  const onChannelDeleted = useCallback(async (payload: { channelId: number }) => {
+    const clonedChannels = _.cloneDeep(myChannels);
+
+    const indexToRemove = _.findIndex(clonedChannels, { channelId: payload.channelId });
+
+    if (indexToRemove !== -1) {
+      clonedChannels.splice(indexToRemove, 1);
+    }
+    setActiveChannel(-1);
+    setMyChannels(clonedChannels);
+  }, [socket, router, myChannels])
   useEffect(() => {
     fetchWrapper(router, fetchMyChannels)
       .then((e) => setMyChannels(e))
@@ -251,6 +263,10 @@ export default function Chat(props: any) {
     socket.on("syncChannel", onSyncChannel);
     return () => { socket.off("syncChannel", onSyncChannel); };
   }, [socket, onSyncChannel]);
+  useEffect(() => {
+    socket.on("deleteChannel", onChannelDeleted);
+    return () => { socket.off("deleteChannel", onChannelDeleted); };
+  }, [socket, onChannelDeleted]);
 
   useEffect(() => {
     socket.on('leaveChannel', onLeaveChannel);
