@@ -39,7 +39,7 @@ import {
 } from "@/lib/fetchers/matches";
 import { HistoryCard } from "@/components/pageComponents/dashboard/HistoryCard";
 
-const RankCard: FC<Rank | undefined> = (props) => {
+const RankCard: FC<Rank | any> = (props) => {
 
   if (props === undefined)
     return (
@@ -118,7 +118,7 @@ export const StatsCard: FC<UserStats> = (props) => {
 const Dashboard: NextPageWithLayout = () => {
   const router = useRouter();
   const [history, setHistory] = useState<HistoryRecord[]>([]);
-  const [rank, setRank] = useState<Rank>();
+  const [rank, setRank] = useState<Rank | undefined>();
   const [stats, setStats] = useState<any>();
   useEffect(() => {
     fetchWrapper(router, myHistory)
@@ -129,7 +129,7 @@ const Dashboard: NextPageWithLayout = () => {
       .catch((e) => console.error(e));
     fetchWrapper(router, myRank)
       .then((e) => setRank(e))
-      .catch((e) => console.error(e));
+      .catch((e) => { console.error(e); setRank(undefined); });
   }, [router]);
   return (
     <Wrap p="5vh 5vw" spacing="30px" justify="center">
