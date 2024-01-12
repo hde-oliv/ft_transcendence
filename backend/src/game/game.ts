@@ -62,7 +62,7 @@ export class Game {
       pTwo: 0,
     };
     this.paused = true;
-    this.tickInterval = 10;
+    this.tickInterval = 60;
     this.socketService = socketService;
     this.gameRepository = gameRepository;
   }
@@ -110,7 +110,7 @@ export class Game {
       const start = this.paddleOne.pos;
       const end = this.paddleOne.pos + this.paddleOne.length
       if (y >= start && y <= end) {
-        this.ballDirection.x *= -1;
+        this.ballDirection.x = Math.abs(this.ballDirection.x);
         const by = y - start;
         const piy = 0;
         const pey = end - start;
@@ -134,7 +134,7 @@ export class Game {
       const start = this.paddleTwo.pos;
       const end = this.paddleTwo.pos + this.paddleTwo.length
       if (y >= start && y <= end) {
-        this.ballDirection.x *= -1;
+        this.ballDirection.x = Math.abs(this.ballDirection.x) * -1;
         const by = y - start;
         const piy = 0;
         const pey = end - start;
