@@ -62,7 +62,7 @@ export class Game {
       pTwo: 0,
     };
     this.paused = true;
-    this.tickInterval = 60;
+    this.tickInterval = 10;
     this.socketService = socketService;
     this.gameRepository = gameRepository;
   }
