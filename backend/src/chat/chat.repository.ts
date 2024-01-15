@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   Channels,
@@ -14,21 +14,30 @@ import { UpdateMembershipDto } from './dto/update-membership-dto';
 import { BlockUserStatusDto } from './dto/block-user-status-dto';
 import { TokenClaims } from 'src/auth/auth.model';
 import { channel } from 'diagnostics_channel';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 @Injectable()
 export class ChatRepository {
   constructor(private readonly prismaService: PrismaService) { }
 
-  async createChannel(newChannel: CreateChannelDto): Promise<Channels> {
-    return this.prismaService.channels.create({
-      data: {
-        type: newChannel.type,
-        name: newChannel.name,
-        password: newChannel.password,
-        protected: newChannel.protected,
-        user2user: newChannel.user2user,
-      },
-    });
+  async createChannel(newChannel: CreateChannelDto) {
+    try {
+      return await this.prismaService.channels.create({
+        data: {
+          type: newChannel.type,
+          name: newChannel.name,
+          password: newChannel.password,
+          protected: newChannel.protected,
+          user2user: newChannel.user2user,
+        },
+      });
+    } catch (e) {
+      if (e instanceof PrismaClientKnownRequestError) {
+        if (e.code = 'P2002')
+          throw new ConflictException('Channel name already in use');
+      } else
+        throw new InternalServerErrorException('Unknown error creating channel')
+    }
   }
 
   async createMembership(

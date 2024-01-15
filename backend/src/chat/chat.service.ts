@@ -1,9 +1,11 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   HttpException,
   HttpStatus,
   Injectable,
+  InternalServerErrorException,
   Logger,
   NotFoundException,
 } from '@nestjs/common';
@@ -51,11 +53,11 @@ export class ChatService {
     const saltOrRounds = 0;
     const hash = await bcrypt.hash(createChannelDto.password, saltOrRounds);
     createChannelDto.password = hash;
-
-    const chat: Channels = await this.chatRepository.createChannel(
+    const chat = await this.chatRepository.createChannel(
       createChannelDto,
     );
-
+    if (chat === undefined)
+      throw new InternalServerErrorException('Errors creating channel and ahndling prev.errors');
     if (createChannelDto.user2user) {
       const first: CreateMembershipDto = {
         channelId: chat.id,
@@ -195,7 +197,7 @@ export class ChatService {
       this.checkOwner(token.intra_login, memberships);
 
       // Not checking for throws 'cause I already got the channel
-      await this.chatRepository.deleteMembershipsbyChannel(channel.id);
+      // await this.chatRepository.deleteMembershipsbyChannel(channel.id);
       await this.chatRepository.deleteChannel(channel.id);
       this.socketService.emitToRoom(id.toString(), 'deleteChannel', { channelId: id });
       this.socketService.emitToUser(token.intra_login, 'deleteChannel', { channelId: id });

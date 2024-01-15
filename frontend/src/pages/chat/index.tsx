@@ -195,7 +195,6 @@ export default function Chat(props: any) {
     try {
       const channelData = await fetchWrapper(router, fetchSingleChannel, payload.channelId);
       updateSingleCard(channelData);
-      console.log('syncChannelReceived');
     } catch (e) {
       if (e instanceof ZodError) {
         console.warn(`Expected return of fetchSingleChannel was not met`);

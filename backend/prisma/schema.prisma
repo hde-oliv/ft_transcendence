@@ -62,8 +62,8 @@ model Memberships {
   administrator Boolean  @default(false)
   banned        Boolean  @default(false)
   muted         Boolean  @default(false)
-  channel       Channels @relation(fields: [channelId], references: [id])
-  user          Users    @relation(fields: [userId], references: [id])
+  channel       Channels @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  user          Users    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([channelId, userId])
   @@map("memberships")
@@ -116,8 +116,8 @@ model Messages {
   message    String
   time       DateTime @default(now())
 
-  channel Channels @relation("channel_message", fields: [channel_id], references: [id])
-  user    Users    @relation("message_user", fields: [user_id], references: [id])
+  channel Channels @relation("channel_message", fields: [channel_id], references: [id], onDelete: Cascade)
+  user    Users    @relation("message_user", fields: [user_id], references: [id], onDelete: Cascade)
 
   @@map("messages")
 }

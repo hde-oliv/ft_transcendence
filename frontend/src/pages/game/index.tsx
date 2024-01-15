@@ -2,7 +2,7 @@
 import PingPongTable from "@/components/game/PingPongTable";
 import PongNavBar from "@/components/nav/PongNavBar";
 import PageLayout, { SocketContext } from "@/components/pageLayout/PageLayout";
-import { Box, Button, Kbd, VStack } from "@chakra-ui/react";
+import { Box, Button, Heading, Kbd, VStack } from "@chakra-ui/react";
 import { ReactElement, useCallback, useContext, useEffect, useState } from "react";
 import { GameState, playerActionPayload, PlayerActionPayload } from "../../lib/dto/game.dto";
 import { useSearchParams } from 'next/navigation'
@@ -56,7 +56,7 @@ function Game() {
     return () => {
       socket.emit('playerAction', { type: 'connected', gameId, connected: false })
     }
-  }, [gameId, socket])
+  }, [gameId, socket]);
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       switch (event.key) {
@@ -77,6 +77,8 @@ function Game() {
     document.addEventListener('keydown', handleKeyDown)
     return () => { document.removeEventListener('keydown', handleKeyDown) }
   }, [movePaddle, pauseAction])
+  if (gameId === null)
+    return <><Heading>No game, go back to dashboard</Heading></>
   return (
     <Box className="App"
       display={'flex'}
