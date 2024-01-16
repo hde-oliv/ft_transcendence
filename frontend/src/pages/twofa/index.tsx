@@ -28,7 +28,7 @@ export default function TwoFaPage(props: PropsWithChildren) {
     setLoading(true);
     const confyTimer = 1000;
     try {
-      const accessToken = await fetchWrapper(router, sendOTP, pin, user);
+      const accessToken = await sendOTP(pin, user);
       storeToken(accessToken, localStorage);
       setTimeout(() => {
         router.push("/dashboard");
