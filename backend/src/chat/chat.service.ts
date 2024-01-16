@@ -597,4 +597,7 @@ export class ChatService {
       throw new WsException('Error verifying if message should be delivered')
     }
   }
+  async getBlockersOfUser(target_id: string) {
+    return (await this.chatRepository.getWhoBlocked(target_id)).map(e => e.issuer_id);
+  }
 }

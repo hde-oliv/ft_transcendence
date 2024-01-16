@@ -333,11 +333,6 @@ export class ChatRepository {
           select: {
             nickname: true
           }
-        },
-        channel: {
-          select: {
-            user2user: true
-          }
         }
       }
     });
@@ -351,8 +346,6 @@ export class ChatRepository {
       }
     })).map(e => { return { targetId: e.target_id, at: e.issue_time } })
     const validMessages = messages.filter(msg => {
-      if (!msg.channel.user2user)
-        return true;
       const bi = blockedUsers.findIndex(b => (b.targetId === msg.user_id) && (b.at <= msg.time))
       return bi === -1;
     }).map(e => {

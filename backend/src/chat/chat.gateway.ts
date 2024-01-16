@@ -139,7 +139,12 @@ export class SocketGateway
           socket.to(channel.id.toString()).emit('server_message', { ...message, nickname: user.nickname });
       }
     } else {
-      socket.to(channel.id.toString()).emit('server_message', { ...message, nickname: user.nickname });
+      const members = channel.Memberships.map(e => e.userId);
+      const blockers = await this.chatService.getBlockersOfUser(user.id);
+      const targets = members.filter(e => !blockers.includes(e));
+      targets.forEach(e => {
+        this.socketService.emitToUser(e, 'server_message', { ...message, nickname: user.nickname })
+      })
     }
     return message;
   }
