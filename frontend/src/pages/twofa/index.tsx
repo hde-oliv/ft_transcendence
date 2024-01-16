@@ -63,7 +63,7 @@ export default function TwoFaPage(props: PropsWithChildren) {
         </Flex>
         <Stack>
           <Text color="orange" textAlign="center" fontSize="2xl">
-            Enter your code, soab{" "}
+            Enter your code, {user}
           </Text>
           <Text color="orange" textAlign="center" fontSize="2xl">
             (tries left : {3 - tryCount})
