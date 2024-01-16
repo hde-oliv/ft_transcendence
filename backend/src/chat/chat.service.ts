@@ -516,6 +516,15 @@ export class ChatService {
   }
 
   async registerNewMessage(data: NewMessageDto, user: Users) {
+    const memberships = await this.getMembershipsbyChannel(data.channel_id)
+    let muted = false;
+    memberships.forEach(member => {
+      if (member.userId === user.id) {
+        muted = member.muted
+      }
+    })
+    if (muted)
+      return undefined;
     return await this.chatRepository.registerNewMessage(data, user.id);
   }
 

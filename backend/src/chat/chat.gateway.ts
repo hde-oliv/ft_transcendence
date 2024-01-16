@@ -131,8 +131,10 @@ export class SocketGateway
       },
       user,
     );
-    socket.emit('server_message', { ...message, nickname: user.nickname }); //sends message to emitter!
+    if (message === undefined)
+      return 'muted';
     if (channel.user2user) {
+      socket.emit('server_message', { ...message, nickname: user.nickname }); //sends message to emitter!
       const target = channel.Memberships.find(member => member.userId !== user.intra_login);
       if (target) {
         if (await this.chatService.shouldSendMessage(user.intra_login, target.userId))

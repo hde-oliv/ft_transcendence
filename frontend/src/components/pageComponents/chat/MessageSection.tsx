@@ -498,7 +498,7 @@ function GroupSettings(props: {
                         <MemberRow
                           owner={props.membership.administrator}
                           admin={props.membership.owner}
-                          key={`ch${props.channel.id}-${user.intra_login}`}
+                          key={`ch${props.channel.id}-${user.intra_login}-cm`}
                           membership={{
                             administrator: e.administrator,
                             banned: e.banned,
@@ -522,7 +522,7 @@ function GroupSettings(props: {
                         <MemberRow
                           owner={props.membership.administrator}
                           admin={props.membership.owner}
-                          key={`ch${props.channel.id}-${user.intra_login}`}
+                          key={`ch${props.channel.id}-${user.intra_login}-ad`}
                           membership={{
                             administrator: e.administrator,
                             banned: e.banned,
@@ -546,7 +546,7 @@ function GroupSettings(props: {
                         <MemberRow
                           owner={props.membership.administrator}
                           admin={props.membership.owner}
-                          key={`ch${props.channel.id}-${user.intra_login}`}
+                          key={`ch${props.channel.id}-${user.intra_login}-bn`}
                           membership={{
                             administrator: e.administrator,
                             banned: e.banned,
@@ -719,6 +719,7 @@ export function MessageSection(
   props: ChannelComponentProps & { syncAll: () => void }
 ): JSX.Element {
   const [messages, setMessages] = useState<Array<MessageCardProps>>([]);
+  const { onClose, isOpen, onOpen } = useDisclosure()
   const [stats, setStats] = useState<null | UserStats>(null);
   const router = useRouter();
   const socket = useContext(SocketContext);
@@ -767,7 +768,11 @@ export function MessageSection(
       if (socket.connected) {
         try {
           const response = await socket.emitWithAck("channel_message", message);
-          setText("");
+          if (response === 'muted') {
+            onOpen();
+            setTimeout(() => onClose(), 1500);
+          } else
+            setText("");
         } catch (e) {
           console.log(e); //TODO: make some king of popUp
         }
@@ -864,7 +869,7 @@ export function MessageSection(
       <Box flexGrow={1} bg="pongBlue" overflowY="auto" ref={messagesRef}>
         <Stack p="1vh 2vw">
           {messages.map((m) => (
-            <MessageCard {...m} key={`${m.id}`} />
+            <MessageCard {...m} key={`msgCard-${m.id}`} />
           ))}
         </Stack>
       </Box>
@@ -881,7 +886,21 @@ export function MessageSection(
             }}
           />
           <InputRightAddon>
-            <EmailIcon onClick={send} focusable={true} />
+            <Popover
+              returnFocusOnClose={true}
+              isOpen={isOpen}
+              onClose={onClose}
+              placement='top'
+              closeOnBlur={true}>
+              <PopoverTrigger>
+                <EmailIcon onClick={send} focusable={true} />
+              </PopoverTrigger>
+              <PopoverContent>
+                <PopoverBody>
+                  You are muted!
+                </PopoverBody>
+              </PopoverContent>
+            </Popover>
           </InputRightAddon>
         </InputGroup>
       </Box>
