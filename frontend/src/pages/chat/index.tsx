@@ -241,7 +241,7 @@ export default function Chat(props: any) {
     }
     setActiveChannel(-1);
     setMyChannels(clonedChannels);
-  }, [socket, router, myChannels])
+  }, [myChannels])
   useEffect(() => {
     fetchWrapper(router, fetchMyChannels)
       .then((e) => setMyChannels(e))

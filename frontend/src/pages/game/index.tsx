@@ -7,10 +7,12 @@ import { ReactElement, useCallback, useContext, useEffect, useState } from "reac
 import { GameState, playerActionPayload, PlayerActionPayload } from "../../lib/dto/game.dto";
 import { useSearchParams } from 'next/navigation'
 import { cloneDeep } from "lodash";
+import { useRouter } from "next/router";
 
 
 function Game() {
   const socket = useContext(SocketContext);
+  const router = useRouter();
   const [gameData, setGameData] = useState<GameState>({
     gameId: '',
     playerOne: { id: '', nickname: '', connected: false },
@@ -45,6 +47,9 @@ function Game() {
     if (payload.gameId === gameId)
       setGameData(cloneDeep(payload));
   }, [gameId]);
+  const onNavigateOff = () => {
+    socket.emit('playerAction', { type: 'connected', gameId, connected: false })
+  };
   useEffect(() => {
     socket.on('gameData', onGameData);
     return () => {
@@ -77,6 +82,14 @@ function Game() {
     document.addEventListener('keydown', handleKeyDown)
     return () => { document.removeEventListener('keydown', handleKeyDown) }
   }, [movePaddle, pauseAction])
+  useEffect(() => {
+    window.addEventListener('beforeunload', onNavigateOff)
+    router.events.on('routeChangeStart', onNavigateOff)
+    return (() => {
+      window.removeEventListener('beforeunload', onNavigateOff);
+      router.events.off('routeChangeStart', onNavigateOff)
+    });
+  }, [])
   if (gameId === null)
     return <><Heading>No game, go back to dashboard</Heading></>
   return (

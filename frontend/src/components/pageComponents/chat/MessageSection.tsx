@@ -407,7 +407,7 @@ function GroupSettings(props: {
         console.error(e);
         onCloseTwo();
       })
-  }, [router, props.channel.id])
+  }, [router, props.channel.id, onCloseTwo])
 
   return (
     <Center>
