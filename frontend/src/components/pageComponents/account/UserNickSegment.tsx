@@ -18,6 +18,7 @@ export function UserNickSegment(props: UserNickSegmentProps): JSX.Element {
 	const [loading, setLoading] = useState(false);
 	const [me, syncMe] = useContext(MeStateContext);
 	const router = useRouter();
+  const [nicknameExists, setNicknameExists] = useState(false)
 
 	async function saveNewNick() {
 		const params = {
@@ -39,6 +40,9 @@ export function UserNickSegment(props: UserNickSegmentProps): JSX.Element {
 			}
 		} catch (e) {
 			console.log(e);
+      if (e.response.status === 500) {
+        setNicknameExists(true)
+      }
 			setTimeout(() => {
 				setLoading(false);
 			}, 200);
@@ -84,8 +88,9 @@ export function UserNickSegment(props: UserNickSegmentProps): JSX.Element {
 						isDisabled={newNick.length === 0 || loading}
 						onClick={saveNewNick}
 						icon={<CheckIcon />}
-					/>
+          />
 				</Flex>
+        {nicknameExists && <Text ml={7} color={'red'} >nickname already exists</Text>}
 			</Collapse>
 		</>
 	);
