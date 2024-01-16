@@ -1106,8 +1106,9 @@ export function InviteMembers(props: {
         colorScheme="yellow"
         size="lg"
         icon={<AddIcon />}
-        aria-label="channel settings"
+        aria-label="invite members"
         onClick={onOpen}
+        hidden={!props.membership.owner}
       />
       <Drawer
         isOpen={isOpen}
