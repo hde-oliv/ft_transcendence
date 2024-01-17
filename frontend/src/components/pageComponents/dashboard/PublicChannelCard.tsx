@@ -85,6 +85,8 @@ function ChannelRow(props: PublicChannelResponse) {
     setPassword("");
   }, [props.id, password, router]);
 
+  if (isUserInChannel)
+    return undefined;
   return (
     <Flex
       w="100%"

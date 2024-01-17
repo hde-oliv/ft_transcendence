@@ -39,9 +39,9 @@ import {
 } from "@/lib/fetchers/matches";
 import { HistoryCard } from "@/components/pageComponents/dashboard/HistoryCard";
 
-const RankCard: FC<Rank | any> = (props) => {
+const RankCard: FC<Rank & { loaded: boolean } | any> = (props) => {
 
-  if (props === undefined)
+  if (props === undefined || !props.loaded)
     return (
       <Skeleton borderRadius="30" isLoaded={false}>
         <Center h="370px" w="370px"></Center>
@@ -61,11 +61,11 @@ const RankCard: FC<Rank | any> = (props) => {
           </StatLabel>
           <StatNumber fontSize="3xl" textAlign="center">
             {props.elo}
-            <StatHelpText textAlign="center" fontSize="md">
-              <StatArrow type={props.variation < 0 ? 'decrease' : 'increase'}></StatArrow>
-              {props.variation}&nbsp;pts (last 10 minutes)
-            </StatHelpText>
           </StatNumber>
+          <StatHelpText textAlign="center" fontSize="md">
+            <StatArrow type={props.variation < 0 ? 'decrease' : 'increase'}></StatArrow>
+            {props.variation}&nbsp;pts (last 10 minutes)
+          </StatHelpText>
         </Stat>
       </Flex>
     </Skeleton>
@@ -73,6 +73,12 @@ const RankCard: FC<Rank | any> = (props) => {
 }
 
 export const StatsCard: FC<UserStats> = (props) => {
+
+  if (props === undefined || props.indeterminate === undefined)
+    return (
+      <Skeleton borderRadius="30" isLoaded={false}>
+        <Center h="370px" w="370px"></Center>
+      </Skeleton>)
   return (
     <Center flexDir="column" h="370px" w="370px">
       <Heading mb="1vw">Stats</Heading>
@@ -118,7 +124,7 @@ export const StatsCard: FC<UserStats> = (props) => {
 const Dashboard: NextPageWithLayout = () => {
   const router = useRouter();
   const [history, setHistory] = useState<HistoryRecord[]>([]);
-  const [rank, setRank] = useState<Rank | undefined>();
+  const [rank, setRank] = useState<Rank | undefined>(undefined);
   const [stats, setStats] = useState<any>();
   useEffect(() => {
     fetchWrapper(router, myHistory)
@@ -137,7 +143,7 @@ const Dashboard: NextPageWithLayout = () => {
         <PlayCard />
       </WrapItem>
       <WrapItem borderRadius="30" borderWidth="2px" borderColor="yellow.400">
-        <RankCard {...rank} />
+        <RankCard {...rank} loaded={rank !== undefined} />
       </WrapItem>
       <WrapItem borderRadius="30" borderWidth="2px" borderColor="yellow.400">
         <HistoryCard matches={history} />
