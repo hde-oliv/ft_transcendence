@@ -340,7 +340,7 @@ export class ChatService {
       this.socketService.emitToUser(targetMembership.userId, 'banned', { name: channel.name, banned: true, administrator: false });
       this.socketService.removeUserFromRoom(userId, channelId.toString());
     } else {
-      this.socketService.emitToUser(targetMembership.userId, 'unbanned', { name: channel.name, banned: false, administrator: false });
+      this.socketService.emitToUser(targetMembership.userId, 'banned', { name: channel.name, banned: false, administrator: false });
       this.socketService.addUserToRoom(userId, channelId.toString());
     }
     this.socketService.emitToRoom(channelId.toString(), 'syncChannel', { channelId: channelId });
