@@ -57,12 +57,6 @@ function Game() {
     };
   }, [onGameData, socket]);
   useEffect(() => {
-    socket.emit('playerAction', { type: 'connected', gameId, connected: true })
-    return () => {
-      socket.emit('playerAction', { type: 'connected', gameId, connected: false })
-    }
-  }, [gameId, socket]);
-  useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       switch (event.key) {
         case 'w':
@@ -83,6 +77,7 @@ function Game() {
     return () => { document.removeEventListener('keydown', handleKeyDown) }
   }, [movePaddle, pauseAction])
   useEffect(() => {
+    socket.emit('playerAction', { type: 'connected', gameId, connected: true })
     window.addEventListener('beforeunload', onNavigateOff)
     router.events.on('routeChangeStart', onNavigateOff)
     return (() => {
