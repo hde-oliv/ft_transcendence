@@ -13,6 +13,7 @@ import { AxiosResponse } from 'axios';
 import { UsersService } from 'src/users/users.service';
 import { createUserSchema, CreateUserDto } from 'src/users/dto/create-user-dto';
 import { Users as UserEntity } from '@prisma/client';
+import { default_avatar } from 'src/users/constants';
 
 @Injectable()
 export class TokenStrategy extends PassportStrategy(
@@ -67,7 +68,7 @@ export class TokenStrategy extends PassportStrategy(
       const userDto: CreateUserDto = {
         id: userData.login,
         nickname: userData.login,
-        avatar: process.env.DEFAULT_AVATAR ?? '',
+        avatar: default_avatar,
         intra_login: userData.login,
       };
 
